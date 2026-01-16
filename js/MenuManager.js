@@ -128,6 +128,31 @@ class MenuManager {
             item.classList.remove('active');
         });
     }
+
+    /**
+     * レイアウトメニューのチェックマークを更新
+     */
+    updateLayoutCheckmarks() {
+        const dagreItem = document.getElementById('layout-dagre');
+        const equalItem = document.getElementById('layout-equal');
+        const hierarchicalMenu = document.querySelector('[data-submenu="hierarchical"]');
+        
+        if (!layoutManager) return;
+        
+        // すべてのチェックマークを削除
+        if (dagreItem) dagreItem.classList.remove('checked');
+        if (equalItem) equalItem.classList.remove('checked');
+        if (hierarchicalMenu) hierarchicalMenu.classList.remove('checked');
+        
+        // 現在のレイアウトに応じてチェックマークを追加
+        if (layoutManager.currentLayout === 'dagre') {
+            if (dagreItem) dagreItem.classList.add('checked');
+            if (hierarchicalMenu) hierarchicalMenu.classList.add('checked');
+        } else if (layoutManager.currentLayout === 'equal') {
+            if (equalItem) equalItem.classList.add('checked');
+            if (hierarchicalMenu) hierarchicalMenu.classList.add('checked');
+        }
+    }
 }
 
 // グローバルインスタンス

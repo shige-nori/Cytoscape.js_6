@@ -87,6 +87,21 @@ body {
     background-color: var(--background-color);
 }
 
+/* チェックマーク付きメニュー項目 */
+.submenu-item.checked:not(.has-submenu)::after {
+    content: '✓';
+    margin-left: 8px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+.has-submenu.checked > span:first-child::after {
+    content: '✓';
+    margin-left: 8px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
 .submenu-item.has-submenu .submenu {
     display: none;
     position: absolute;

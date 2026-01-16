@@ -7,6 +7,9 @@ class LayoutManager {
         if (typeof cytoscape !== 'undefined' && typeof cytoscapeDagre !== 'undefined') {
             cytoscape.use(cytoscapeDagre);
         }
+        
+        // 現在適用されているレイアウトの状態
+        this.currentLayout = null; // 'dagre' or 'equal'
     }
 
     /**
@@ -29,6 +32,14 @@ class LayoutManager {
         });
         
         layout.run();
+        
+        // 現在のレイアウトを記録
+        this.currentLayout = 'dagre';
+        
+        // メニューのチェックマークを更新
+        if (typeof menuManager !== 'undefined' && menuManager) {
+            menuManager.updateLayoutCheckmarks();
+        }
     }
 
     /**
@@ -114,6 +125,14 @@ class LayoutManager {
             },
             duration: 500
         });
+        
+        // 現在のレイアウトを記録
+        this.currentLayout = 'equal';
+        
+        // メニューのチェックマークを更新
+        if (typeof menuManager !== 'undefined' && menuManager) {
+            menuManager.updateLayoutCheckmarks();
+        }
     }
 
     /**
@@ -183,6 +202,11 @@ class LayoutManager {
             },
             duration: 500
         });
+        
+        // Layout Toolsの基準位置をリセット（並び替えを維持するため）
+        if (typeof layoutTools !== 'undefined' && layoutTools) {
+            layoutTools.resetOriginalPositions();
+        }
     }
 
     /**
@@ -240,6 +264,11 @@ class LayoutManager {
             },
             duration: 500
         });
+        
+        // Layout Toolsの基準位置をリセット（並び替えを維持するため）
+        if (typeof layoutTools !== 'undefined' && layoutTools) {
+            layoutTools.resetOriginalPositions();
+        }
     }
 }
 

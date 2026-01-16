@@ -162,6 +162,11 @@ class LayoutTools {
         }
     }
 
+    resetOriginalPositions() {
+        // 基準位置をクリアして、次回パネルを開いたときに新しい位置を保存する
+        this.originalPositions.clear();
+    }
+
     handleScaleAxisChange(axis) {
         // 現在のスケールと回転をすべて適用して確定
         if (this.currentScale !== 1 || this.currentRotation !== 0) {
