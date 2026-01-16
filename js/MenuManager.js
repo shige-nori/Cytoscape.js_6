@@ -62,7 +62,17 @@ class MenuManager {
         // Layout - Tools
         document.getElementById('layout-tools').addEventListener('click', () => {
             if (networkManager.hasNetwork()) {
+                edgeBends.closePanel(); // Edge Bendsパネルを閉じる
                 layoutTools.openPanel();
+            }
+            this.closeAllMenus();
+        });
+
+        // Edge Bends
+        document.getElementById('edge-bends').addEventListener('click', () => {
+            if (networkManager.hasNetwork()) {
+                layoutTools.closePanel(); // Layout Toolsパネルを閉じる
+                edgeBends.openPanel();
             }
             this.closeAllMenus();
         });

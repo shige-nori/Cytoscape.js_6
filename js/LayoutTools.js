@@ -116,12 +116,17 @@ class LayoutTools {
     openPanel() {
         if (!this.panel) return;
         this.panel.classList.add('active');
-        this.storeOriginalPositions();
-        this.resetSliders();
+        // 基準位置が未設定の場合のみ保存（パネルを閉じて再度開いたときは保存しない）
+        if (this.originalPositions.size === 0) {
+            this.storeOriginalPositions();
+        }
+        // 既存の値を維持するため、resetSlidersは呼ばない
     }
 
     closePanel() {
-        if (this.panel) this.panel.classList.remove('active');
+        if (!this.panel) return;
+        this.panel.classList.remove('active');
+        // パネルを閉じても設定値は維持（リセットしない）
     }
 
     resetSliders() {
@@ -158,12 +163,24 @@ class LayoutTools {
     }
 
     handleScaleAxisChange(axis) {
+        // 現在のスケールと回転をすべて適用して確定
+        if (this.currentScale !== 1 || this.currentRotation !== 0) {
+            this.applyTransform();
+        }
+        
+        // スケール軸を変更
         this.currentScaleAxis = axis;
-        if (this.scaleSlider) this.scaleSlider.value = 0;
+        
+        // 現在の位置を新しい基準位置として保存（変換後の位置が新しい基準になる）
+        this.storeOriginalPositions();
+        
+        // スケール値をリセット
         this.currentScale = 1;
+        if (this.scaleSlider) this.scaleSlider.value = 0;
         const scaleValueEl = document.getElementById('scale-value') || document.getElementById('scale-value-input');
         if (scaleValueEl) { if ('value' in scaleValueEl) scaleValueEl.value = '1.00'; else scaleValueEl.textContent = '1.00'; }
-        this.storeOriginalPositions();
+        
+        // 回転値を0°にリセット
         this.currentRotation = 0;
         if (this.rotateSlider) this.rotateSlider.value = 0;
         const rotateValueEl = document.getElementById('rotate-value') || document.getElementById('rotate-value-input');
@@ -211,11 +228,33 @@ class LayoutTools {
             const centerX = this.originalCenter.x;
             const centerY = this.originalCenter.y;
             const angleRadians = (this.currentRotation * Math.PI) / 180;
+            
+            // 回転角度に応じてWidth/Heightを逆転
+            // 45°～135° または -135°～-45° の範囲で逆転
+            const normalizedAngle = ((this.currentRotation % 360) + 360) % 360; // 0-360の範囲に正規化
+            const shouldSwap = (normalizedAngle > 45 && normalizedAngle < 135) || 
+                              (normalizedAngle > 225 && normalizedAngle < 315);
+            
             let scaleX = 1, scaleY = 1;
             switch (this.currentScaleAxis) {
-                case 'width': scaleX = this.currentScale; break;
-                case 'height': scaleY = this.currentScale; break;
-                case 'selected': scaleX = this.currentScale; scaleY = this.currentScale; break;
+                case 'width': 
+                    if (shouldSwap) {
+                        scaleY = this.currentScale; // 逆転：Widthが縦方向に作用
+                    } else {
+                        scaleX = this.currentScale; // 通常：Widthが横方向に作用
+                    }
+                    break;
+                case 'height': 
+                    if (shouldSwap) {
+                        scaleX = this.currentScale; // 逆転：Heightが横方向に作用
+                    } else {
+                        scaleY = this.currentScale; // 通常：Heightが縦方向に作用
+                    }
+                    break;
+                case 'selected': 
+                    scaleX = this.currentScale; 
+                    scaleY = this.currentScale; 
+                    break;
             }
             
             nodes.forEach(node => {
@@ -228,6 +267,36 @@ class LayoutTools {
                 const rotatedY = dx * Math.sin(angleRadians) + dy * Math.cos(angleRadians);
                 const newX = centerX + rotatedX;
                 const newY = centerY + rotatedY;
+                node.position({ x: newX, y: newY });
+            });
+        });
+    }
+
+    applyScaleOnly() {
+        // スケールのみを適用（回転は適用しない）
+        if (!networkManager || !networkManager.cy) return;
+        const isSelectedOnly = this.currentScaleAxis === 'selected';
+        const nodes = isSelectedOnly ? networkManager.cy.nodes(':selected') : networkManager.cy.nodes();
+        if (nodes.length === 0) return;
+        
+        networkManager.cy.batch(() => {
+            const centerX = this.originalCenter.x;
+            const centerY = this.originalCenter.y;
+            let scaleX = 1, scaleY = 1;
+            switch (this.currentScaleAxis) {
+                case 'width': scaleX = this.currentScale; break;
+                case 'height': scaleY = this.currentScale; break;
+                case 'selected': scaleX = this.currentScale; scaleY = this.currentScale; break;
+            }
+            
+            nodes.forEach(node => {
+                const originalPos = this.originalPositions.get(node.id());
+                if (!originalPos) return;
+                let dx = originalPos.x - centerX;
+                let dy = originalPos.y - centerY;
+                // スケールのみ適用（回転は適用しない）
+                const newX = centerX + dx * scaleX;
+                const newY = centerY + dy * scaleY;
                 node.position({ x: newX, y: newY });
             });
         });

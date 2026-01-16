@@ -38,13 +38,14 @@ class NetworkManager {
                     'width': 40,
                     'height': 40,
                     'label': 'data(id)',
-                    'text-valign': 'center',
+                    'text-valign': 'top',
                     'text-halign': 'center',
                     'font-size': '10px',
-                    'color': '#fff',
+                    'color': '#000',
                     'text-outline-width': 0,
                     'text-wrap': 'ellipsis',
-                    'text-max-width': '80px'
+                    'text-max-width': '80px',
+                    'text-margin-y': -5
                 }
             },
             {

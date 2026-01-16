@@ -43,28 +43,66 @@ class LayoutManager {
         // 現在のY座標で階層をグループ化
         const layers = this.groupNodesByLayer(nodes);
         
-        // 最大のノード数を持つ階層を取得
-        const maxNodesInLayer = Math.max(...Array.from(layers.values()).map(l => l.length));
+        // 縦横比1:1になるように正方形のサイズを計算
+        const layerCount = layers.size;
+        const size = 1000;  // 正方形の一辺のサイズ
         
-        // 全体のサイズを計算（縦横比1:1）
-        const spacing = 100;  // ノード間隔
-        const totalWidth = maxNodesInLayer * spacing;
-        const totalHeight = layers.size * spacing;
-        
-        // 正方形に近づけるためのスケーリング
-        const size = Math.max(totalWidth, totalHeight);
-        
-        // 各階層内でノードを均等配置
+        // 各階層内でノードを均等配置（両端のノードの端を揃える）
         const layerArray = Array.from(layers.entries()).sort((a, b) => a[0] - b[0]);
-        const layerSpacing = size / (layers.size + 1);
         
         layerArray.forEach(([layerY, layerNodes], layerIndex) => {
-            const y = (layerIndex + 1) * layerSpacing;
-            const nodeSpacing = size / (layerNodes.length + 1);
+            // Y座標：ノードの高さを考慮して両端を揃える
+            if (layerCount > 1) {
+                if (layerIndex === 0) {
+                    // 最初の階層：上端を0に揃える
+                    const nodeHeight = layerNodes[0].height();
+                    const y = nodeHeight / 2;
+                    layerNodes.forEach(node => node.position('y', y));
+                } else if (layerIndex === layerCount - 1) {
+                    // 最後の階層：下端をsizeに揃える
+                    const nodeHeight = layerNodes[0].height();
+                    const y = size - nodeHeight / 2;
+                    layerNodes.forEach(node => node.position('y', y));
+                } else {
+                    // 中間の階層：上下の端に揃えた階層間で均等配置
+                    const firstNodeHeight = nodes[0].height();
+                    const lastNodeHeight = nodes[nodes.length - 1].height();
+                    const availableHeight = size - firstNodeHeight / 2 - lastNodeHeight / 2;
+                    const y = firstNodeHeight / 2 + (layerIndex / (layerCount - 1)) * availableHeight;
+                    layerNodes.forEach(node => node.position('y', y));
+                }
+            } else {
+                // 階層が1つの場合は中央に配置
+                const y = size / 2;
+                layerNodes.forEach(node => node.position('y', y));
+            }
             
+            // X座標：ノードの幅を考慮して両端を揃える
             layerNodes.forEach((node, nodeIndex) => {
-                const x = (nodeIndex + 1) * nodeSpacing;
-                node.position({ x, y });
+                const nodeWidth = node.width();
+                
+                if (layerNodes.length > 1) {
+                    if (nodeIndex === 0) {
+                        // 最初のノード：左端を0に揃える
+                        const x = nodeWidth / 2;
+                        node.position('x', x);
+                    } else if (nodeIndex === layerNodes.length - 1) {
+                        // 最後のノード：右端をsizeに揃える
+                        const x = size - nodeWidth / 2;
+                        node.position('x', x);
+                    } else {
+                        // 中間のノード：左右の端に揃えたノード間で均等配置
+                        const firstNodeWidth = layerNodes[0].width();
+                        const lastNodeWidth = layerNodes[layerNodes.length - 1].width();
+                        const availableWidth = size - firstNodeWidth / 2 - lastNodeWidth / 2;
+                        const x = firstNodeWidth / 2 + (nodeIndex / (layerNodes.length - 1)) * availableWidth;
+                        node.position('x', x);
+                    }
+                } else {
+                    // ノードが1つの場合は中央に配置
+                    const x = size / 2;
+                    node.position('x', x);
+                }
             });
         });
 

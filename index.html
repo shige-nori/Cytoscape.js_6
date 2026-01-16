@@ -25,6 +25,8 @@
         <div class="menu-item" data-menu="layout">
             <span class="menu-title">Layout</span>
             <div class="submenu">
+                <div class="submenu-item" id="layout-tools">Layout Tools...</div>
+                <div class="submenu-item" id="edge-bends">Edge Bends...</div>
                 <div class="submenu-item has-submenu" data-submenu="hierarchical">
                     <span>Hierarchical</span>
                     <span class="arrow">▶</span>
@@ -33,7 +35,6 @@
                         <div class="submenu-item" id="layout-equal">Equal</div>
                     </div>
                 </div>
-                <div class="submenu-item" id="layout-tools">Layout Tools...</div>
             </div>
         </div>
     </nav>
@@ -151,6 +152,39 @@
         </div>
     </div>
 
+    <!-- Edge Bendsパネル -->
+    <div class="edge-bends-panel" id="edge-bends-panel">
+        <div class="tools-panel-header">
+            <h3>Edge Bends</h3>
+        </div>
+        <div class="tools-panel-body">
+            <!-- Bend Strength -->
+            <div class="tools-section">
+                <h4>Bend Strength</h4>
+                <div class="slider-wrapper">
+                    <div class="slider-ticks">
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                    </div>
+                    <input type="range" id="bend-strength-slider" min="0" max="80" step="1" value="40" class="slider">
+                </div>
+                <div class="slider-labels">
+                    <span>0</span>
+                    <span>20</span>
+                    <span>40</span>
+                    <span>60</span>
+                    <span>80</span>
+                </div>
+                <div class="value-input-container">
+                    <input type="number" id="bend-strength-value" value="40" step="1" min="0" max="80" class="value-input">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 隠しファイル入力 -->
     <input type="file" id="file-input-network" accept=".xlsx,.xls" style="display: none;">
     <input type="file" id="file-input-table" accept=".xlsx,.xls" style="display: none;">
@@ -166,6 +200,7 @@
     <script src="js/FileHandler.js"></script>
     <script src="js/LayoutManager.js"></script>
     <script src="js/LayoutTools.js"></script>
+    <script src="js/EdgeBendsPanel.js"></script>
     <script src="js/ModalManager.js"></script>
     <script src="js/MenuManager.js"></script>
     <script src="js/app.js"></script>

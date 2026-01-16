@@ -373,6 +373,24 @@ body {
     display: block;
 }
 
+/* Edge Bends Panel */
+.edge-bends-panel {
+    display: none;
+    position: fixed;
+    top: 60px;
+    right: 20px;
+    width: 450px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 2500;
+}
+
+.edge-bends-panel.active {
+    display: block;
+}
+
 .tools-panel-header {
     padding: 12px 16px;
     background-color: var(--menubar-bg);
