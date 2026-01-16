@@ -13,6 +13,8 @@ class LayoutTools {
         this.currentRotation = 0;
         this.isDragging = false;
         this.dragOffset = { x: 0, y: 0 };
+        this.animationFrameId = null;
+        this.pendingTransform = false;
     }
 
     initialize() {
@@ -40,9 +42,44 @@ class LayoutTools {
             });
         }
 
+        // 数値入力との連動
+        const scaleValueInput = document.getElementById('scale-value-input');
+        if (scaleValueInput) {
+            scaleValueInput.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (!isNaN(value) && value >= 0.125 && value <= 8) {
+                    const logValue = Math.log2(value);
+                    if (this.scaleSlider) this.scaleSlider.value = logValue;
+                    this.currentScale = value;
+                    this.scheduleTransform();
+                }
+            });
+        }
+
+        const rotateValueInput = document.getElementById('rotate-value-input');
+        if (rotateValueInput) {
+            rotateValueInput.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                if (!isNaN(value) && value >= -180 && value <= 180) {
+                    if (this.rotateSlider) this.rotateSlider.value = value;
+                    this.currentRotation = value;
+                    this.scheduleTransform();
+                }
+            });
+        }
+
         document.querySelectorAll('input[name="scale-axis"]').forEach(radio => {
             radio.addEventListener('change', (e) => this.handleScaleAxisChange(e.target.value));
         });
+
+        // ネットワーク図の空白クリックでパネルを閉じる
+        if (networkManager && networkManager.cy) {
+            networkManager.cy.on('tap', (e) => {
+                if (e.target === networkManager.cy && this.panel && this.panel.classList.contains('active')) {
+                    this.closePanel();
+                }
+            });
+        }
     }
 
     setupDraggable() {
@@ -138,14 +175,29 @@ class LayoutTools {
         const scaleValueEl = document.getElementById('scale-value') || document.getElementById('scale-value-input');
         if (scaleValueEl) { if ('value' in scaleValueEl) scaleValueEl.value = scale.toFixed(2); else scaleValueEl.textContent = scale.toFixed(2); }
         this.currentScale = scale;
-        this.applyTransform();
+        this.scheduleTransform();
     }
 
     handleRotateChange(angle) {
         const rotateValueEl = document.getElementById('rotate-value') || document.getElementById('rotate-value-input');
         if (rotateValueEl) { if ('value' in rotateValueEl) rotateValueEl.value = Math.round(angle).toString(); else rotateValueEl.textContent = Math.round(angle).toString(); }
         this.currentRotation = angle;
-        this.applyTransform();
+        this.scheduleTransform();
+    }
+
+    scheduleTransform() {
+        if (this.pendingTransform) return;
+        this.pendingTransform = true;
+        
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+        }
+        
+        this.animationFrameId = requestAnimationFrame(() => {
+            this.applyTransform();
+            this.pendingTransform = false;
+            this.animationFrameId = null;
+        });
     }
 
     applyTransform() {
@@ -153,26 +205,31 @@ class LayoutTools {
         const isSelectedOnly = this.currentScaleAxis === 'selected';
         const nodes = isSelectedOnly ? networkManager.cy.nodes(':selected') : networkManager.cy.nodes();
         if (nodes.length === 0) return;
-        const centerX = this.originalCenter.x;
-        const centerY = this.originalCenter.y;
-        const angleRadians = (this.currentRotation * Math.PI) / 180;
-        let scaleX = 1, scaleY = 1;
-        switch (this.currentScaleAxis) {
-            case 'width': scaleX = this.currentScale; break;
-            case 'height': scaleY = this.currentScale; break;
-            case 'selected': scaleX = this.currentScale; scaleY = this.currentScale; break;
-        }
-        nodes.forEach(node => {
-            const originalPos = this.originalPositions.get(node.id());
-            if (!originalPos) return;
-            let dx = originalPos.x - centerX;
-            let dy = originalPos.y - centerY;
-            dx = dx * scaleX; dy = dy * scaleY;
-            const rotatedX = dx * Math.cos(angleRadians) - dy * Math.sin(angleRadians);
-            const rotatedY = dx * Math.sin(angleRadians) + dy * Math.cos(angleRadians);
-            const newX = centerX + rotatedX;
-            const newY = centerY + rotatedY;
-            node.position({ x: newX, y: newY });
+        
+        // バッチ更新を使用してパフォーマンスを向上
+        networkManager.cy.batch(() => {
+            const centerX = this.originalCenter.x;
+            const centerY = this.originalCenter.y;
+            const angleRadians = (this.currentRotation * Math.PI) / 180;
+            let scaleX = 1, scaleY = 1;
+            switch (this.currentScaleAxis) {
+                case 'width': scaleX = this.currentScale; break;
+                case 'height': scaleY = this.currentScale; break;
+                case 'selected': scaleX = this.currentScale; scaleY = this.currentScale; break;
+            }
+            
+            nodes.forEach(node => {
+                const originalPos = this.originalPositions.get(node.id());
+                if (!originalPos) return;
+                let dx = originalPos.x - centerX;
+                let dy = originalPos.y - centerY;
+                dx = dx * scaleX; dy = dy * scaleY;
+                const rotatedX = dx * Math.cos(angleRadians) - dy * Math.sin(angleRadians);
+                const rotatedY = dx * Math.sin(angleRadians) + dy * Math.cos(angleRadians);
+                const newX = centerX + rotatedX;
+                const newY = centerY + rotatedY;
+                node.position({ x: newX, y: newY });
+            });
         });
     }
 

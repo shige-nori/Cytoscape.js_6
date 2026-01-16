@@ -33,6 +33,7 @@
                         <div class="submenu-item" id="layout-equal">Equal</div>
                     </div>
                 </div>
+                <div class="submenu-item" id="layout-tools">Layout Tools...</div>
             </div>
         </div>
     </nav>
@@ -78,6 +79,78 @@
         <p class="progress-text">Loading...</p>
     </div>
 
+    <!-- Layout Toolsパネル -->
+    <div class="layout-tools-panel" id="layout-tools-panel">
+        <div class="tools-panel-header">
+            <h3>Layout Tools</h3>
+        </div>
+        <div class="tools-panel-body">
+            <!-- Scale -->
+            <div class="tools-section">
+                <h4>Scale</h4>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="scale-axis" value="width" id="scale-width" checked>
+                        Width
+                    </label>
+                    <label>
+                        <input type="radio" name="scale-axis" value="height" id="scale-height">
+                        Height
+                    </label>
+                    <label>
+                        <input type="radio" name="scale-axis" value="selected" id="scale-selected">
+                        Selected Only
+                    </label>
+                </div>
+                <div class="slider-wrapper">
+                    <div class="slider-ticks">
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                    </div>
+                    <input type="range" id="scale-slider" min="-3" max="3" step="0.1" value="0" class="slider">
+                </div>
+                <div class="slider-labels">
+                    <span>1/8x</span>
+                    <span>1/4x</span>
+                    <span>1x</span>
+                    <span>4x</span>
+                    <span>8x</span>
+                </div>
+                <div class="value-input-container">
+                    <input type="number" id="scale-value-input" value="1.00" step="0.01" min="0.125" max="8" class="value-input">
+                </div>
+            </div>
+            
+            <!-- Rotate -->
+            <div class="tools-section">
+                <h4>Rotate</h4>
+                <div class="slider-wrapper">
+                    <div class="slider-ticks">
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                        <span class="tick"></span>
+                    </div>
+                    <input type="range" id="rotate-slider" min="-180" max="180" step="1" value="0" class="slider">
+                </div>
+                <div class="slider-labels">
+                    <span>-180°</span>
+                    <span>-90°</span>
+                    <span>0°</span>
+                    <span>90°</span>
+                    <span>180°</span>
+                </div>
+                <div class="value-input-container">
+                    <input type="number" id="rotate-value-input" value="0" step="1" min="-180" max="180" class="value-input">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 隠しファイル入力 -->
     <input type="file" id="file-input-network" accept=".xlsx,.xls" style="display: none;">
     <input type="file" id="file-input-table" accept=".xlsx,.xls" style="display: none;">
@@ -92,6 +165,7 @@
     <script src="js/NetworkManager.js"></script>
     <script src="js/FileHandler.js"></script>
     <script src="js/LayoutManager.js"></script>
+    <script src="js/LayoutTools.js"></script>
     <script src="js/ModalManager.js"></script>
     <script src="js/MenuManager.js"></script>
     <script src="js/app.js"></script>

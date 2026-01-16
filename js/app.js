@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     networkManager = new NetworkManager();
     fileHandler = new FileHandler();
     layoutManager = new LayoutManager();
+    layoutTools = new LayoutTools();
+    layoutTools.initialize();
     modalManager = new ModalManager();
     menuManager = new MenuManager();
     

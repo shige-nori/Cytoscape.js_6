@@ -59,6 +59,14 @@ class MenuManager {
             this.closeAllMenus();
         });
 
+        // Layout - Tools
+        document.getElementById('layout-tools').addEventListener('click', () => {
+            if (networkManager.hasNetwork()) {
+                layoutTools.openPanel();
+            }
+            this.closeAllMenus();
+        });
+
         // メニュー外クリックで閉じる
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.menubar')) {
