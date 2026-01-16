@@ -136,6 +136,111 @@ class LayoutManager {
         
         return layers;
     }
+
+    /**
+     * 階層ごとにノードID順にノードを並び替え
+     * 注意: 並び替えは常に階層単位で実施され、階層間の順序は変更しない
+     */
+    sortNodesAZ() {
+        if (!networkManager || !networkManager.cy) return;
+
+        const nodes = networkManager.cy.nodes();
+        if (nodes.length === 0) return;
+
+        // ステップ1: 現在のY座標で階層をグループ化（階層間の順序は変更しない）
+        const layers = this.groupNodesByLayer(nodes);
+        
+        // ステップ2: 階層をY座標順に並べる
+        const layerArray = Array.from(layers.entries()).sort((a, b) => a[0] - b[0]);
+        
+        // ステップ3: 各階層内でのみノードをID順にソート（常に昇順）
+        layerArray.forEach(([layerY, layerNodes]) => {
+            // 階層内のノードをID順に昇順ソート
+            layerNodes.sort((a, b) => {
+                const idA = a.id();
+                const idB = b.id();
+                return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+            });
+            
+            // 階層内の現在のX座標範囲を取得（階層の幅を維持）
+            const xPositions = layerNodes.map(node => node.position('x')).sort((a, b) => a - b);
+            const minX = xPositions[0];
+            const maxX = xPositions[xPositions.length - 1];
+            const spacing = layerNodes.length > 1 ? (maxX - minX) / (layerNodes.length - 1) : 0;
+            
+            // 階層内でソートされた順序でX座標を再配置（Y座標は変更しない）
+            layerNodes.forEach((node, index) => {
+                const x = layerNodes.length > 1 ? minX + (index * spacing) : minX;
+                node.position({ x, y: layerY }); // Y座標は階層のまま維持
+            });
+        });
+
+        // アニメーションでビューをフィット
+        networkManager.cy.animate({
+            fit: {
+                eles: networkManager.cy.elements(),
+                padding: 50
+            },
+            duration: 500
+        });
+    }
+
+    /**
+     * 列単位（Y-axis）でノードID順にノードを並び替え
+     * 注意: 並び替えは常に列単位で実施され、列間の順序は変更しない
+     */
+    sortNodesByColumn() {
+        if (!networkManager || !networkManager.cy) return;
+
+        const nodes = networkManager.cy.nodes();
+        if (nodes.length === 0) return;
+
+        // ステップ1: X座標で列をグループ化（列間の順序は変更しない）
+        const columns = new Map();
+        const tolerance = 10; // X座標の許容誤差
+        
+        nodes.forEach(node => {
+            const x = Math.round(node.position('x') / tolerance) * tolerance;
+            if (!columns.has(x)) {
+                columns.set(x, []);
+            }
+            columns.get(x).push(node);
+        });
+        
+        // ステップ2: 列をX座標順に並べる
+        const columnArray = Array.from(columns.entries()).sort((a, b) => a[0] - b[0]);
+        
+        // ステップ3: 各列内でのみノードをID順にソート（常に昇順）
+        columnArray.forEach(([columnX, columnNodes]) => {
+            // 列内のノードをID順に昇順ソート
+            columnNodes.sort((a, b) => {
+                const idA = a.id();
+                const idB = b.id();
+                return idA.localeCompare(idB, undefined, { numeric: true, sensitivity: 'base' });
+            });
+            
+            // 列内の現在のY座標範囲を取得（列の高さを維持）
+            const yPositions = columnNodes.map(node => node.position('y')).sort((a, b) => a - b);
+            const minY = yPositions[0];
+            const maxY = yPositions[yPositions.length - 1];
+            const spacing = columnNodes.length > 1 ? (maxY - minY) / (columnNodes.length - 1) : 0;
+            
+            // 列内でソートされた順序でY座標を再配置（X座標は変更しない）
+            columnNodes.forEach((node, index) => {
+                const y = columnNodes.length > 1 ? minY + (index * spacing) : minY;
+                node.position({ x: columnX, y }); // X座標は列のまま維持
+            });
+        });
+
+        // アニメーションでビューをフィット
+        networkManager.cy.animate({
+            fit: {
+                eles: networkManager.cy.elements(),
+                padding: 50
+            },
+            duration: 500
+        });
+    }
 }
 
 // グローバルインスタンス

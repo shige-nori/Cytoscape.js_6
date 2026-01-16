@@ -63,6 +63,7 @@ class MenuManager {
         document.getElementById('layout-tools').addEventListener('click', () => {
             if (networkManager.hasNetwork()) {
                 edgeBends.closePanel(); // Edge Bendsパネルを閉じる
+                sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
                 layoutTools.openPanel();
             }
             this.closeAllMenus();
@@ -72,7 +73,18 @@ class MenuManager {
         document.getElementById('edge-bends').addEventListener('click', () => {
             if (networkManager.hasNetwork()) {
                 layoutTools.closePanel(); // Layout Toolsパネルを閉じる
+                sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
                 edgeBends.openPanel();
+            }
+            this.closeAllMenus();
+        });
+
+        // Sort Nodes (A-Z)
+        document.getElementById('sort-nodes-az').addEventListener('click', () => {
+            if (networkManager.hasNetwork()) {
+                layoutTools.closePanel();
+                edgeBends.closePanel();
+                sortNodesPanel.openPanel();
             }
             this.closeAllMenus();
         });

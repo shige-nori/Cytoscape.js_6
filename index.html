@@ -33,6 +33,7 @@
                     <div class="submenu submenu-right">
                         <div class="submenu-item" id="layout-dagre">Defaults</div>
                         <div class="submenu-item" id="layout-equal">Equal</div>
+                        <div class="submenu-item" id="sort-nodes-az">Sort Nodes (A-Z)</div>
                     </div>
                 </div>
             </div>
@@ -185,6 +186,29 @@
         </div>
     </div>
 
+    <!-- Sort Nodes (A-Z)パネル -->
+    <div class="sort-nodes-panel" id="sort-nodes-panel">
+        <div class="tools-panel-header">
+            <h3>Sort Nodes (A-Z)</h3>
+        </div>
+        <div class="tools-panel-body">
+            <div class="tools-section">
+                <h4>Sort Direction</h4>
+                <div class="radio-group">
+                    <label>
+                        <input type="radio" name="sort-axis" value="x-axis" id="sort-x-axis" checked>
+                        X-axis (Rows)
+                    </label>
+                    <label>
+                        <input type="radio" name="sort-axis" value="y-axis" id="sort-y-axis">
+                        Y-axis (Columns)
+                    </label>
+                </div>
+                <button class="btn btn-primary" id="sort-apply-btn" style="width: 100%; margin-top: 15px;">Apply Sort</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 隠しファイル入力 -->
     <input type="file" id="file-input-network" accept=".xlsx,.xls" style="display: none;">
     <input type="file" id="file-input-table" accept=".xlsx,.xls" style="display: none;">
@@ -201,6 +225,7 @@
     <script src="js/LayoutManager.js"></script>
     <script src="js/LayoutTools.js"></script>
     <script src="js/EdgeBendsPanel.js"></script>
+    <script src="js/SortNodesPanel.js"></script>
     <script src="js/ModalManager.js"></script>
     <script src="js/MenuManager.js"></script>
     <script src="js/app.js"></script>

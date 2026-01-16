@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', () => {
     layoutTools.initialize();
     edgeBends = new EdgeBends();
     edgeBends.initialize();
+    sortNodesPanel = new SortNodesPanel();
+    sortNodesPanel.initialize();
     modalManager = new ModalManager();
     menuManager = new MenuManager();
     
