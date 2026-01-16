@@ -133,9 +133,11 @@ class ModalManager {
         delimiterInput.dataset.column = column;
         delimiterInput.dataset.field = 'delimiter';
         
-        // Array型でない場合は無効化
+        // Array型でない場合は非表示
         const isArrayType = defaultType.includes('Array');
-        delimiterInput.disabled = !isArrayType;
+        if (!isArrayType) {
+            delimiterCell.style.display = 'none';
+        }
         
         delimiterInput.addEventListener('change', (e) => {
             this.currentMappings[column].delimiter = e.target.value || '|';
@@ -151,9 +153,10 @@ class ModalManager {
      * Delimiter入力の状態を更新
      */
     updateDelimiterState(row, dataType) {
-        const delimiterInput = row.querySelector('.delimiter-input');
-        if (delimiterInput) {
-            delimiterInput.disabled = !dataType.includes('Array');
+        const delimiterCell = row.querySelector('.delimiter-input').closest('td');
+        if (delimiterCell) {
+            const isArrayType = dataType.includes('Array');
+            delimiterCell.style.display = isArrayType ? '' : 'none';
         }
     }
 
@@ -169,7 +172,14 @@ class ModalManager {
         }
         
         this.hide();
-        fileHandler.executeImport(this.currentMappings);
+        
+        // プログレスオーバーレイを表示
+        progressOverlay.show('Importing data...');
+        
+        // UIをブロックしないよう非同期処理
+        setTimeout(() => {
+            fileHandler.executeImport(this.currentMappings);
+        }, 50);
     }
 
     /**

@@ -1,6 +1,6 @@
 # Network Visualizer 再作成プロンプト
 
-以下の仕様に従って、Cytoscape.jsベースのネットワーク可視化Webアプリケーションを作成してください。
+以下の仕様に従って、現在の機能に不足している部分を追加してください。不明点があれば教えてください
 
 ---
 
@@ -20,23 +20,6 @@
 
 ---
 
-## ファイル構成
-
-```
-project/
-├── index.html
-├── css/
-│   └── style.css
-└── js/
-    ├── app.js             # メインアプリケーション
-    ├── fileHandler.js     # ファイル読み込み・解析
-    ├── networkManager.js  # Cytoscape.js管理
-    ├── layoutTools.js     # レイアウトツール
-    ├── stylePanel.js      # スタイル設定パネル
-    └── tablePanel.js      # データテーブルパネル
-```
-
----
 
 ## 機能要件
 
@@ -52,7 +35,7 @@ project/
 - **Style**: スタイル設定パネルを開く
 
 - **View**
-  - Table Panel: データテーブルの表示/非表示
+  - Table Panel: データテーブルの表示/非表示（表示しているときはメニュー名の先頭にチェック印を表示）
 
 - **Filter**: Coming soon（将来実装予定の表示のみ）
 
@@ -85,37 +68,25 @@ project/
 - CSV（UTF-8、カンマ区切り、ダブルクォート対応）
 - Excel（.xlsx, .xls）
 
----
-
-### 3. グラフ表示領域
-
-- Cytoscape.jsを使用したインタラクティブなグラフ表示
-- ズーム（マウスホイール）、パン（背景ドラッグ）対応
-- ノードのドラッグ移動
-- クリック/Ctrl+クリックによる選択
-- ノードホバー時に上流/下流パスをピンク色でハイライト
-  - 大規模ネットワーク（2000要素以上）では自動無効化
-
-#### デフォルトスタイル
-- ノード: 青色円形（#2563eb）、サイズ40px
-- エッジ: グレー線（#94a3b8）、矢印付きbezierカーブ
-- 選択時: オレンジ色に変化
 
 ---
 
-### 4. Style Panel（スタイル設定パネル）
+### 3. Style Panel（スタイル設定パネル）
 
 Node/Edgeタブ切り替え式のパネル：
 
 #### Nodeタブ
 - Label Font Size
 - Label Color
+- Label Position
+- Label Width
 - Fill Color
 - Shape（ellipse, rectangle, triangle等）
 - Size
 - Border Width
 - Border Color
 - Opacity
+
 
 #### Edgeタブ
 - Line Type（solid, dashed, dotted）
@@ -133,7 +104,7 @@ Node/Edgeタブ切り替え式のパネル：
 
 ---
 
-### 5. Table Panel（データテーブルパネル）
+### 4. Table Panel（データテーブルパネル）
 
 画面下部に表示するリサイズ可能なパネル：
 
@@ -149,25 +120,29 @@ Node/Edgeタブ切り替え式のパネル：
 
 ---
 
-### 6. Layout Tools Panel
+### 5. Layout Tools Panel
 
 ドラッグ移動可能なフローティングパネル：
 
 #### Scale（スケール）
-- Width: 横方向のみスケール
-- Height: 縦方向のみスケール  
-- Selected Only: 選択ノードのみスケール
+- Width: 横方向のみスケール(数値を手入力可能)
+- Height: 縦方向のみスケール(数値を手入力可能)  
+- Selected Only: 選択ノードのみスケール(数値を手入力可能)
 - 対数スライダー: 1/8 ～ 8倍
 
 #### Rotate（回転）
 - -180° ～ 180°のスライダー
 
+Scale、Rotate共に動作が重くならないように考慮すること
+(ネットワーク図の描画があとになってもいいのでスライダーの動きはスムーズにしたい)
+
 ---
 
-### 7. Edge Bends Panel
+### 6. Edge Bends Panel
 
 - エッジの曲げ強度（control-point-step-size）調整
-- 同じノード間の複数エッジが重ならないように
+- 設定幅は0.1～20としスライド間隔は可能であれば0.1刻みでスライド
+- 曲げ強度のデフォルトは2とする
 
 ---
 
@@ -200,91 +175,14 @@ Node/Edgeタブ切り替え式のパネル：
 - スピナーアニメーション
 - 画面操作をブロック
 
----
-
-## データ構造
-
-### Network File（CSV例）
-```csv
-source,target,weight,type
-A,B,10,normal
-B,C,20,strong
-C,A,5,weak
-```
-
-### Table File（CSV例）
-```csv
-id,label,category,value
-A,Node A,Type1,100
-B,Node B,Type2,200
-```
-
-### エクスポートJSON形式
-```json
-{
-    "format_version": "1.0",
-    "generated_by": "cytoscape-js-app",
-    "elements": {
-        "nodes": [{ "data": {...}, "position": {...} }],
-        "edges": [{ "data": {...} }]
-    },
-    "appExtensions": {
-        "styleSettings": {...},
-        "edgeBendsSettings": {...}
-    }
-}
-```
-
----
-
-## 実装上の注意点
-
-1. **モジュール構成**: 各機能を独立したクラスとして実装
-2. **グローバルインスタンス**: networkManager, fileHandler等はグローバルアクセス可能に
-3. **パフォーマンス**: 大規模データ時はcy.batch()でバッチ処理
-4. **エラーハンドリング**: ファイル読み込み等でtry-catchを使用
-5. **レスポンシブ**: ウィンドウリサイズに対応
-
----
-
-## サンプルデータ
-
-### network.csv
-```csv
-source,target,weight
-Node1,Node2,10
-Node2,Node3,20
-Node3,Node4,15
-Node4,Node1,8
-Node2,Node4,12
-```
-
-### nodes.csv
-```csv
-id,label,category
-Node1,First Node,TypeA
-Node2,Second Node,TypeB
-Node3,Third Node,TypeA
-Node4,Fourth Node,TypeC
-```
-
----
 
 ## 参考添付
 
-この指示と一緒に `SPECIFICATION.md` ファイルを添付しています。詳細な仕様はそちらを参照してください。
+各機能やIFの実装状態はC:\Work\Cytoscape\03_Cytoscape.jsも参考にしてみてください
 
----
 
-## 作成手順
-
-1. まずindex.htmlを作成し、外部ライブラリのCDN読み込みとHTML構造を定義
-2. css/style.cssでスタイルを定義
-3. js/fileHandler.jsでファイル読み込み機能を実装
-4. js/networkManager.jsでCytoscape.js管理機能を実装
-5. js/layoutTools.jsでレイアウトツールを実装
-6. js/stylePanel.jsでスタイル設定パネルを実装
-7. js/tablePanel.jsでデータテーブルパネルを実装
-8. js/app.jsでメインアプリケーションを実装し、各モジュールを統合
+## その他
+カラムマッピングモーダルでDelimiterはData TypeはString Arry、Number Arry、Date Arrayを選択したときのみに表示してください
 
 各ステップごとに動作確認しながら進めてください。
+特に各機能のID付けで相違がないように確認してください

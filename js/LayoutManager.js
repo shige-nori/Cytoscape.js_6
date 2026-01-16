@@ -54,23 +54,15 @@ class LayoutManager {
         // 正方形に近づけるためのスケーリング
         const size = Math.max(totalWidth, totalHeight);
         
-        // 各階層内でノードを名前順にソートして均等配置
+        // 各階層内でノードを均等配置
         const layerArray = Array.from(layers.entries()).sort((a, b) => a[0] - b[0]);
         const layerSpacing = size / (layers.size + 1);
         
         layerArray.forEach(([layerY, layerNodes], layerIndex) => {
             const y = (layerIndex + 1) * layerSpacing;
+            const nodeSpacing = size / (layerNodes.length + 1);
             
-            // ノードをID（名前）順にソート（右から左に並べるため降順）
-            const sortedNodes = layerNodes.sort((a, b) => {
-                const idA = String(a.id()).toLowerCase();
-                const idB = String(b.id()).toLowerCase();
-                return idB.localeCompare(idA, 'ja', { numeric: true });
-            });
-            
-            const nodeSpacing = size / (sortedNodes.length + 1);
-            
-            sortedNodes.forEach((node, nodeIndex) => {
+            layerNodes.forEach((node, nodeIndex) => {
                 const x = (nodeIndex + 1) * nodeSpacing;
                 node.position({ x, y });
             });

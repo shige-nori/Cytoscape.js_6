@@ -38,7 +38,11 @@ class MenuManager {
         // Layout - Dagre (Defaults)
         document.getElementById('layout-dagre').addEventListener('click', () => {
             if (networkManager.hasNetwork()) {
-                layoutManager.applyDagreLayout();
+                progressOverlay.show('Applying layout...');
+                setTimeout(() => {
+                    layoutManager.applyDagreLayout();
+                    progressOverlay.hide();
+                }, 50);
             }
             this.closeAllMenus();
         });
@@ -46,7 +50,11 @@ class MenuManager {
         // Layout - Equal
         document.getElementById('layout-equal').addEventListener('click', () => {
             if (networkManager.hasNetwork()) {
-                layoutManager.applyEqualLayout();
+                progressOverlay.show('Applying layout...');
+                setTimeout(() => {
+                    layoutManager.applyEqualLayout();
+                    progressOverlay.hide();
+                }, 50);
             }
             this.closeAllMenus();
         });

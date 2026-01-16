@@ -117,8 +117,6 @@ class FileHandler {
      * @param {Object} mappings - カラムマッピング設定
      */
     executeImport(mappings) {
-        progressOverlay.show('Importing data...');
-        
         try {
             if (this.importMode === 'network') {
                 const result = networkManager.createNetwork(this.currentData, mappings);
