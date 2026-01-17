@@ -129,9 +129,43 @@ class LayoutTools {
     openPanel() {
         if (!this.panel) return;
         this.panel.classList.add('active');
-        // 基準位置が未設定の場合のみ保存（パネルを閉じて再度開いたときは保存しない）
-        if (this.originalPositions.size === 0) {
-            this.storeOriginalPositions();
+        
+        // パネルを開いた時：現在の変換を確定して値をリセット
+        if (this.currentScale !== 1 || this.currentRotation !== 0) {
+            // 現在のスケールと回転を適用して位置を確定（図の描画はそのまま）
+            this.applyTransform();
+        }
+        
+        // 現在の位置を新しい基準位置として保存
+        this.storeOriginalPositions();
+        
+        // すべての値をリセット
+        this.currentScale = 1;
+        this.baseScale = 1;
+        this.widthScale = 1;
+        this.widthBaseScale = 1;
+        this.heightScale = 1;
+        this.heightBaseScale = 1;
+        this.currentRotation = 0;
+        this.baseRotation = 0;
+        this.widthRotation = 0;
+        this.widthBaseRotation = 0;
+        this.heightRotation = 0;
+        this.heightBaseRotation = 0;
+        
+        // UIを更新
+        if (this.scaleSlider) this.scaleSlider.value = 0;
+        const scaleValueEl = document.getElementById('scale-value') || document.getElementById('scale-value-input');
+        if (scaleValueEl) {
+            if ('value' in scaleValueEl) scaleValueEl.value = '1.00';
+            else scaleValueEl.textContent = '1.00';
+        }
+        
+        if (this.rotateSlider) this.rotateSlider.value = 0;
+        const rotateValueEl = document.getElementById('rotate-value') || document.getElementById('rotate-value-input');
+        if (rotateValueEl) {
+            if ('value' in rotateValueEl) rotateValueEl.value = '0';
+            else rotateValueEl.textContent = '0';
         }
     }
 
