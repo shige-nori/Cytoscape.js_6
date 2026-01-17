@@ -205,6 +205,31 @@ class LayoutTools {
     }
 
     handleScaleChange(logValue) {
+        // Scale操作時：現在の回転を確定してリセット
+        if (this.currentRotation !== 0) {
+            // 現在のスケールと回転を適用して位置を確定
+            this.applyTransform();
+            
+            // 確定した位置（スケール+回転済み）を新しいoriginalPositionsとして保存
+            this.storeOriginalPositions();
+            
+            // 回転をリセット
+            this.baseRotation = 0;
+            this.currentRotation = 0;
+            
+            // RotateのUIを0°に更新
+            if (this.rotateSlider) this.rotateSlider.value = 0;
+            const rotateValueEl = document.getElementById('rotate-value') || document.getElementById('rotate-value-input');
+            if (rotateValueEl) {
+                if ('value' in rotateValueEl) rotateValueEl.value = '0';
+                else rotateValueEl.textContent = '0';
+            }
+            
+            // スケールもリセット
+            this.currentScale = 1;
+            this.baseScale = 1;
+        }
+        
         const scale = Math.pow(2, logValue);
         const scaleValueEl = document.getElementById('scale-value') || document.getElementById('scale-value-input');
         if (scaleValueEl) { if ('value' in scaleValueEl) scaleValueEl.value = scale.toFixed(2); else scaleValueEl.textContent = scale.toFixed(2); }
