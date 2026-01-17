@@ -132,6 +132,12 @@ body {
     background-color: transparent;
 }
 
+.submenu-separator {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 4px 0;
+}
+
 /* Graph Container */
 #cy-container {
     position: fixed;

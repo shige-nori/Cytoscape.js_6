@@ -123,6 +123,11 @@ class FileHandler {
                 layoutManager.applyDagreLayout();
                 progressOverlay.hide();
                 console.log(`Network created: ${result.nodeCount} nodes, ${result.edgeCount} edges`);
+                
+                // メニュー状態を更新
+                if (menuManager) {
+                    menuManager.updateMenuStates();
+                }
             } else {
                 const result = networkManager.addTableData(this.currentData, mappings);
                 progressOverlay.hide();

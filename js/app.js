@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     modalManager = new ModalManager();
     menuManager = new MenuManager();
     
+    // 初期メニュー状態を設定
+    menuManager.updateMenuStates();
+    
     // ウィンドウリサイズ対応
     window.addEventListener('resize', () => {
         if (networkManager && networkManager.cy) {

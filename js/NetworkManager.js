@@ -242,6 +242,46 @@ class NetworkManager {
     }
 
     /**
+     * ネットワークをクローズし、すべての設定をクリア
+     */
+    closeNetwork() {
+        // グラフをクリア
+        if (this.cy) {
+            this.cy.elements().remove();
+            this.cy.reset();
+        }
+        
+        // テーブルパネルをクリア
+        if (window.tablePanel) {
+            tablePanel.clearTable();
+        }
+        
+        // Layout Toolsパネルをクリア
+        if (window.layoutTools) {
+            layoutTools.closePanel();
+            layoutTools.resetOriginalPositions();
+        }
+        
+        // Edge Bendsパネルをクリア
+        if (window.edgeBends) {
+            edgeBends.closePanel();
+        }
+        
+        // Sort Nodesパネルをクリア
+        if (window.sortNodesPanel) {
+            sortNodesPanel.closePanel();
+        }
+        
+        // Layout Managerの設定をクリア
+        if (window.layoutManager) {
+            layoutManager.currentLayout = null;
+            if (window.menuManager) {
+                menuManager.updateLayoutCheckmarks();
+            }
+        }
+    }
+
+    /**
      * グラフをビューにフィット
      */
     fit(padding = 50) {

@@ -35,6 +35,17 @@ class MenuManager {
             this.closeAllMenus();
         });
 
+        // Close Network
+        document.getElementById('close-network').addEventListener('click', () => {
+            if (networkManager.hasNetwork()) {
+                if (confirm('Are you sure you want to close the current network?')) {
+                    networkManager.closeNetwork();
+                    this.updateMenuStates();
+                }
+            }
+            this.closeAllMenus();
+        });
+
         // Layout - Dagre (Defaults)
         document.getElementById('layout-dagre').addEventListener('click', () => {
             if (networkManager.hasNetwork()) {
@@ -127,6 +138,33 @@ class MenuManager {
         document.querySelectorAll('.menu-item').forEach(item => {
             item.classList.remove('active');
         });
+    }
+
+    /**
+     * メニュー項目の有効/無効状態を更新
+     */
+    updateMenuStates() {
+        const hasNetwork = networkManager && networkManager.hasNetwork();
+        
+        // Closeメニュー
+        const closeItem = document.getElementById('close-network');
+        if (closeItem) {
+            if (hasNetwork) {
+                closeItem.classList.remove('disabled');
+            } else {
+                closeItem.classList.add('disabled');
+            }
+        }
+        
+        // Import Tableメニュー
+        const importTableItem = document.getElementById('import-table');
+        if (importTableItem) {
+            if (hasNetwork) {
+                importTableItem.classList.remove('disabled');
+            } else {
+                importTableItem.classList.add('disabled');
+            }
+        }
     }
 
     /**
