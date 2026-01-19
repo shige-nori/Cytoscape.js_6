@@ -354,6 +354,7 @@ class NetworkManager {
         // FileHandlerのファイルパスをクリア
         if (window.fileHandler) {
             fileHandler.currentFilePath = null;
+            fileHandler.currentFileHandle = null;
         }
         
         // Edge Bendsパネルをクリア

@@ -19,9 +19,31 @@ class MenuManager {
      */
     setupMenuEvents() {
         // Open Network
-        document.getElementById('open-network').addEventListener('click', () => {
-            document.getElementById('file-input-cx2').click();
+        document.getElementById('open-network').addEventListener('click', async () => {
             this.closeAllMenus();
+            
+            // File System Access APIを使用してファイルを開く
+            if ('showOpenFilePicker' in window) {
+                try {
+                    const [fileHandle] = await window.showOpenFilePicker({
+                        types: [{
+                            description: 'CX2 Network File',
+                            accept: { 'application/json': ['.cx2'] }
+                        }],
+                        multiple: false
+                    });
+                    
+                    const file = await fileHandle.getFile();
+                    await fileHandler.openCX2File(file, fileHandle);
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error('Error opening file:', err);
+                    }
+                }
+            } else {
+                // フォールバック: 従来のファイル入力
+                document.getElementById('file-input-cx2').click();
+            }
         });
 
         // Save Network

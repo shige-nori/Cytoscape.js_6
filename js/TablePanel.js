@@ -67,6 +67,12 @@ class TablePanel {
             columnBtn.addEventListener('click', () => this.openColumnSettings());
         }
 
+        // 閉じるボタン
+        const closeBtn = document.getElementById('table-panel-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closePanel());
+        }
+
         // カラム設定モーダルのイベント
         const columnModal = document.getElementById('column-settings-modal');
         if (columnModal) {
@@ -226,15 +232,22 @@ class TablePanel {
         thead.innerHTML = '';
         const headerRow = document.createElement('tr');
         
+        // 利用可能な幅を計算（保存された幅がない場合のみ）
+        const tableWrapper = document.querySelector('.table-wrapper');
+        const availableWidth = tableWrapper ? tableWrapper.clientWidth - 20 : 1000; // 20pxはスクロールバー用
+        const columnCount = this.visibleNodeColumns.size;
+        const hasSavedWidths = Array.from(this.visibleNodeColumns).some(col => this.nodeColumnWidths[col]);
+        const autoWidth = !hasSavedWidths && columnCount > 0 ? Math.max(80, Math.floor(availableWidth / columnCount)) : null;
+        
         Array.from(this.visibleNodeColumns).forEach(col => {
             const th = document.createElement('th');
             th.textContent = col;
             th.classList.add('sortable');
             th.dataset.column = col;
             
-            // 保存された幅があればそれを使用、なければデフォルト
+            // 保存された幅があればそれを使用、なければ自動調整またはデフォルト
             const savedWidth = this.nodeColumnWidths[col];
-            const width = savedWidth || '120px';
+            const width = savedWidth || (autoWidth ? `${autoWidth}px` : '120px');
             th.style.width = width;
             if (savedWidth) {
                 th.style.minWidth = width;
@@ -333,15 +346,22 @@ class TablePanel {
         thead.innerHTML = '';
         const headerRow = document.createElement('tr');
         
+        // 利用可能な幅を計算（保存された幅がない場合のみ）
+        const tableWrapper = document.querySelector('.table-wrapper');
+        const availableWidth = tableWrapper ? tableWrapper.clientWidth - 20 : 1000; // 20pxはスクロールバー用
+        const columnCount = this.visibleEdgeColumns.size;
+        const hasSavedWidths = Array.from(this.visibleEdgeColumns).some(col => this.edgeColumnWidths[col]);
+        const autoWidth = !hasSavedWidths && columnCount > 0 ? Math.max(80, Math.floor(availableWidth / columnCount)) : null;
+        
         Array.from(this.visibleEdgeColumns).forEach(col => {
             const th = document.createElement('th');
             th.textContent = col;
             th.classList.add('sortable');
             th.dataset.column = col;
             
-            // 保存された幅があればそれを使用、なければデフォルト
+            // 保存された幅があればそれを使用、なければ自動調整またはデフォルト
             const savedWidth = this.edgeColumnWidths[col];
-            const width = savedWidth || '120px';
+            const width = savedWidth || (autoWidth ? `${autoWidth}px` : '120px');
             th.style.width = width;
             if (savedWidth) {
                 th.style.minWidth = width;
@@ -433,6 +453,19 @@ class TablePanel {
         if (tbody) {
             tbody.innerHTML = '<tr><td colspan="100" style="text-align: center; padding: 20px; color: #999;">No data available</td></tr>';
         }
+    }
+
+    /**
+     * テーブルをクリア（ネットワーククローズ時に使用）
+     */
+    clearTable() {
+        this.renderEmptyTable();
+        // ソート状態をリセット
+        this.sortColumn = null;
+        this.sortOrder = 'asc';
+        // カラム幅をリセット
+        this.nodeColumnWidths = {};
+        this.edgeColumnWidths = {};
     }
 
     updateAvailableColumns(type, elements, showAll = false) {

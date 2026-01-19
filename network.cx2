@@ -28632,13 +28632,13 @@
       },
       "borderWidth": {
         "type": "default",
-        "value": 0,
+        "value": 6,
         "mapping": null,
         "attribute": null
       },
       "borderColor": {
         "type": "default",
-        "value": "#000000",
+        "value": "#c7c7c7",
         "mapping": null,
         "attribute": null
       },
@@ -28652,15 +28652,15 @@
     "edgeStyles": {
       "lineColor": {
         "type": "default",
-        "value": "#94a3b8",
+        "value": "#b1bbc8",
         "mapping": null,
         "attribute": null
       },
       "width": {
-        "type": "default",
+        "type": "continuous",
         "value": 2,
         "mapping": null,
-        "attribute": null
+        "attribute": "EdgeWeight"
       },
       "style": {
         "type": "default",

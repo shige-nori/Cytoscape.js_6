@@ -7,6 +7,7 @@ class FileHandler {
         this.currentColumns = [];
         this.importMode = 'network'; // 'network' or 'table'
         this.currentFilePath = null; // 現在開いているcx2ファイルのパス
+        this.currentFileHandle = null; // File System Access APIのファイルハンドル
     }
 
     /**
@@ -193,8 +194,9 @@ class FileHandler {
     /**
      * CX2ファイルを開く
      * @param {File} file 
+     * @param {FileSystemFileHandle} fileHandle - File System Access APIのファイルハンドル（オプション）
      */
-    async openCX2File(file) {
+    async openCX2File(file, fileHandle = null) {
         progressOverlay.show('Opening CX2 file...');
         
         try {
@@ -291,8 +293,9 @@ class FileHandler {
                 tablePanel.resetToShowAllColumns();
             }
             
-            // 現在のファイルパスを保存
+            // 現在のファイル情報を保存
             this.currentFilePath = file.name;
+            this.currentFileHandle = fileHandle; // ファイルハンドルを保存
             
             // Saveメニューを有効化
             if (menuManager) {
@@ -371,28 +374,37 @@ class FileHandler {
             const blob = new Blob([jsonString], { type: 'application/json' });
             
             // File System Access APIをサポートしているか確認
-            if (useFileDialog && 'showSaveFilePicker' in window) {
+            if ('showSaveFilePicker' in window) {
                 try {
-                    // デフォルトファイル名を設定
-                    const defaultName = filename || this.currentFilePath || 'network.cx2';
-                    const suggestedName = defaultName.endsWith('.cx2') ? defaultName : defaultName + '.cx2';
+                    let handle;
                     
-                    // ファイル保存ダイアログを表示
-                    const handle = await window.showSaveFilePicker({
-                        suggestedName: suggestedName,
-                        types: [{
-                            description: 'CX2 Network File',
-                            accept: { 'application/json': ['.cx2'] }
-                        }]
-                    });
+                    // Save Asまたは保存先がない場合はダイアログを表示
+                    if (useFileDialog || !this.currentFileHandle) {
+                        // デフォルトファイル名を設定
+                        const defaultName = filename || this.currentFilePath || 'network.cx2';
+                        const suggestedName = defaultName.endsWith('.cx2') ? defaultName : defaultName + '.cx2';
+                        
+                        // ファイル保存ダイアログを表示
+                        handle = await window.showSaveFilePicker({
+                            suggestedName: suggestedName,
+                            types: [{
+                                description: 'CX2 Network File',
+                                accept: { 'application/json': ['.cx2'] }
+                            }]
+                        });
+                        
+                        // ファイルハンドルを保存
+                        this.currentFileHandle = handle;
+                        this.currentFilePath = handle.name;
+                    } else {
+                        // 既存のファイルハンドルを使用（上書き）
+                        handle = this.currentFileHandle;
+                    }
                     
                     // ファイルに書き込み
                     const writable = await handle.createWritable();
                     await writable.write(blob);
                     await writable.close();
-                    
-                    // ファイルパスを保存
-                    this.currentFilePath = handle.name;
                     
                     // Saveメニューを有効化
                     if (menuManager) {
