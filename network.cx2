@@ -2616,7 +2616,8 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 238,
-        "NodeClass": "評価方法"
+        "NodeClass": "評価方法",
+        "_originalBg": "rgb(178,52,83)"
       }
     },
     {
@@ -5683,7 +5684,8 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 239,
-        "NodeClass": "対象材料"
+        "NodeClass": "対象材料",
+        "_originalBg": "rgb(179,52,82)"
       }
     },
     {
@@ -8704,7 +8706,8 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 130,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "rgb(114,73,152)"
       }
     },
     {
@@ -16182,7 +16185,9 @@
           "Time-domain observation of ballistic orbital-angular-momentum currents with giant relaxation length in tungsten"
         ],
         "所属1": "東大",
-        "所属2": "東北大"
+        "所属2": "東北大",
+        "_originalLineColor": "rgb(177,187,200)",
+        "_originalWidth": "1.725130890052356px"
       }
     },
     {
@@ -18665,7 +18670,9 @@
           "Publisher Correction: Metallofullerenes: Welcome to the single-molecule electret device"
         ],
         "所属1": null,
-        "所属2": "東北大"
+        "所属2": "東北大",
+        "_originalLineColor": "rgb(177,187,200)",
+        "_originalWidth": "1.3481675392670156px"
       }
     },
     {
@@ -19169,7 +19176,9 @@
           "Antiferromagnetic spin-torque diode effect in a kagome Weyl semimetal"
         ],
         "所属1": "東大",
-        "所属2": "東北大"
+        "所属2": "東北大",
+        "_originalLineColor": "rgb(177,187,200)",
+        "_originalWidth": "0.6884816753926701px"
       }
     },
     {

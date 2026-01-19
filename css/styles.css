@@ -1121,24 +1121,28 @@ body {
 .data-table {
     width: auto;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 12px;
     background: white;
 }
 
 .data-table thead {
     position: sticky;
     top: 0;
-    background: white;
+    background: #f3f4f6;
     z-index: 10;
+}
+
+.data-table thead tr {
+    background: #f3f4f6;
 }
 
 .data-table th {
     position: relative;
-    padding: 10px 8px;
+    padding: 8px 8px 4px 8px;
     text-align: left;
     font-weight: 600;
-    border-bottom: 2px solid var(--border-color);
-    background: var(--background-color);
+    border-bottom: none;
+    background: #f3f4f6;
     color: var(--text-color);
     white-space: nowrap;
     user-select: none;
@@ -1149,10 +1153,40 @@ body {
 
 .data-table th.sortable {
     cursor: pointer;
+    background: #f3f4f6;
 }
 
 .data-table th.sortable:hover {
-    background-color: #e2e8f0;
+    background-color: #e5e7eb;
+}
+
+/* Filter Row */
+.data-table .filter-row th {
+    padding: 0px 8px 8px 8px;
+    background-color: #f3f4f6;
+    border-top: none;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.data-table .column-filter {
+    width: 100%;
+    padding: 4px 0px;
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    font-size: 12px;
+    box-sizing: border-box;
+    transition: border-color 0.2s;
+}
+
+.data-table .column-filter:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.data-table .column-filter::placeholder {
+    color: #94a3b8;
+    font-size: 11px;
 }
 
 .data-table td {

@@ -16,9 +16,11 @@ class TablePanel {
         this.visibleEdgeColumns = new Set(this.edgeColumns);
         this.nodeColumnWidths = {}; // ノードカラムの幅を保存
         this.edgeColumnWidths = {}; // エッジカラムの幅を保存
+        this.nodeFilters = {}; // ノードカラムのフィルター値を保存
+        this.edgeFilters = {}; // エッジカラムのフィルター値を保存
         // 表示対象外カラムのリスト
         this.excludedNodeColumns = ['_originalBg', 'name', 'label'];
-        this.excludedEdgeColumns = ['id', 'interaction'];
+        this.excludedEdgeColumns = ['id', 'interaction', '_originalLineColor', '_originalWidth'];
         this.isResizing = false;
         this.startY = 0;
         this.startHeight = 0;
@@ -65,6 +67,12 @@ class TablePanel {
         const columnBtn = document.getElementById('table-column-settings-btn');
         if (columnBtn) {
             columnBtn.addEventListener('click', () => this.openColumnSettings());
+        }
+
+        // フィルター解除ボタン
+        const clearFiltersBtn = document.getElementById('table-clear-filters-btn');
+        if (clearFiltersBtn) {
+            clearFiltersBtn.addEventListener('click', () => this.clearAllFilters());
         }
 
         // 閉じるボタン
@@ -244,7 +252,7 @@ class TablePanel {
         }
     }
 
-    renderNodeTable() {
+    renderNodeTable(recreateHeader = true) {
         const tbody = document.querySelector('#table-panel tbody');
         const thead = document.querySelector('#table-panel thead');
         
@@ -257,9 +265,10 @@ class TablePanel {
         // 利用可能なカラムを更新
         this.updateAvailableColumns('node', nodes);
         
-        // ヘッダーを生成
-        thead.innerHTML = '';
-        const headerRow = document.createElement('tr');
+        if (recreateHeader) {
+            // ヘッダーを生成
+            thead.innerHTML = '';
+            const headerRow = document.createElement('tr');
         
         // 利用可能な幅を計算（保存された幅がない場合のみ）
         const tableWrapper = document.querySelector('.table-wrapper');
@@ -307,6 +316,51 @@ class TablePanel {
         
         thead.appendChild(headerRow);
         
+        // フィルター行を追加
+        const filterRow = document.createElement('tr');
+        filterRow.classList.add('filter-row');
+        
+        Array.from(this.visibleNodeColumns).forEach(col => {
+            const th = document.createElement('th');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.classList.add('column-filter');
+            input.placeholder = '検索...';
+            input.value = this.nodeFilters[col] || '';
+            input.dataset.column = col;
+            
+            // IME入力中フラグ
+            let isComposing = false;
+            
+            // IME入力開始
+            input.addEventListener('compositionstart', () => {
+                isComposing = true;
+            });
+            
+            // IME入力終了
+            input.addEventListener('compositionend', (e) => {
+                isComposing = false;
+                this.nodeFilters[col] = e.target.value;
+                this.applyFilters('node');
+            });
+            
+            // フィルター入力イベント
+            input.addEventListener('input', (e) => {
+                // IME入力中はスキップ
+                if (isComposing) {
+                    return;
+                }
+                this.nodeFilters[col] = e.target.value;
+                this.applyFilters('node');
+            });
+            
+            th.appendChild(input);
+            filterRow.appendChild(th);
+        });
+        
+        thead.appendChild(filterRow);
+        }
+        
         // データ行を生成
         tbody.innerHTML = '';
         
@@ -324,6 +378,9 @@ class TablePanel {
         if (this.sortColumn && this.visibleNodeColumns.has(this.sortColumn)) {
             nodeData = this.sortData(nodeData, this.sortColumn);
         }
+        
+        // フィルター適用
+        nodeData = this.filterData(nodeData, this.nodeFilters);
         
         nodeData.forEach(rowData => {
             const tr = document.createElement('tr');
@@ -361,7 +418,7 @@ class TablePanel {
         });
     }
 
-    renderEdgeTable() {
+    renderEdgeTable(recreateHeader = true) {
         const tbody = document.querySelector('#table-panel tbody');
         const thead = document.querySelector('#table-panel thead');
         
@@ -374,9 +431,10 @@ class TablePanel {
         // 利用可能なカラムを更新
         this.updateAvailableColumns('edge', edges);
         
-        // ヘッダーを生成
-        thead.innerHTML = '';
-        const headerRow = document.createElement('tr');
+        if (recreateHeader) {
+            // ヘッダーを生成
+            thead.innerHTML = '';
+            const headerRow = document.createElement('tr');
         
         // 利用可能な幅を計算（保存された幅がない場合のみ）
         const tableWrapper = document.querySelector('.table-wrapper');
@@ -424,6 +482,51 @@ class TablePanel {
         
         thead.appendChild(headerRow);
         
+        // フィルター行を追加
+        const filterRow = document.createElement('tr');
+        filterRow.classList.add('filter-row');
+        
+        Array.from(this.visibleEdgeColumns).forEach(col => {
+            const th = document.createElement('th');
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.classList.add('column-filter');
+            input.placeholder = '検索...';
+            input.value = this.edgeFilters[col] || '';
+            input.dataset.column = col;
+            
+            // IME入力中フラグ
+            let isComposing = false;
+            
+            // IME入力開始
+            input.addEventListener('compositionstart', () => {
+                isComposing = true;
+            });
+            
+            // IME入力終了
+            input.addEventListener('compositionend', (e) => {
+                isComposing = false;
+                this.edgeFilters[col] = e.target.value;
+                this.applyFilters('edge');
+            });
+            
+            // フィルター入力イベント
+            input.addEventListener('input', (e) => {
+                // IME入力中はスキップ
+                if (isComposing) {
+                    return;
+                }
+                this.edgeFilters[col] = e.target.value;
+                this.applyFilters('edge');
+            });
+            
+            th.appendChild(input);
+            filterRow.appendChild(th);
+        });
+        
+        thead.appendChild(filterRow);
+        }
+        
         // データ行を生成
         tbody.innerHTML = '';
         
@@ -441,6 +544,9 @@ class TablePanel {
         if (this.sortColumn && this.visibleEdgeColumns.has(this.sortColumn)) {
             edgeData = this.sortData(edgeData, this.sortColumn);
         }
+        
+        // フィルター適用
+        edgeData = this.filterData(edgeData, this.edgeFilters);
         
         edgeData.forEach(rowData => {
             const tr = document.createElement('tr');
@@ -499,6 +605,9 @@ class TablePanel {
         // カラム幅をリセット
         this.nodeColumnWidths = {};
         this.edgeColumnWidths = {};
+        // フィルターをリセット
+        this.nodeFilters = {};
+        this.edgeFilters = {};
     }
 
     updateAvailableColumns(type, elements, showAll = false) {
@@ -561,6 +670,54 @@ class TablePanel {
             this.sortOrder = 'asc';
         }
         
+        this.refreshTable();
+    }
+
+    /**
+     * データをフィルタリング
+     */
+    filterData(data, filters) {
+        return data.filter(row => {
+            // すべてのフィルター条件をANDで適用
+            return Object.keys(filters).every(col => {
+                const filterValue = filters[col];
+                if (!filterValue || filterValue.trim() === '') {
+                    return true; // フィルターが空の場合は全て通過
+                }
+                
+                const cellValue = this.formatCellValue(row[col]);
+                // 大文字小文字を区別しない部分一致検索
+                return cellValue.toLowerCase().includes(filterValue.toLowerCase());
+            });
+        });
+    }
+
+    /**
+     * フィルターを適用してテーブルを再描画
+     */
+    applyFilters(type) {
+        if (type === this.currentTab) {
+            // フィルター適用時はヘッダーを再生成せず、tbodyのみ更新
+            if (type === 'node') {
+                this.renderNodeTable(false);
+            } else {
+                this.renderEdgeTable(false);
+            }
+        }
+    }
+
+    /**
+     * すべてのフィルターをクリア
+     */
+    clearAllFilters() {
+        // 現在のタブのフィルターをクリア
+        if (this.currentTab === 'node') {
+            this.nodeFilters = {};
+        } else {
+            this.edgeFilters = {};
+        }
+        
+        // テーブルを再描画
         this.refreshTable();
     }
 
