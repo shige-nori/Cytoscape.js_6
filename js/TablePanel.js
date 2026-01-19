@@ -96,13 +96,13 @@ class TablePanel {
         if (networkManager && networkManager.cy) {
             networkManager.cy.on('select', (e) => {
                 if (this.isVisible) {
-                    this.highlightSelectedElements();
+                    this.refreshTable();
                 }
             });
             
             networkManager.cy.on('unselect', (e) => {
                 if (this.isVisible) {
-                    this.highlightSelectedElements();
+                    this.refreshTable();
                 }
             });
         }
@@ -199,6 +199,33 @@ class TablePanel {
     }
 
     /**
+     * セルの値をフォーマット（配列は改行で表示）
+     * @param {*} value - セルの値
+     * @returns {string} フォーマットされた値
+     */
+    formatCellValue(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        
+        // 配列の場合は改行で区切る
+        if (Array.isArray(value)) {
+            return value.map(v => String(v)).join('\n');
+        }
+        
+        // オブジェクトの場合はJSON文字列化
+        if (typeof value === 'object') {
+            try {
+                return JSON.stringify(value);
+            } catch (e) {
+                return String(value);
+            }
+        }
+        
+        return String(value);
+    }
+
+    /**
      * 全カラムを表示するようにリセット（ファイル読み込み時に使用）
      */
     resetToShowAllColumns() {
@@ -223,7 +250,9 @@ class TablePanel {
         
         if (!tbody || !thead) return;
 
-        const nodes = networkManager.cy.nodes();
+        // 選択されたノードがあればそれらのみ、なければ全て
+        const selectedNodes = networkManager.cy.nodes(':selected');
+        const nodes = selectedNodes.length > 0 ? selectedNodes : networkManager.cy.nodes();
         
         // 利用可能なカラムを更新
         this.updateAvailableColumns('node', nodes);
@@ -300,13 +329,14 @@ class TablePanel {
             const tr = document.createElement('tr');
             tr.dataset.elementId = rowData._element.id();
             
-            // 選択状態を反映
-            if (rowData._element.selected()) {
-                tr.classList.add('selected');
-            }
-            
             // 行クリックで選択
             tr.addEventListener('click', (e) => {
+                // テキスト選択中の場合はスキップ
+                const selection = window.getSelection();
+                if (selection && selection.toString().length > 0) {
+                    return;
+                }
+                
                 if (e.ctrlKey || e.metaKey) {
                     // Ctrl/Cmdキーで複数選択
                     if (rowData._element.selected()) {
@@ -323,7 +353,7 @@ class TablePanel {
             
             Array.from(this.visibleNodeColumns).forEach(col => {
                 const td = document.createElement('td');
-                td.textContent = rowData[col];
+                td.textContent = this.formatCellValue(rowData[col]);
                 tr.appendChild(td);
             });
             
@@ -337,7 +367,9 @@ class TablePanel {
         
         if (!tbody || !thead) return;
 
-        const edges = networkManager.cy.edges();
+        // 選択されたエッジがあればそれらのみ、なければ全て
+        const selectedEdges = networkManager.cy.edges(':selected');
+        const edges = selectedEdges.length > 0 ? selectedEdges : networkManager.cy.edges();
         
         // 利用可能なカラムを更新
         this.updateAvailableColumns('edge', edges);
@@ -414,13 +446,14 @@ class TablePanel {
             const tr = document.createElement('tr');
             tr.dataset.elementId = rowData._element.id();
             
-            // 選択状態を反映
-            if (rowData._element.selected()) {
-                tr.classList.add('selected');
-            }
-            
             // 行クリックで選択
             tr.addEventListener('click', (e) => {
+                // テキスト選択中の場合はスキップ
+                const selection = window.getSelection();
+                if (selection && selection.toString().length > 0) {
+                    return;
+                }
+                
                 if (e.ctrlKey || e.metaKey) {
                     // Ctrl/Cmdキーで複数選択
                     if (rowData._element.selected()) {
@@ -437,7 +470,7 @@ class TablePanel {
             
             Array.from(this.visibleEdgeColumns).forEach(col => {
                 const td = document.createElement('td');
-                td.textContent = rowData[col];
+                td.textContent = this.formatCellValue(rowData[col]);
                 tr.appendChild(td);
             });
             
@@ -491,11 +524,10 @@ class TablePanel {
                 // 全カラムを表示（除外カラム以外）
                 this.visibleNodeColumns = new Set(this.nodeColumns);
             } else {
-                // 既存の表示設定を維持（除外カラムは除く）
+                // 既存の表示設定を維持
                 this.visibleNodeColumns = new Set(
                     this.nodeColumns.filter(col => 
-                        this.visibleNodeColumns.has(col) || 
-                        ['id'].includes(col) // idはデフォルトで表示
+                        this.visibleNodeColumns.has(col)
                     )
                 );
             }
@@ -510,11 +542,10 @@ class TablePanel {
                 // 全カラムを表示（除外カラム以外）
                 this.visibleEdgeColumns = new Set(this.edgeColumns);
             } else {
-                // 既存の表示設定を維持（除外カラムは除く）
+                // 既存の表示設定を維持
                 this.visibleEdgeColumns = new Set(
                     this.edgeColumns.filter(col => 
-                        this.visibleEdgeColumns.has(col) || 
-                        ['source', 'target'].includes(col) // source, targetはデフォルトで表示
+                        this.visibleEdgeColumns.has(col)
                     )
                 );
             }
@@ -554,24 +585,6 @@ class TablePanel {
                 return valA < valB ? -1 : valA > valB ? 1 : 0;
             } else {
                 return valA > valB ? -1 : valA < valB ? 1 : 0;
-            }
-        });
-    }
-
-    highlightSelectedElements() {
-        const tbody = document.querySelector('#table-panel tbody');
-        if (!tbody) return;
-
-        const rows = tbody.querySelectorAll('tr');
-        rows.forEach(row => {
-            const elementId = row.dataset.elementId;
-            if (elementId) {
-                const element = networkManager.cy.getElementById(elementId);
-                if (element.length > 0 && element.selected()) {
-                    row.classList.add('selected');
-                } else {
-                    row.classList.remove('selected');
-                }
             }
         });
     }

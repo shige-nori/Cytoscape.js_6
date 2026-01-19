@@ -1160,12 +1160,15 @@ body {
     border-bottom: 1px solid var(--border-color);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: pre-line;
     max-width: 200px;
+    vertical-align: top;
+    user-select: text;
+    cursor: text;
 }
 
 .data-table tbody tr {
-    cursor: pointer;
+    cursor: default;
     transition: background-color 0.15s;
 }
 

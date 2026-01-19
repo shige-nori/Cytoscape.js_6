@@ -19,8 +19,7 @@ class NetworkManager {
             minZoom: 0.05,
             maxZoom: 10,
             wheelSensitivity: 0.1,
-            boxSelectionEnabled: true,
-            selectionType: 'single'
+            boxSelectionEnabled: true
         });
 
         this.setupEventListeners();
@@ -90,6 +89,9 @@ class NetworkManager {
                 'border-width': 3,
                 'border-color': '#ca8a04'
             });
+            
+            // 隣接ノード間のエッジを自動選択
+            this.selectEdgesBetweenSelectedNodes();
         });
 
         this.cy.on('unselect', 'node', (event) => {
@@ -102,6 +104,9 @@ class NetworkManager {
                 'border-width': stylePanel ? stylePanel.nodeStyles.borderWidth.value : 0,
                 'border-color': stylePanel ? stylePanel.getStyleValue(node, 'borderColor', stylePanel.nodeStyles.borderColor) : '#000000'
             });
+            
+            // 選択解除されたノードに接続されたエッジをチェック
+            this.deselectOrphanEdges();
         });
 
         this.cy.on('select', 'edge', (event) => {
@@ -130,18 +135,49 @@ class NetworkManager {
             }
         });
 
-        // Ctrl+クリックで複数選択
-        this.cy.on('tap', 'node, edge', (event) => {
-            if (!event.originalEvent.ctrlKey && !event.originalEvent.metaKey) {
-                this.cy.elements().unselect();
-            }
-            event.target.select();
-        });
-
         // 背景クリックで選択解除
         this.cy.on('tap', (event) => {
             if (event.target === this.cy) {
                 this.cy.elements().unselect();
+            }
+        });
+    }
+
+    /**
+     * 選択されたノード間のエッジを自動選択
+     */
+    selectEdgesBetweenSelectedNodes() {
+        const selectedNodes = this.cy.nodes(':selected');
+        
+        // 選択されたノード間のすべてのエッジを取得
+        selectedNodes.forEach(node1 => {
+            selectedNodes.forEach(node2 => {
+                if (node1.id() !== node2.id()) {
+                    // node1とnode2を接続するエッジを取得
+                    const edges = this.cy.edges(`[source="${node1.id()}"][target="${node2.id()}"], [source="${node2.id()}"][target="${node1.id()}"]`);
+                    edges.forEach(edge => {
+                        if (!edge.selected()) {
+                            edge.select();
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    /**
+     * 両端のノードが選択されていないエッジの選択を解除
+     */
+    deselectOrphanEdges() {
+        const selectedEdges = this.cy.edges(':selected');
+        
+        selectedEdges.forEach(edge => {
+            const source = edge.source();
+            const target = edge.target();
+            
+            // 両端のノードが両方とも選択されていない場合は選択解除
+            if (!source.selected() || !target.selected()) {
+                edge.unselect();
             }
         });
     }

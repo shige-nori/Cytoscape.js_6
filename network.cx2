@@ -538,7 +538,9 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 264
+        "NodeWeight": 264,
+        "NodeClass": "研究目的",
+        "_originalBg": "rgb(194,47,66)"
       }
     },
     {
@@ -846,7 +848,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 148
+        "NodeWeight": 148,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -1279,7 +1282,8 @@
         ],
         "所属1": null,
         "所属2": "東北大",
-        "NodeWeight": 211
+        "NodeWeight": 211,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -1906,7 +1910,8 @@
         ],
         "所属1": null,
         "所属2": "東北大",
-        "NodeWeight": 308
+        "NodeWeight": 308,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -2002,7 +2007,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 42
+        "NodeWeight": 42,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -2120,7 +2126,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 53
+        "NodeWeight": 53,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -2608,7 +2615,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 238
+        "NodeWeight": 238,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -3036,7 +3044,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 208
+        "NodeWeight": 208,
+        "NodeClass": "研究目的"
       }
     },
     {
@@ -3212,7 +3221,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 82
+        "NodeWeight": 82,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -3426,7 +3436,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 101
+        "NodeWeight": 101,
+        "NodeClass": "研究目的"
       }
     },
     {
@@ -3646,7 +3657,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 104
+        "NodeWeight": 104,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -3846,7 +3858,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 94
+        "NodeWeight": 94,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -4122,7 +4135,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 132
+        "NodeWeight": 132,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -4239,7 +4253,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 52
+        "NodeWeight": 52,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -4369,7 +4384,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 58
+        "NodeWeight": 58,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -4475,7 +4491,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 47
+        "NodeWeight": 47,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -5073,7 +5090,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 293
+        "NodeWeight": 293,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -5171,7 +5189,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 43
+        "NodeWeight": 43,
+        "NodeClass": "研究目的"
       }
     },
     {
@@ -5663,7 +5682,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 239
+        "NodeWeight": 239,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -5817,7 +5837,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 70
+        "NodeWeight": 70,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -6019,7 +6040,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 95
+        "NodeWeight": 95,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -6357,7 +6379,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 163
+        "NodeWeight": 163,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -6535,7 +6558,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 83
+        "NodeWeight": 83,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -6647,7 +6671,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 50
+        "NodeWeight": 50,
+        "NodeClass": "研究目的"
       }
     },
     {
@@ -6721,7 +6746,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 31
+        "NodeWeight": 31,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -6829,7 +6855,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 48
+        "NodeWeight": 48,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -7065,7 +7092,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 112
+        "NodeWeight": 112,
+        "NodeClass": "研究目的"
       }
     },
     {
@@ -7498,7 +7526,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 210
+        "NodeWeight": 210,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -7747,7 +7776,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 119
+        "NodeWeight": 119,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -8044,7 +8074,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 142
+        "NodeWeight": 142,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -8222,7 +8253,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 83
+        "NodeWeight": 83,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -8398,7 +8430,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 82
+        "NodeWeight": 82,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -8670,7 +8703,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 130
+        "NodeWeight": 130,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -9108,7 +9142,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 212
+        "NodeWeight": 212,
+        "NodeClass": "研究目的"
       }
     },
     {
@@ -9202,7 +9237,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 41
+        "NodeWeight": 41,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -9316,7 +9352,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 51
+        "NodeWeight": 51,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -9562,7 +9599,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 117
+        "NodeWeight": 117,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -9672,7 +9710,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 49
+        "NodeWeight": 49,
+        "NodeClass": "研究目的"
       }
     },
     {
@@ -9768,7 +9807,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 42
+        "NodeWeight": 42,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -9880,7 +9920,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 50
+        "NodeWeight": 50,
+        "NodeClass": "研究目的"
       }
     },
     {
@@ -10130,7 +10171,8 @@
         ],
         "所属1": "東大",
         "所属2": "東北大",
-        "NodeWeight": 119
+        "NodeWeight": 119,
+        "NodeClass": "研究目的"
       }
     },
     {
@@ -10318,7 +10360,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 88
+        "NodeWeight": 88,
+        "NodeClass": "研究目的"
       }
     },
     {
@@ -10486,7 +10529,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 78
+        "NodeWeight": 78,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -10642,7 +10686,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 72
+        "NodeWeight": 72,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -10790,7 +10835,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 68
+        "NodeWeight": 68,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -10848,7 +10894,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 23
+        "NodeWeight": 23,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -10978,7 +11025,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 59
+        "NodeWeight": 59,
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -11086,7 +11134,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 48
+        "NodeWeight": 48,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -11144,7 +11193,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 23
+        "NodeWeight": 23,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -11288,7 +11338,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 66
+        "NodeWeight": 66,
+        "NodeClass": "研究目的"
       }
     },
     {
@@ -11312,7 +11363,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 6
+        "NodeWeight": 6,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -11330,7 +11382,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 3
+        "NodeWeight": 3,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -11358,7 +11411,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 8
+        "NodeWeight": 8,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -11386,7 +11440,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 8
+        "NodeWeight": 8,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -11484,7 +11539,8 @@
         ],
         "所属1": "東大",
         "所属2": null,
-        "NodeWeight": 43
+        "NodeWeight": 43,
+        "NodeClass": "評価方法"
       }
     },
     {
@@ -11572,7 +11628,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 38
+        "NodeWeight": 38,
+        "NodeClass": "対象材料"
       }
     },
     {
@@ -11586,7 +11643,8 @@
         ],
         "所属1": null,
         "所属2": null,
-        "NodeWeight": 1
+        "NodeWeight": 1,
+        "NodeClass": "適用手法"
       }
     }
   ],
