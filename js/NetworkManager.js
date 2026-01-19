@@ -101,6 +101,16 @@ class NetworkManager {
      * @param {Object} mappings - カラムマッピング設定
      */
     createNetwork(data, mappings) {
+        // StylePanelをリセット
+        if (typeof stylePanel !== 'undefined' && stylePanel) {
+            stylePanel.resetStyles();
+        }
+        
+        // FileHandlerのファイルパスをクリア（Import時）
+        if (typeof fileHandler !== 'undefined' && fileHandler) {
+            fileHandler.currentFilePath = null;
+        }
+        
         const nodes = new Map();
         const edges = [];
 
@@ -276,6 +286,16 @@ class NetworkManager {
         if (window.layoutTools) {
             layoutTools.closePanel();
             layoutTools.resetOriginalPositions();
+        }
+        
+        // StylePanelをリセット
+        if (window.stylePanel) {
+            stylePanel.resetStyles();
+        }
+        
+        // FileHandlerのファイルパスをクリア
+        if (window.fileHandler) {
+            fileHandler.currentFilePath = null;
         }
         
         // Edge Bendsパネルをクリア

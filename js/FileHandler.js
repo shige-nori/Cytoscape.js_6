@@ -6,6 +6,7 @@ class FileHandler {
         this.currentData = null;
         this.currentColumns = [];
         this.importMode = 'network'; // 'network' or 'table'
+        this.currentFilePath = null; // 現在開いているcx2ファイルのパス
     }
 
     /**
@@ -177,6 +178,203 @@ class FileHandler {
         }
 
         return 'String';
+    }
+
+    /**
+     * CX2ファイルを開く
+     * @param {File} file 
+     */
+    async openCX2File(file) {
+        progressOverlay.show('Opening CX2 file...');
+        
+        try {
+            const text = await file.text();
+            const cx2Data = JSON.parse(text);
+            
+            // CX2フォーマットの検証
+            if (!cx2Data.nodes || !cx2Data.edges) {
+                throw new Error('Invalid CX2 format: missing nodes or edges');
+            }
+            
+            // ネットワークをクリア
+            if (networkManager.hasNetwork()) {
+                networkManager.closeNetwork();
+            }
+            
+            // Cytoscapeデータに変換
+            const elements = {
+                nodes: cx2Data.nodes.map(node => ({
+                    data: { id: node.id, ...node.v }
+                })),
+                edges: cx2Data.edges.map(edge => ({
+                    data: { 
+                        id: edge.id, 
+                        source: edge.s, 
+                        target: edge.t,
+                        ...edge.v 
+                    }
+                }))
+            };
+            
+            // ネットワークを作成
+            networkManager.cy.add(elements);
+            
+            // レイアウトを復元（保存されている場合）
+            if (cx2Data.layout) {
+                cx2Data.nodes.forEach((node, index) => {
+                    if (cx2Data.layout[index]) {
+                        const cyNode = networkManager.cy.getElementById(node.id);
+                        cyNode.position(cx2Data.layout[index]);
+                    }
+                });
+            }
+            
+            // スタイルを復元（保存されている場合）
+            if (cx2Data.styleSettings && stylePanel) {
+                stylePanel.nodeStyles = cx2Data.styleSettings.nodeStyles || stylePanel.nodeStyles;
+                stylePanel.edgeStyles = cx2Data.styleSettings.edgeStyles || stylePanel.edgeStyles;
+                stylePanel.reapplyStyles();
+            }
+            
+            // ファイトを適用
+            networkManager.cy.fit();
+            
+            // Table Panelを更新
+            if (window.tablePanel) {
+                tablePanel.updateTable(networkManager.cy.nodes());
+            }
+            
+            // 現在のファイルパスを保存
+            this.currentFilePath = file.name;
+            
+            // Saveメニューを有効化
+            if (menuManager) {
+                menuManager.updateMenuStates();
+            }
+            
+            progressOverlay.hide();
+        } catch (error) {
+            progressOverlay.hide();
+            alert('Error opening CX2 file: ' + error.message);
+        }
+    }
+
+    /**
+     * ネットワークをCX2形式で保存
+     * @param {string} filename - ファイル名（省略時はデフォルト名）
+     * @param {boolean} useFileDialog - ファイルダイアログを使用するか（Save As用）
+     */
+    async saveCX2File(filename, useFileDialog = false) {
+        if (!networkManager.hasNetwork()) {
+            alert('No network to save.');
+            return;
+        }
+        
+        try {
+            // CX2フォーマットに変換
+            const nodes = networkManager.cy.nodes().map(node => {
+                const data = node.data();
+                const { id, ...attributes } = data;
+                return {
+                    id: id,
+                    v: attributes
+                };
+            });
+            
+            const edges = networkManager.cy.edges().map(edge => {
+                const data = edge.data();
+                const { id, source, target, ...attributes } = data;
+                return {
+                    id: id,
+                    s: source,
+                    t: target,
+                    v: attributes
+                };
+            });
+            
+            // レイアウト情報を保存
+            const layout = networkManager.cy.nodes().map(node => node.position());
+            
+            // スタイル設定を保存
+            const styleSettings = stylePanel ? {
+                nodeStyles: stylePanel.nodeStyles,
+                edgeStyles: stylePanel.edgeStyles
+            } : null;
+            
+            const cx2Data = {
+                nodes: nodes,
+                edges: edges,
+                layout: layout,
+                styleSettings: styleSettings
+            };
+            
+            const jsonString = JSON.stringify(cx2Data, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            
+            // File System Access APIをサポートしているか確認
+            if (useFileDialog && 'showSaveFilePicker' in window) {
+                try {
+                    // デフォルトファイル名を設定
+                    const defaultName = filename || this.currentFilePath || 'network.cx2';
+                    const suggestedName = defaultName.endsWith('.cx2') ? defaultName : defaultName + '.cx2';
+                    
+                    // ファイル保存ダイアログを表示
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: suggestedName,
+                        types: [{
+                            description: 'CX2 Network File',
+                            accept: { 'application/json': ['.cx2'] }
+                        }]
+                    });
+                    
+                    // ファイルに書き込み
+                    const writable = await handle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+                    
+                    // ファイルパスを保存
+                    this.currentFilePath = handle.name;
+                    
+                    // Saveメニューを有効化
+                    if (menuManager) {
+                        menuManager.updateMenuStates();
+                    }
+                    
+                    return;
+                } catch (err) {
+                    // ユーザーがキャンセルした場合など
+                    if (err.name !== 'AbortError') {
+                        console.error('Error using File System Access API:', err);
+                        // フォールバックに続く
+                    } else {
+                        return; // キャンセルされた
+                    }
+                }
+            }
+            
+            // フォールバック: 従来のダウンロード方法
+            const defaultName = filename || this.currentFilePath || 'network.cx2';
+            const finalName = defaultName.endsWith('.cx2') ? defaultName : defaultName + '.cx2';
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = finalName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            // ファイルパスを保存
+            this.currentFilePath = finalName;
+            
+            // Saveメニューを有効化
+            if (menuManager) {
+                menuManager.updateMenuStates();
+            }
+        } catch (error) {
+            alert('Error saving CX2 file: ' + error.message);
+        }
     }
 }
 

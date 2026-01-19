@@ -18,6 +18,28 @@ class MenuManager {
      * メニューイベントを設定
      */
     setupMenuEvents() {
+        // Open Network
+        document.getElementById('open-network').addEventListener('click', () => {
+            document.getElementById('file-input-cx2').click();
+            this.closeAllMenus();
+        });
+
+        // Save Network
+        document.getElementById('save-network').addEventListener('click', () => {
+            if (fileHandler.currentFilePath) {
+                fileHandler.saveCX2File(fileHandler.currentFilePath);
+            }
+            this.closeAllMenus();
+        });
+
+        // Save As Network
+        document.getElementById('save-as-network').addEventListener('click', () => {
+            if (networkManager.hasNetwork()) {
+                fileHandler.saveCX2File(null, true); // useFileDialog = true
+            }
+            this.closeAllMenus();
+        });
+
         // Import Network File
         document.getElementById('import-network').addEventListener('click', () => {
             document.getElementById('file-input-network').click();
@@ -126,6 +148,15 @@ class MenuManager {
      * ファイル入力イベントを設定
      */
     setupFileInputs() {
+        // CX2 File入力
+        document.getElementById('file-input-cx2').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                await fileHandler.openCX2File(file);
+            }
+            e.target.value = ''; // リセット
+        });
+
         // Network File入力
         document.getElementById('file-input-network').addEventListener('change', async (e) => {
             const file = e.target.files[0];
@@ -159,6 +190,27 @@ class MenuManager {
      */
     updateMenuStates() {
         const hasNetwork = networkManager && networkManager.hasNetwork();
+        const hasSavePath = fileHandler && fileHandler.currentFilePath;
+        
+        // Saveメニュー
+        const saveItem = document.getElementById('save-network');
+        if (saveItem) {
+            if (hasNetwork && hasSavePath) {
+                saveItem.classList.remove('disabled');
+            } else {
+                saveItem.classList.add('disabled');
+            }
+        }
+        
+        // Save Asメニュー
+        const saveAsItem = document.getElementById('save-as-network');
+        if (saveAsItem) {
+            if (hasNetwork) {
+                saveAsItem.classList.remove('disabled');
+            } else {
+                saveAsItem.classList.add('disabled');
+            }
+        }
         
         // Closeメニュー
         const closeItem = document.getElementById('close-network');

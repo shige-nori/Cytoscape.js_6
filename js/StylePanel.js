@@ -1149,6 +1149,134 @@ class StylePanel {
         if (this.panel) this.panel.classList.remove('active');
     }
 
+    resetStyles() {
+        // ノードスタイルをデフォルトにリセット
+        this.nodeStyles = {
+            fillColor: { type: 'default', value: '#2563eb', mapping: null, attribute: null },
+            shape: { type: 'default', value: 'ellipse', mapping: null, attribute: null },
+            size: { type: 'default', value: 40, mapping: null, attribute: null },
+            labelFontSize: { type: 'default', value: 10, mapping: null, attribute: null },
+            labelColor: { type: 'default', value: '#000000', mapping: null, attribute: null },
+            labelPosition: { type: 'default', value: 'top', mapping: null, attribute: null },
+            labelWidth: { type: 'default', value: 80, mapping: null, attribute: null },
+            borderWidth: { type: 'default', value: 0, mapping: null, attribute: null },
+            borderColor: { type: 'default', value: '#000000', mapping: null, attribute: null },
+            opacity: { type: 'default', value: 100, mapping: null, attribute: null }
+        };
+        
+        // エッジスタイルをデフォルトにリセット
+        this.edgeStyles = {
+            lineColor: { type: 'default', value: '#94a3b8', mapping: null, attribute: null },
+            width: { type: 'default', value: 2, mapping: null, attribute: null },
+            style: { type: 'default', value: 'solid', mapping: null, attribute: null },
+            targetArrow: { type: 'default', value: 'none', mapping: null, attribute: null },
+            opacity: { type: 'default', value: 100, mapping: null, attribute: null },
+            curveStyle: { type: 'default', value: 'bezier', mapping: null, attribute: null }
+        };
+        
+        // UIをリセット
+        this.resetUIControls();
+        
+        // スタイルを再適用
+        if (networkManager && networkManager.cy && networkManager.cy.nodes().length > 0) {
+            this.applyStyles();
+        }
+    }
+
+    resetUIControls() {
+        // Node Tab - デフォルト値に戻す
+        const nodeFillColor = document.getElementById('node-fillColor');
+        if (nodeFillColor) nodeFillColor.value = '#2563eb';
+        
+        const nodeShape = document.getElementById('node-shape');
+        if (nodeShape) nodeShape.value = 'ellipse';
+        
+        const nodeSize = document.getElementById('node-size');
+        const nodeSizeValue = document.getElementById('node-size-value');
+        if (nodeSize) nodeSize.value = '40';
+        if (nodeSizeValue) nodeSizeValue.value = '40';
+        
+        const nodeLabelFontSize = document.getElementById('node-labelFontSize');
+        const nodeLabelFontSizeValue = document.getElementById('node-labelFontSize-value');
+        if (nodeLabelFontSize) nodeLabelFontSize.value = '10';
+        if (nodeLabelFontSizeValue) nodeLabelFontSizeValue.value = '10';
+        
+        const nodeLabelColor = document.getElementById('node-labelColor');
+        if (nodeLabelColor) nodeLabelColor.value = '#000000';
+        
+        const nodeLabelPosition = document.getElementById('node-labelPosition');
+        if (nodeLabelPosition) nodeLabelPosition.value = 'top';
+        
+        const nodeLabelWidth = document.getElementById('node-labelWidth');
+        const nodeLabelWidthValue = document.getElementById('node-labelWidth-value');
+        if (nodeLabelWidth) nodeLabelWidth.value = '80';
+        if (nodeLabelWidthValue) nodeLabelWidthValue.value = '80';
+        
+        const nodeBorderWidth = document.getElementById('node-borderWidth');
+        const nodeBorderWidthValue = document.getElementById('node-borderWidth-value');
+        if (nodeBorderWidth) nodeBorderWidth.value = '0';
+        if (nodeBorderWidthValue) nodeBorderWidthValue.value = '0';
+        
+        const nodeBorderColor = document.getElementById('node-borderColor');
+        if (nodeBorderColor) nodeBorderColor.value = '#000000';
+        
+        const nodeOpacity = document.getElementById('node-opacity');
+        const nodeOpacityValue = document.getElementById('node-opacity-value');
+        if (nodeOpacity) nodeOpacity.value = '100';
+        if (nodeOpacityValue) nodeOpacityValue.value = '100';
+        
+        // Edge Tab - デフォルト値に戻す
+        const edgeLineColor = document.getElementById('edge-lineColor');
+        if (edgeLineColor) edgeLineColor.value = '#94a3b8';
+        
+        const edgeWidth = document.getElementById('edge-width');
+        const edgeWidthValue = document.getElementById('edge-width-value');
+        if (edgeWidth) edgeWidth.value = '2';
+        if (edgeWidthValue) edgeWidthValue.value = '2';
+        
+        const edgeStyle = document.getElementById('edge-style');
+        if (edgeStyle) edgeStyle.value = 'solid';
+        
+        const edgeTargetArrow = document.getElementById('edge-targetArrow');
+        if (edgeTargetArrow) edgeTargetArrow.value = 'none';
+        
+        const edgeOpacity = document.getElementById('edge-opacity');
+        const edgeOpacityValue = document.getElementById('edge-opacity-value');
+        if (edgeOpacity) edgeOpacity.value = '100';
+        if (edgeOpacityValue) edgeOpacityValue.value = '100';
+        
+        const edgeCurveStyle = document.getElementById('edge-curveStyle');
+        if (edgeCurveStyle) edgeCurveStyle.value = 'bezier';
+        
+        // すべてのマッピングタイプをDefaultに戻す
+        document.querySelectorAll('.style-mapping-type').forEach(select => {
+            select.value = 'default';
+            const propertyGroup = select.closest('.style-property-group');
+            if (propertyGroup) {
+                const controlDiv = propertyGroup.querySelector('.style-property-control');
+                if (controlDiv) {
+                    const attrSelect = controlDiv.querySelector('.style-attribute-select');
+                    const directInputs = Array.from(controlDiv.querySelectorAll('input, select')).filter(el => 
+                        !el.classList.contains('style-attribute-select') && !el.classList.contains('style-mapping-type')
+                    );
+                    const rangeDiv = propertyGroup.querySelector('.style-continuous-range');
+                    const discreteDiv = propertyGroup.querySelector('.style-discrete-mapping');
+                    
+                    // すべて非表示にしてからデフォルトモードに
+                    directInputs.forEach(input => input.classList.remove('hidden'));
+                    if (attrSelect) attrSelect.classList.add('hidden');
+                    if (rangeDiv) rangeDiv.classList.add('hidden');
+                    if (discreteDiv) discreteDiv.classList.add('hidden');
+                }
+            }
+        });
+        
+        // すべての属性セレクトをリセット
+        document.querySelectorAll('.style-attribute-select').forEach(select => {
+            select.value = '';
+        });
+    }
+
     applyStyles() {
         this.applyNodeStyles();
         this.applyEdgeStyles();
