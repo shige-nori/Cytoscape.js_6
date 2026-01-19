@@ -16,9 +16,9 @@ class NetworkManager {
             elements: [],
             style: this.getDefaultStyle(),
             layout: { name: 'preset' },
-            minZoom: 0.1,
-            maxZoom: 5,
-            wheelSensitivity: 0.3,
+            minZoom: 0.05,
+            maxZoom: 10,
+            wheelSensitivity: 0.1,
             boxSelectionEnabled: true,
             selectionType: 'single'
         });

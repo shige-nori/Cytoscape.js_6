@@ -236,6 +236,38 @@ class FileHandler {
                 stylePanel.reapplyStyles();
             }
             
+            // Edge Bends設定を復元（保存されている場合）
+            if (cx2Data.edgeBendsSettings && edgeBends) {
+                // Bend Strengthを復元
+                edgeBends.currentBendStrength = cx2Data.edgeBendsSettings.bendStrength || 40;
+                const slider = document.getElementById('bend-strength-slider');
+                const valueInput = document.getElementById('bend-strength-value');
+                if (slider) slider.value = edgeBends.currentBendStrength;
+                if (valueInput) valueInput.value = edgeBends.currentBendStrength;
+                
+                // 各エッジの曲げ設定を復元
+                if (cx2Data.edgeBendsSettings.edgeStyles) {
+                    cx2Data.edgeBendsSettings.edgeStyles.forEach(edgeStyle => {
+                        const edge = networkManager.cy.getElementById(edgeStyle.id);
+                        if (edge.length > 0) {
+                            const style = {};
+                            if (edgeStyle.curveStyle && edgeStyle.curveStyle !== 'undefined') {
+                                style['curve-style'] = edgeStyle.curveStyle;
+                            }
+                            if (edgeStyle.controlPointDistances !== undefined && edgeStyle.controlPointDistances !== 'undefined') {
+                                style['control-point-distances'] = edgeStyle.controlPointDistances;
+                            }
+                            if (edgeStyle.controlPointWeights !== undefined && edgeStyle.controlPointWeights !== 'undefined') {
+                                style['control-point-weights'] = edgeStyle.controlPointWeights;
+                            }
+                            if (Object.keys(style).length > 0) {
+                                edge.style(style);
+                            }
+                        }
+                    });
+                }
+            }
+            
             // ファイトを適用
             networkManager.cy.fit();
             
@@ -295,6 +327,17 @@ class FileHandler {
             // レイアウト情報を保存
             const layout = networkManager.cy.nodes().map(node => node.position());
             
+            // Edge Bends設定を保存
+            const edgeBendsSettings = {
+                bendStrength: edgeBends ? edgeBends.currentBendStrength : 40,
+                edgeStyles: networkManager.cy.edges().map(edge => ({
+                    id: edge.id(),
+                    curveStyle: edge.style('curve-style'),
+                    controlPointDistances: edge.style('control-point-distances'),
+                    controlPointWeights: edge.style('control-point-weights')
+                }))
+            };
+            
             // スタイル設定を保存
             const styleSettings = stylePanel ? {
                 nodeStyles: stylePanel.nodeStyles,
@@ -305,6 +348,7 @@ class FileHandler {
                 nodes: nodes,
                 edges: edges,
                 layout: layout,
+                edgeBendsSettings: edgeBendsSettings,
                 styleSettings: styleSettings
             };
             
