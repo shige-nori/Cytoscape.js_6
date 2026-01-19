@@ -16,6 +16,9 @@ class TablePanel {
         this.visibleEdgeColumns = new Set(this.edgeColumns);
         this.nodeColumnWidths = {}; // ノードカラムの幅を保存
         this.edgeColumnWidths = {}; // エッジカラムの幅を保存
+        // 表示対象外カラムのリスト
+        this.excludedNodeColumns = ['_originalBg', 'name', 'label'];
+        this.excludedEdgeColumns = ['id', 'interaction'];
         this.isResizing = false;
         this.startY = 0;
         this.startHeight = 0;
@@ -244,8 +247,15 @@ class TablePanel {
                 th.textContent += icon;
             }
             
-            // ソートイベント
-            th.addEventListener('click', () => this.sortTable(col));
+            // ソートイベント（リサイザークリック時は除外）
+            th.addEventListener('click', (e) => {
+                // リサイザーまたはその子要素がクリックされた場合はソートしない
+                if (e.target.classList.contains('column-resizer') || 
+                    e.target.closest('.column-resizer')) {
+                    return;
+                }
+                this.sortTable(col);
+            });
             
             // カラム幅リサイズ
             this.makeColumnResizable(th, 'node');
@@ -344,8 +354,15 @@ class TablePanel {
                 th.textContent += icon;
             }
             
-            // ソートイベント
-            th.addEventListener('click', () => this.sortTable(col));
+            // ソートイベント（リサイザークリック時は除外）
+            th.addEventListener('click', (e) => {
+                // リサイザーまたはその子要素がクリックされた場合はソートしない
+                if (e.target.classList.contains('column-resizer') || 
+                    e.target.closest('.column-resizer')) {
+                    return;
+                }
+                this.sortTable(col);
+            });
             
             // カラム幅リサイズ
             this.makeColumnResizable(th, 'edge');
@@ -433,34 +450,38 @@ class TablePanel {
         if (type === 'node') {
             // 基本カラムを保持
             ['id', 'name', 'label'].forEach(col => allColumns.add(col));
+            // 除外カラムを削除
+            this.excludedNodeColumns.forEach(col => allColumns.delete(col));
             this.nodeColumns = Array.from(allColumns);
             
             if (showAll) {
-                // 全カラムを表示
+                // 全カラムを表示（除外カラム以外）
                 this.visibleNodeColumns = new Set(this.nodeColumns);
             } else {
-                // 既存の表示設定を維持
+                // 既存の表示設定を維持（除外カラムは除く）
                 this.visibleNodeColumns = new Set(
                     this.nodeColumns.filter(col => 
                         this.visibleNodeColumns.has(col) || 
-                        ['id', 'name', 'label'].includes(col)
+                        ['id'].includes(col) // idはデフォルトで表示
                     )
                 );
             }
         } else {
             // 基本カラムを保持
             ['id', 'source', 'target', 'interaction'].forEach(col => allColumns.add(col));
+            // 除外カラムを削除
+            this.excludedEdgeColumns.forEach(col => allColumns.delete(col));
             this.edgeColumns = Array.from(allColumns);
             
             if (showAll) {
-                // 全カラムを表示
+                // 全カラムを表示（除外カラム以外）
                 this.visibleEdgeColumns = new Set(this.edgeColumns);
             } else {
-                // 既存の表示設定を維持
+                // 既存の表示設定を維持（除外カラムは除く）
                 this.visibleEdgeColumns = new Set(
                     this.edgeColumns.filter(col => 
                         this.visibleEdgeColumns.has(col) || 
-                        ['id', 'source', 'target', 'interaction'].includes(col)
+                        ['source', 'target'].includes(col) // source, targetはデフォルトで表示
                     )
                 );
             }

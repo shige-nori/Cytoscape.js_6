@@ -286,9 +286,9 @@ class FileHandler {
             // ファイトを適用
             networkManager.cy.fit();
             
-            // Table Panelを更新
-            if (window.tablePanel) {
-                tablePanel.updateTable(networkManager.cy.nodes());
+            // Table Panelの全カラムを表示
+            if (tablePanel) {
+                tablePanel.resetToShowAllColumns();
             }
             
             // 現在のファイルパスを保存
