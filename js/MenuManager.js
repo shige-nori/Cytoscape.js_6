@@ -75,6 +75,7 @@ class MenuManager {
             if (networkManager.hasNetwork()) {
                 edgeBends.closePanel(); // Edge Bendsパネルを閉じる
                 sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
+                if (stylePanel) stylePanel.closePanel(); // Style Panelを閉じる
                 layoutTools.openPanel();
             }
             this.closeAllMenus();
@@ -85,6 +86,7 @@ class MenuManager {
             if (networkManager.hasNetwork()) {
                 layoutTools.closePanel(); // Layout Toolsパネルを閉じる
                 sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
+                if (stylePanel) stylePanel.closePanel(); // Style Panelを閉じる
                 edgeBends.openPanel();
             }
             this.closeAllMenus();
@@ -95,7 +97,19 @@ class MenuManager {
             if (networkManager.hasNetwork()) {
                 layoutTools.closePanel();
                 edgeBends.closePanel();
+                if (stylePanel) stylePanel.closePanel();
                 sortNodesPanel.openPanel();
+            }
+            this.closeAllMenus();
+        });
+
+        // Style Panel
+        document.getElementById('open-style-panel').addEventListener('click', () => {
+            if (networkManager.hasNetwork()) {
+                layoutTools.closePanel();
+                edgeBends.closePanel();
+                sortNodesPanel.closePanel();
+                if (stylePanel) stylePanel.openPanel();
             }
             this.closeAllMenus();
         });

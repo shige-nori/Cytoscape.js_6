@@ -40,6 +40,12 @@
                 </div>
             </div>
         </div>
+        <div class="menu-item" data-menu="style">
+            <span class="menu-title">Style</span>
+            <div class="submenu">
+                <div class="submenu-item" id="open-style-panel">Style Panel...</div>
+            </div>
+        </div>
     </nav>
 
     <!-- グラフ表示領域 -->
@@ -168,7 +174,7 @@
                         <span class="tick"></span>
                         <span class="tick"></span>
                     </div>
-                    <input type="range" id="bend-strength-slider" min="0" max="80" step="1" value="40" class="slider">
+                    <input type="range" id="bend-strength-slider" min="0" max="80" step="0.1" value="40" class="slider">
                 </div>
                 <div class="slider-labels">
                     <span>0</span>
@@ -178,7 +184,7 @@
                     <span>80</span>
                 </div>
                 <div class="value-input-container">
-                    <input type="number" id="bend-strength-value" value="40" step="1" min="0" max="80" class="value-input">
+                    <input type="number" id="bend-strength-value" value="40" step="0.1" min="0" max="80" class="value-input">
                 </div>
             </div>
         </div>
@@ -224,6 +230,7 @@
     <script src="js/LayoutTools.js"></script>
     <script src="js/EdgeBendsPanel.js"></script>
     <script src="js/SortNodesPanel.js"></script>
+    <script src="js/StylePanel.js"></script>
     <script src="js/ModalManager.js"></script>
     <script src="js/MenuManager.js"></script>
     <script src="js/app.js"></script>

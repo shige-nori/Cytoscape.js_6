@@ -31,7 +31,7 @@ class EdgeBends {
 
         if (bendStrengthSlider) {
             bendStrengthSlider.addEventListener('input', (e) => {
-                this.currentBendStrength = parseInt(e.target.value);
+                this.currentBendStrength = parseFloat(e.target.value);
                 console.log('EdgeBends: slider changed to', this.currentBendStrength);
                 if (bendValueEl) {
                     if ('value' in bendValueEl) bendValueEl.value = this.currentBendStrength;
@@ -44,7 +44,7 @@ class EdgeBends {
         // 入力ボックスとの連動
         if (bendValueEl && 'value' in bendValueEl) {
             bendValueEl.addEventListener('input', (e) => {
-                const value = parseInt(e.target.value);
+                const value = parseFloat(e.target.value);
                 console.log('EdgeBends: input changed to', value);
                 if (!isNaN(value) && value >= 0 && value <= 80) {
                     this.currentBendStrength = value;

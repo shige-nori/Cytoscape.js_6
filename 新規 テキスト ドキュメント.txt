@@ -1,0 +1,58 @@
+・Node側にLabel Position、Label Widthの項目を追加してください
+・Fill ColorやLabel ColorなどのRGBカラーパネルから値を選択する場合、即時で図に反映されません。即時反映されるように修正してください。
+また色を選択するときRGBカラーパネルの他にサンプルカラーから選択できるようなものも用意してください
+
+Node側
+Label Widthの最大値を1000まで設定できるようにしてください
+Label Font Size最大値を100まで設定できるようにしてください
+
+
+Edge側
+Withは0.1刻みで100まで設定できるようにしてください
+
+Node、Edge共通
+プリセットカラーはカラーピッカーを表示させるときにプリセットカラーとカラーピッカーをタブ切り替えで切り替え可能な形で表示するようにしてください
+プリセットカラーは色系統ごとに薄いやつ濃いやつなどもっとたくさんパターンから選択できるようにしてください
+Opacityは0から100で設定できるようにしてください
+
+
+Styleの設定値はブラウザーを閉じたときや、ネットワーク図をクローズしたときはリセットしてください
+
+Import error:e.toLowerCase is not a function
+
+
+・Node側にLabel Position、Label Widthの項目を追加してください
+・Fill ColorやLabel ColorなどのRGBカラーパネルから値を選択する場合、即時で図に反映されません。即時反映されるように修正してください。
+また色を選択するときRGBカラーパネルの他にサンプルカラーから選択できるようなものも用意してください
+
+
+
+Cytoscape Desktopの「VizMapper」を模した、データ駆動型のビジュアルスタイル設定パネル。ノードとエッジの視覚的プロパティを、データ属性に基づいて動的にマッピング可能なStyle Panelを作成してください。パネルのUIは他のパネルと同じような感じにしてください
+
+設計思想
+データ駆動: データの値に応じてスタイルを自動調整
+即時反映: 設定変更は即座にグラフに反映
+永続化: パネルを閉じても設定は保持され、適用され続ける
+型安全: データ型に応じた適切な入力コントロールを提供
+メニューバー
+メニューバーにStyleを追加しStyleをクリックするとStyle Panelを開く
+機能詳細
+NodeタブとEdgeタブで切り替え
+Node設定
+- Fill Color
+- Shape
+- Size
+- Label Font Size
+- Label Color
+- Label Position
+- Label Width
+- Border Width
+- Border Color
+- Opacity
+Edge設定
+- Line Color
+- Width
+- Style
+- Target Arrow
+- Opacity
+- Curve Style

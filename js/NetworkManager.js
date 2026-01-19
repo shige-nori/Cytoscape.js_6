@@ -123,9 +123,6 @@ class NetworkManager {
                 });
             }
 
-            // Sourceノードに属性を追加
-            this.addAttributesToNode(nodes.get(sourceId), row, mappings, sourceColumn);
-
             // Targetがあればエッジを作成
             if (targetColumn && row[targetColumn]) {
                 const targetId = String(row[targetColumn]).trim();
@@ -137,14 +134,23 @@ class NetworkManager {
                         });
                     }
 
-                    // エッジを追加
-                    edges.push({
-                        data: {
-                            id: `edge-${index}`,
-                            source: sourceId,
-                            target: targetId
+                    // エッジを追加（属性も含む）
+                    const edgeData = {
+                        id: `edge-${index}`,
+                        source: sourceId,
+                        target: targetId
+                    };
+                    
+                    // エッジにAttributeを追加（ネットワークモードではAttributeはエッジ属性）
+                    Object.keys(mappings).forEach(column => {
+                        const mapping = mappings[column];
+                        if (mapping.role === 'Attribute' && column !== sourceColumn && column !== targetColumn) {
+                            const value = this.convertValue(row[column], mapping.dataType, mapping.delimiter);
+                            edgeData[column] = value;
                         }
                     });
+                    
+                    edges.push({ data: edgeData });
                 }
             }
         });
@@ -152,6 +158,11 @@ class NetworkManager {
         // グラフをクリアして要素を追加
         this.cy.elements().remove();
         this.cy.add([...nodes.values(), ...edges]);
+
+        // Style Panelのスタイルを適用
+        if (typeof stylePanel !== 'undefined' && stylePanel) {
+            setTimeout(() => stylePanel.reapplyStyles(), 100);
+        }
 
         return {
             nodeCount: nodes.size,
@@ -228,6 +239,11 @@ class NetworkManager {
             }
         });
 
+        // Style Panelのスタイルを再適用
+        if (typeof stylePanel !== 'undefined' && stylePanel) {
+            setTimeout(() => stylePanel.reapplyStyles(), 100);
+        }
+
         return {
             matchedCount,
             totalRows: data.length
@@ -270,6 +286,11 @@ class NetworkManager {
         // Sort Nodesパネルをクリア
         if (window.sortNodesPanel) {
             sortNodesPanel.closePanel();
+        }
+        
+        // Style Panelをクリア
+        if (window.stylePanel) {
+            stylePanel.closePanel();
         }
         
         // Layout Managerの設定をクリア
