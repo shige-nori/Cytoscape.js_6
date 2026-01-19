@@ -18,9 +18,6 @@ class TablePanel {
         this.edgeColumnWidths = {}; // エッジカラムの幅を保存
         this.nodeFilters = {}; // ノードカラムのフィルター値を保存
         this.edgeFilters = {}; // エッジカラムのフィルター値を保存
-        // 表示対象外カラムのリスト
-        this.excludedNodeColumns = ['_originalBg', 'name', 'label'];
-        this.excludedEdgeColumns = ['id', 'interaction', '_originalLineColor', '_originalWidth'];
         this.isResizing = false;
         this.startY = 0;
         this.startHeight = 0;
@@ -612,50 +609,30 @@ class TablePanel {
 
     updateAvailableColumns(type, elements, showAll = false) {
         const allColumns = new Set();
-        
         elements.forEach(ele => {
             const data = ele.data();
             Object.keys(data).forEach(key => {
-                if (key !== 'id' || type === 'node') { // edgeの場合はidを除外しない
-                    allColumns.add(key);
-                }
+                allColumns.add(key);
             });
         });
-        
         if (type === 'node') {
-            // 基本カラムを保持
             ['id', 'name', 'label'].forEach(col => allColumns.add(col));
-            // 除外カラムを削除
-            this.excludedNodeColumns.forEach(col => allColumns.delete(col));
             this.nodeColumns = Array.from(allColumns);
-            
             if (showAll) {
-                // 全カラムを表示（除外カラム以外）
                 this.visibleNodeColumns = new Set(this.nodeColumns);
             } else {
-                // 既存の表示設定を維持
                 this.visibleNodeColumns = new Set(
-                    this.nodeColumns.filter(col => 
-                        this.visibleNodeColumns.has(col)
-                    )
+                    this.nodeColumns.filter(col => this.visibleNodeColumns.has(col))
                 );
             }
         } else {
-            // 基本カラムを保持
             ['id', 'source', 'target', 'interaction'].forEach(col => allColumns.add(col));
-            // 除外カラムを削除
-            this.excludedEdgeColumns.forEach(col => allColumns.delete(col));
             this.edgeColumns = Array.from(allColumns);
-            
             if (showAll) {
-                // 全カラムを表示（除外カラム以外）
                 this.visibleEdgeColumns = new Set(this.edgeColumns);
             } else {
-                // 既存の表示設定を維持
                 this.visibleEdgeColumns = new Set(
-                    this.edgeColumns.filter(col => 
-                        this.visibleEdgeColumns.has(col)
-                    )
+                    this.edgeColumns.filter(col => this.visibleEdgeColumns.has(col))
                 );
             }
         }

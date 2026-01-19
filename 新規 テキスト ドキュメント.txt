@@ -19,6 +19,25 @@ Node Tableの_originalBg、name、labelカラムは表示対象にしない(カ�
 Edge Tableのid、interactionカラムは表示対象にしない(カラム選択にも表示しない)
 
 
+Table Panelでコピー可。Ctrlキーで複数選択
+
+Node Classが対象材料でその対象材料の発行年月日が2024年11月以降　そして
+Node Classが評価方法でその評価方法の発行年月日が2025年11月以降
+
+
+Table PanelのColumnsボタンと閉じるボタンの間にFloatボタンを作成
+Flotボタンを押下するとFlotウインドウとしてTable Panelを外だしできるようにしてください
+FlotウインドウとしてTable Panelを表示してもTable Panel機能は全て引き継ぐこととする
+
+Table Panelの各カラム名の下にテキストボックスを作成し抽出機能を作成してください
+
+Table Panelの閉じるボタンの左にフィルター解除ボタンを作成してください
+カラム名と抽出用テキストボックスの間を白で塗りつぶししてください
+
+Edge Tableに_originalLinColorと_originalWidthは表示しないでください。Columns選択にも表示不要です。
+ヘッダーと検索ボックスまでの背景色を薄い灰色にしてください
+
+
 Table Panelを表示させるとき最初は画面サイズに合わせて全てのカラムが表示させるようにしてください
 
 Saveをクリックしたときダウンロードフォルダにダウンロードされてしまいます
