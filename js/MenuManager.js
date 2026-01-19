@@ -136,6 +136,14 @@ class MenuManager {
             this.closeAllMenus();
         });
 
+        // Table Panel
+        document.getElementById('toggle-table-panel').addEventListener('click', () => {
+            if (networkManager.hasNetwork()) {
+                if (tablePanel) tablePanel.togglePanel();
+            }
+            this.closeAllMenus();
+        });
+
         // メニュー外クリックで閉じる
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.menubar')) {
@@ -255,6 +263,20 @@ class MenuManager {
         } else if (layoutManager.currentLayout === 'equal') {
             if (equalItem) equalItem.classList.add('checked');
             if (hierarchicalMenu) hierarchicalMenu.classList.add('checked');
+        }
+    }
+
+    /**
+     * Table Panelメニューのチェックマークを更新
+     */
+    updateTablePanelCheckmark() {
+        const tablePanelItem = document.getElementById('toggle-table-panel');
+        if (!tablePanelItem) return;
+        
+        if (tablePanel && tablePanel.isVisible) {
+            tablePanelItem.classList.add('checked');
+        } else {
+            tablePanelItem.classList.remove('checked');
         }
     }
 }

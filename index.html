@@ -50,6 +50,12 @@
                 <div class="submenu-item" id="open-style-panel">Style Panel...</div>
             </div>
         </div>
+        <div class="menu-item" data-menu="view">
+            <span class="menu-title">View</span>
+            <div class="submenu">
+                <div class="submenu-item" id="toggle-table-panel">Table Panel</div>
+            </div>
+        </div>
     </nav>
 
     <!-- グラフ表示領域 -->
@@ -217,6 +223,50 @@
         </div>
     </div>
 
+    <!-- Table Panel -->
+    <div class="table-panel" id="table-panel">
+        <div class="table-resize-handle" id="table-resize-handle"></div>
+        <div class="table-panel-header">
+            <div class="table-tabs">
+                <div class="table-tab active" id="node-table-tab">Node Table</div>
+                <div class="table-tab" id="edge-table-tab">Edge Table</div>
+            </div>
+            <div class="table-panel-actions">
+                <button class="btn btn-secondary btn-sm" id="table-column-settings-btn">Columns...</button>
+            </div>
+        </div>
+        <div class="table-panel-body">
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Column Settings Modal -->
+    <div class="modal-overlay" id="column-settings-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Column Settings</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="column-settings-container">
+                    <p style="margin-bottom: 10px;">Select columns to display:</p>
+                    <div class="column-checkboxes" id="column-checkboxes">
+                        <!-- Checkboxes will be dynamically generated -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="column-settings-cancel">Cancel</button>
+                <button class="btn btn-primary" id="column-settings-apply">Apply</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 隠しファイル入力 -->
     <input type="file" id="file-input-network" accept=".xlsx,.xls" style="display: none;">
     <input type="file" id="file-input-table" accept=".xlsx,.xls" style="display: none;">
@@ -236,6 +286,7 @@
     <script src="js/EdgeBendsPanel.js"></script>
     <script src="js/SortNodesPanel.js"></script>
     <script src="js/StylePanel.js"></script>
+    <script src="js/TablePanel.js"></script>
     <script src="js/ModalManager.js"></script>
     <script src="js/MenuManager.js"></script>
     <script src="js/app.js"></script>

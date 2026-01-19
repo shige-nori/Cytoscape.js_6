@@ -1029,3 +1029,226 @@ body {
     font-size: 12px;
     font-style: italic;
 }
+
+/* Table Panel */
+.table-panel {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 300px;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    z-index: 1500;
+    flex-direction: column;
+}
+
+.table-panel.active {
+    display: flex;
+}
+
+.table-resize-handle {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--border-color);
+    cursor: ns-resize;
+    z-index: 10;
+}
+
+.table-resize-handle:hover {
+    background: var(--primary-color);
+}
+
+.table-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: var(--background-color);
+    border-bottom: 1px solid var(--border-color);
+    min-height: 40px;
+}
+
+.table-tabs {
+    display: flex;
+    gap: 4px;
+}
+
+.table-tab {
+    padding: 6px 16px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-size: 14px;
+    color: var(--secondary-color);
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.table-tab:hover {
+    background-color: rgba(37, 99, 235, 0.1);
+}
+
+.table-tab.active {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 500;
+}
+
+.table-panel-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.table-panel-body {
+    flex: 1;
+    overflow: hidden;
+    padding: 0;
+}
+
+.table-wrapper {
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: auto;
+}
+
+/* Data Table */
+.data-table {
+    width: auto;
+    border-collapse: collapse;
+    font-size: 13px;
+    background: white;
+}
+
+.data-table thead {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
+}
+
+.data-table th {
+    position: relative;
+    padding: 10px 8px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border-color);
+    background: var(--background-color);
+    color: var(--text-color);
+    white-space: nowrap;
+    user-select: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 80px;
+}
+
+.data-table th.sortable {
+    cursor: pointer;
+}
+
+.data-table th.sortable:hover {
+    background-color: #e2e8f0;
+}
+
+.data-table td {
+    padding: 8px 8px;
+    border-bottom: 1px solid var(--border-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
+}
+
+.data-table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.data-table tbody tr:hover {
+    background-color: rgba(37, 99, 235, 0.05);
+}
+
+.data-table tbody tr.selected {
+    background-color: rgba(249, 115, 22, 0.15);
+}
+
+.data-table tbody tr.selected:hover {
+    background-color: rgba(249, 115, 22, 0.25);
+}
+
+/* Column Resizer */
+.column-resizer {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 100%;
+    cursor: col-resize;
+    user-select: none;
+    z-index: 1;
+}
+
+.column-resizer:hover {
+    background-color: var(--primary-color);
+    opacity: 0.5;
+}
+
+.column-resizer:active {
+    background-color: var(--primary-color);
+    opacity: 0.8;
+}
+
+/* Column Settings Modal */
+.column-settings-container {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.column-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    max-height: 350px;
+    overflow-y: auto;
+}
+
+.column-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+    user-select: none;
+}
+
+.column-checkbox-item:hover {
+    background-color: var(--background-color);
+}
+
+.column-checkbox-item input[type="checkbox"] {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+}
+
+/* Adjust cy-container for table panel */
+#cy-container {
+    bottom: 0;
+    transition: bottom 0.2s;
+}
+
+/* Button styles */
+.btn-sm {
+    padding: 5px 12px;
+    font-size: 13px;
+}

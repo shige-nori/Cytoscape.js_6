@@ -21,6 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     sortNodesPanel.initialize();
     stylePanel = new StylePanel();
     stylePanel.initialize();
+    tablePanel = new TablePanel();
+    tablePanel.initialize();
     modalManager = new ModalManager();
     menuManager = new MenuManager();
     

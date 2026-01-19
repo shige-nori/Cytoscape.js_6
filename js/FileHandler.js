@@ -129,10 +129,20 @@ class FileHandler {
                 if (menuManager) {
                     menuManager.updateMenuStates();
                 }
+                
+                // Table Panelの全カラムを表示
+                if (tablePanel) {
+                    tablePanel.resetToShowAllColumns();
+                }
             } else {
                 const result = networkManager.addTableData(this.currentData, mappings);
                 progressOverlay.hide();
                 console.log(`Table imported: ${result.matchedCount}/${result.totalRows} rows matched`);
+                
+                // Table Panelの全カラムを表示
+                if (tablePanel) {
+                    tablePanel.resetToShowAllColumns();
+                }
             }
             
             this.currentData = null;
@@ -234,6 +244,11 @@ class FileHandler {
                 stylePanel.nodeStyles = cx2Data.styleSettings.nodeStyles || stylePanel.nodeStyles;
                 stylePanel.edgeStyles = cx2Data.styleSettings.edgeStyles || stylePanel.edgeStyles;
                 stylePanel.reapplyStyles();
+            }
+            
+            // Table Panelの全カラムを表示
+            if (tablePanel) {
+                tablePanel.resetToShowAllColumns();
             }
             
             // Edge Bends設定を復元（保存されている場合）
