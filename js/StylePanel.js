@@ -1332,6 +1332,11 @@ class StylePanel {
 
             node.style(style);
         });
+        
+        // 選択スタイルを再適用
+        if (networkManager) {
+            networkManager.updateSelectionStyles();
+        }
     }
 
     applyEdgeStyles() {
@@ -1374,6 +1379,11 @@ class StylePanel {
         if (networkManager.cy) {
             networkManager.cy.edges().updateStyle();
             networkManager.cy.style().update();
+        }
+        
+        // 選択スタイルを再適用
+        if (networkManager) {
+            networkManager.updateSelectionStyles();
         }
     }
 

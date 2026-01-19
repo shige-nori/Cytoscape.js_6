@@ -51,9 +51,9 @@ class NetworkManager {
             {
                 selector: 'node:selected',
                 style: {
-                    'background-color': '#f97316',
+                    'background-color': '#eab308',
                     'border-width': 3,
-                    'border-color': '#ea580c'
+                    'border-color': '#ca8a04'
                 }
             },
             {
@@ -68,7 +68,8 @@ class NetworkManager {
             {
                 selector: 'edge:selected',
                 style: {
-                    'line-color': '#f97316',
+                    'line-color': '#ef4444',
+                    'target-arrow-color': '#ef4444',
                     'width': 3
                 }
             }
@@ -79,6 +80,56 @@ class NetworkManager {
      * イベントリスナーを設定
      */
     setupEventListeners() {
+        // 選択時のスタイル変更
+        this.cy.on('select', 'node', (event) => {
+            const node = event.target;
+            const currentBg = node.style('background-color');
+            node.data('_originalBg', currentBg);
+            node.style({
+                'background-color': '#eab308',
+                'border-width': 3,
+                'border-color': '#ca8a04'
+            });
+        });
+
+        this.cy.on('unselect', 'node', (event) => {
+            const node = event.target;
+            const originalBg = node.data('_originalBg');
+            if (originalBg) {
+                node.style('background-color', originalBg);
+            }
+            node.style({
+                'border-width': stylePanel ? stylePanel.nodeStyles.borderWidth.value : 0,
+                'border-color': stylePanel ? stylePanel.getStyleValue(node, 'borderColor', stylePanel.nodeStyles.borderColor) : '#000000'
+            });
+        });
+
+        this.cy.on('select', 'edge', (event) => {
+            const edge = event.target;
+            const currentColor = edge.style('line-color');
+            const currentWidth = edge.style('width');
+            edge.data('_originalLineColor', currentColor);
+            edge.data('_originalWidth', currentWidth);
+            edge.style({
+                'line-color': '#ef4444',
+                'target-arrow-color': '#ef4444',
+                'width': 3
+            });
+        });
+
+        this.cy.on('unselect', 'edge', (event) => {
+            const edge = event.target;
+            const originalColor = edge.data('_originalLineColor');
+            const originalWidth = edge.data('_originalWidth');
+            if (originalColor) {
+                edge.style('line-color', originalColor);
+                edge.style('target-arrow-color', originalColor);
+            }
+            if (originalWidth) {
+                edge.style('width', originalWidth);
+            }
+        });
+
         // Ctrl+クリックで複数選択
         this.cy.on('tap', 'node, edge', (event) => {
             if (!event.originalEvent.ctrlKey && !event.originalEvent.metaKey) {
@@ -93,6 +144,13 @@ class NetworkManager {
                 this.cy.elements().unselect();
             }
         });
+    }
+
+    /**
+     * 選択スタイルをスタイルシートに追加
+     */
+    updateSelectionStyles() {
+        // このメソッドは不要になったが、互換性のため残す
     }
 
     /**
