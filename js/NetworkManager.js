@@ -4,6 +4,7 @@
 class NetworkManager {
     constructor() {
         this.cy = null;
+        this.isSelectingNodesFromEdge = false; // エッジ選択によるノード選択中フラグ
         this.init();
     }
 
@@ -90,8 +91,11 @@ class NetworkManager {
                 'border-color': '#ca8a04'
             });
             
-            // 隣接ノード間のエッジを自動選択
-            this.selectEdgesBetweenSelectedNodes();
+            // エッジ選択によるノード選択の場合は、エッジ自動選択をスキップ
+            if (!this.isSelectingNodesFromEdge) {
+                // 隣接ノード間のエッジを自動選択
+                this.selectEdgesBetweenSelectedNodes();
+            }
         });
 
         this.cy.on('unselect', 'node', (event) => {
@@ -120,6 +124,18 @@ class NetworkManager {
                 'target-arrow-color': '#ef4444',
                 'width': 3
             });
+            
+            // 両端のノードも選択（フラグを立てて他のエッジが選択されないようにする）
+            this.isSelectingNodesFromEdge = true;
+            const source = edge.source();
+            const target = edge.target();
+            if (!source.selected()) {
+                source.select();
+            }
+            if (!target.selected()) {
+                target.select();
+            }
+            this.isSelectingNodesFromEdge = false;
         });
 
         this.cy.on('unselect', 'edge', (event) => {
