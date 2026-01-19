@@ -42,7 +42,6 @@ class StylePanel {
         this.setupEventListeners();
         this.setupPanelDrag();
         window.stylePanel = this;
-        console.log('StylePanel: initialized successfully');
     }
 
     createPanel() {
@@ -695,48 +694,6 @@ class StylePanel {
                 this.applyNodeStyles();
             });
         }
-        
-        // Label Font Size Continuous Range (理論上存在する場合)
-        const labelFontSizeMin = document.getElementById('node-labelFontSize-min');
-        const labelFontSizeMax = document.getElementById('node-labelFontSize-max');
-        if (labelFontSizeMin) {
-            labelFontSizeMin.addEventListener('input', () => {
-                this.applyNodeStyles();
-            });
-        }
-        if (labelFontSizeMax) {
-            labelFontSizeMax.addEventListener('input', () => {
-                this.applyNodeStyles();
-            });
-        }
-        
-        // Border Width Continuous Range (理論上存在する場合)
-        const borderWidthMin = document.getElementById('node-borderWidth-min');
-        const borderWidthMax = document.getElementById('node-borderWidth-max');
-        if (borderWidthMin) {
-            borderWidthMin.addEventListener('input', () => {
-                this.applyNodeStyles();
-            });
-        }
-        if (borderWidthMax) {
-            borderWidthMax.addEventListener('input', () => {
-                this.applyNodeStyles();
-            });
-        }
-        
-        // Node Opacity Continuous Range (理論上存在する場合)
-        const opacityMin = document.getElementById('node-opacity-min');
-        const opacityMax = document.getElementById('node-opacity-max');
-        if (opacityMin) {
-            opacityMin.addEventListener('input', () => {
-                this.applyNodeStyles();
-            });
-        }
-        if (opacityMax) {
-            opacityMax.addEventListener('input', () => {
-                this.applyNodeStyles();
-            });
-        }
     }
 
     setupEdgeStyleListeners() {
@@ -823,20 +780,6 @@ class StylePanel {
             opacityValue.addEventListener('input', (e) => {
                 this.edgeStyles.opacity.value = parseFloat(e.target.value);
                 opacity.value = e.target.value;
-                this.applyEdgeStyles();
-            });
-        }
-        
-        // Edge Opacity Continuous Range (理論上存在する場合)
-        const opacityMin = document.getElementById('edge-opacity-min');
-        const opacityMax = document.getElementById('edge-opacity-max');
-        if (opacityMin) {
-            opacityMin.addEventListener('input', () => {
-                this.applyEdgeStyles();
-            });
-        }
-        if (opacityMax) {
-            opacityMax.addEventListener('input', () => {
                 this.applyEdgeStyles();
             });
         }
