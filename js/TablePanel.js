@@ -214,9 +214,17 @@ class TablePanel {
             if (tab === 'node') {
                 nodeTab.classList.add('active');
                 edgeTab.classList.remove('active');
+                // ノードタブに切り替わったらノードのキャッシュをクリア
+                this._lastNodeSelectionIds = '';
+                this._lastNodeFilterString = '';
+                this._lastNodeVisibleColumns = '';
             } else {
                 nodeTab.classList.remove('active');
                 edgeTab.classList.add('active');
+                // エッジタブに切り替わったらエッジのキャッシュをクリア
+                this._lastEdgeSelectionIds = '';
+                this._lastEdgeFilterString = '';
+                this._lastEdgeVisibleColumns = '';
             }
         }
         
