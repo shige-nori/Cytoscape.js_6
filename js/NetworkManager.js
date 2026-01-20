@@ -84,8 +84,10 @@ class NetworkManager {
         // 選択時のスタイル変更
         this.cy.on('select', 'node', (event) => {
             const node = event.target;
+            // ホバー中ならピンク色ではなく、ホバー前の色を保存
+            const hoverBg = node.data('_hoverOriginalBg');
             const currentBg = node.style('background-color');
-            node.data('_originalBg', currentBg);
+            node.data('_originalBg', hoverBg !== undefined ? hoverBg : currentBg);
             node.style({
                 'background-color': '#eab308',
                 'border-width': 3,
@@ -161,10 +163,24 @@ class NetworkManager {
 
         // ノードホバー時の論文ID経路ハイライト
         this.cy.on('mouseover', 'node', (event) => {
-            this.highlightPaperIdPath(event.target);
+            const node = event.target;
+            // 選択中ノードはホバーでピンクにしない
+            if (!node.selected()) {
+                this.highlightPaperIdPath(node);
+            }
         });
 
         this.cy.on('mouseout', 'node', (event) => {
+            const node = event.target;
+            // ホバー解除時、選択中なら黄色に戻す（ピンク解除）
+            if (node.selected()) {
+                // 選択スタイルを再適用
+                node.style({
+                    'background-color': '#eab308',
+                    'border-width': 3,
+                    'border-color': '#ca8a04'
+                });
+            }
             this.clearHighlight();
         });
     }
@@ -317,14 +333,16 @@ class NetworkManager {
                 ele.removeData('_hoverOriginalOpacity');
             }
         });
-        
         if (this.hoveredElements) {
             // ハイライトされた要素の色を元に戻す
             this.hoveredElements.forEach(ele => {
                 if (ele.isNode()) {
                     const originalBg = ele.data('_hoverOriginalBg');
                     if (originalBg !== undefined) {
-                        ele.style('background-color', originalBg);
+                        // 選択中ノードは黄色を維持
+                        if (!ele.selected()) {
+                            ele.style('background-color', originalBg);
+                        }
                         ele.removeData('_hoverOriginalBg');
                     }
                 } else if (ele.isEdge()) {
