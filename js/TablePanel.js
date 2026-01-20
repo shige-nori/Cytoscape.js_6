@@ -29,8 +29,10 @@ class TablePanel {
         // キャッシュ用
         this._lastNodeSelectionIds = '';
         this._lastNodeFilterString = '';
+        this._lastNodeVisibleColumns = '';
         this._lastEdgeSelectionIds = '';
         this._lastEdgeFilterString = '';
+        this._lastEdgeVisibleColumns = '';
     }
 
     initialize() {
@@ -278,8 +280,10 @@ class TablePanel {
         // キャッシュをクリア（新しいネットワークが読み込まれた時のため）
         this._lastNodeSelectionIds = null;
         this._lastNodeFilterString = null;
+        this._lastNodeVisibleColumns = null;
         this._lastEdgeSelectionIds = null;
         this._lastEdgeFilterString = null;
+        this._lastEdgeVisibleColumns = null;
         
         // テーブルを更新（表示されていない場合でも次回表示時に正しく描画されるよう準備）
         if (this.isVisible) {
@@ -297,15 +301,19 @@ class TablePanel {
         const selectedNodes = networkManager.cy.nodes(':selected');
         const nodes = selectedNodes.length > 0 ? selectedNodes : networkManager.cy.nodes();
         
-        // キャッシュ用: 選択IDとフィルター状態を文字列化
+        // キャッシュ用: 選択ID、フィルター状態、表示カラムを文字列化
         const selectedIds = Array.from(selectedNodes).map(n => n.id()).sort().join(',');
         const filterString = JSON.stringify(this.nodeFilters);
-        if (selectedIds === this._lastNodeSelectionIds && filterString === this._lastNodeFilterString) {
+        const visibleColumnsString = Array.from(this.visibleNodeColumns).sort().join(',');
+        if (selectedIds === this._lastNodeSelectionIds && 
+            filterString === this._lastNodeFilterString &&
+            visibleColumnsString === this._lastNodeVisibleColumns) {
             // 前回と同じなら再描画スキップ
             return;
         }
         this._lastNodeSelectionIds = selectedIds;
         this._lastNodeFilterString = filterString;
+        this._lastNodeVisibleColumns = visibleColumnsString;
         
         // 利用可能なカラムを更新
         this.updateAvailableColumns('node', nodes);
@@ -462,15 +470,19 @@ class TablePanel {
         const selectedEdges = networkManager.cy.edges(':selected');
         const edges = selectedEdges.length > 0 ? selectedEdges : networkManager.cy.edges();
         
-        // キャッシュ用: 選択IDとフィルター状態を文字列化
+        // キャッシュ用: 選択ID、フィルター状態、表示カラムを文字列化
         const selectedIds = Array.from(selectedEdges).map(e => e.id()).sort().join(',');
         const filterString = JSON.stringify(this.edgeFilters);
-        if (selectedIds === this._lastEdgeSelectionIds && filterString === this._lastEdgeFilterString) {
+        const visibleColumnsString = Array.from(this.visibleEdgeColumns).sort().join(',');
+        if (selectedIds === this._lastEdgeSelectionIds && 
+            filterString === this._lastEdgeFilterString &&
+            visibleColumnsString === this._lastEdgeVisibleColumns) {
             // 前回と同じなら再描画スキップ
             return;
         }
         this._lastEdgeSelectionIds = selectedIds;
         this._lastEdgeFilterString = filterString;
+        this._lastEdgeVisibleColumns = visibleColumnsString;
         
         // 利用可能なカラムを更新
         this.updateAvailableColumns('edge', edges);
