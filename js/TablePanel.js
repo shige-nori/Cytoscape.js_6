@@ -10,8 +10,11 @@ class TablePanel {
         this.currentTab = 'node'; // 'node' or 'edge'
         this.sortColumn = null;
         this.sortOrder = 'asc'; // 'asc' or 'desc'
-        this.nodeColumns = ['id', 'name', 'label']; // デフォルトカラム
-        this.edgeColumns = ['id', 'source', 'target', 'interaction']; // デフォルトカラム
+        // 除外カラム
+        this.excludedNodeColumns = ['_originalBg', 'name', 'label', 'Label'];
+        this.excludedEdgeColumns = ['_originalLineColor', '_originalWidth', 'interaction'];
+        this.nodeColumns = ['id']; // デフォルトカラム（除外済み）
+        this.edgeColumns = ['id', 'source', 'target']; // デフォルトカラム（除外済み）
         this.visibleNodeColumns = new Set(this.nodeColumns);
         this.visibleEdgeColumns = new Set(this.edgeColumns);
         this.nodeColumnWidths = {}; // ノードカラムの幅を保存
@@ -595,8 +598,8 @@ class TablePanel {
             });
         });
         if (type === 'node') {
-            ['id', 'name', 'label'].forEach(col => allColumns.add(col));
-            this.nodeColumns = Array.from(allColumns);
+            ['id'].forEach(col => allColumns.add(col));
+            this.nodeColumns = Array.from(allColumns).filter(col => !this.excludedNodeColumns.includes(col));
             if (showAll) {
                 this.visibleNodeColumns = new Set(this.nodeColumns);
             } else {
@@ -605,8 +608,8 @@ class TablePanel {
                 );
             }
         } else {
-            ['id', 'source', 'target', 'interaction'].forEach(col => allColumns.add(col));
-            this.edgeColumns = Array.from(allColumns);
+            ['id', 'source', 'target'].forEach(col => allColumns.add(col));
+            this.edgeColumns = Array.from(allColumns).filter(col => !this.excludedEdgeColumns.includes(col));
             if (showAll) {
                 this.visibleEdgeColumns = new Set(this.edgeColumns);
             } else {
