@@ -527,12 +527,20 @@ class StylePanel {
         const fillColorMin = document.getElementById('node-fillColor-min');
         const fillColorMax = document.getElementById('node-fillColor-max');
         if (fillColorMin) {
-            fillColorMin.addEventListener('input', () => {
+            fillColorMin.addEventListener('input', (e) => {
+                if (!this.nodeStyles.fillColor.mapping) {
+                    this.nodeStyles.fillColor.mapping = {};
+                }
+                this.nodeStyles.fillColor.mapping.min = e.target.value;
                 this.applyNodeStyles();
             });
         }
         if (fillColorMax) {
-            fillColorMax.addEventListener('input', () => {
+            fillColorMax.addEventListener('input', (e) => {
+                if (!this.nodeStyles.fillColor.mapping) {
+                    this.nodeStyles.fillColor.mapping = {};
+                }
+                this.nodeStyles.fillColor.mapping.max = e.target.value;
                 this.applyNodeStyles();
             });
         }
@@ -566,12 +574,20 @@ class StylePanel {
         const sizeMin = document.getElementById('node-size-min');
         const sizeMax = document.getElementById('node-size-max');
         if (sizeMin) {
-            sizeMin.addEventListener('input', () => {
+            sizeMin.addEventListener('input', (e) => {
+                if (!this.nodeStyles.size.mapping) {
+                    this.nodeStyles.size.mapping = {};
+                }
+                this.nodeStyles.size.mapping.min = parseFloat(e.target.value);
                 this.applyNodeStyles();
             });
         }
         if (sizeMax) {
-            sizeMax.addEventListener('input', () => {
+            sizeMax.addEventListener('input', (e) => {
+                if (!this.nodeStyles.size.mapping) {
+                    this.nodeStyles.size.mapping = {};
+                }
+                this.nodeStyles.size.mapping.max = parseFloat(e.target.value);
                 this.applyNodeStyles();
             });
         }
@@ -605,12 +621,20 @@ class StylePanel {
         const labelColorMin = document.getElementById('node-labelColor-min');
         const labelColorMax = document.getElementById('node-labelColor-max');
         if (labelColorMin) {
-            labelColorMin.addEventListener('input', () => {
+            labelColorMin.addEventListener('input', (e) => {
+                if (!this.nodeStyles.labelColor.mapping) {
+                    this.nodeStyles.labelColor.mapping = {};
+                }
+                this.nodeStyles.labelColor.mapping.min = e.target.value;
                 this.applyNodeStyles();
             });
         }
         if (labelColorMax) {
-            labelColorMax.addEventListener('input', () => {
+            labelColorMax.addEventListener('input', (e) => {
+                if (!this.nodeStyles.labelColor.mapping) {
+                    this.nodeStyles.labelColor.mapping = {};
+                }
+                this.nodeStyles.labelColor.mapping.max = e.target.value;
                 this.applyNodeStyles();
             });
         }
@@ -669,12 +693,20 @@ class StylePanel {
         const borderColorMin = document.getElementById('node-borderColor-min');
         const borderColorMax = document.getElementById('node-borderColor-max');
         if (borderColorMin) {
-            borderColorMin.addEventListener('input', () => {
+            borderColorMin.addEventListener('input', (e) => {
+                if (!this.nodeStyles.borderColor.mapping) {
+                    this.nodeStyles.borderColor.mapping = {};
+                }
+                this.nodeStyles.borderColor.mapping.min = e.target.value;
                 this.applyNodeStyles();
             });
         }
         if (borderColorMax) {
-            borderColorMax.addEventListener('input', () => {
+            borderColorMax.addEventListener('input', (e) => {
+                if (!this.nodeStyles.borderColor.mapping) {
+                    this.nodeStyles.borderColor.mapping = {};
+                }
+                this.nodeStyles.borderColor.mapping.max = e.target.value;
                 this.applyNodeStyles();
             });
         }
@@ -710,12 +742,20 @@ class StylePanel {
         const lineColorMin = document.getElementById('edge-lineColor-min');
         const lineColorMax = document.getElementById('edge-lineColor-max');
         if (lineColorMin) {
-            lineColorMin.addEventListener('input', () => {
+            lineColorMin.addEventListener('input', (e) => {
+                if (!this.edgeStyles.lineColor.mapping) {
+                    this.edgeStyles.lineColor.mapping = {};
+                }
+                this.edgeStyles.lineColor.mapping.min = e.target.value;
                 this.applyEdgeStyles();
             });
         }
         if (lineColorMax) {
-            lineColorMax.addEventListener('input', () => {
+            lineColorMax.addEventListener('input', (e) => {
+                if (!this.edgeStyles.lineColor.mapping) {
+                    this.edgeStyles.lineColor.mapping = {};
+                }
+                this.edgeStyles.lineColor.mapping.max = e.target.value;
                 this.applyEdgeStyles();
             });
         }
@@ -740,12 +780,20 @@ class StylePanel {
         const widthMin = document.getElementById('edge-width-min');
         const widthMax = document.getElementById('edge-width-max');
         if (widthMin) {
-            widthMin.addEventListener('input', () => {
+            widthMin.addEventListener('input', (e) => {
+                if (!this.edgeStyles.width.mapping) {
+                    this.edgeStyles.width.mapping = {};
+                }
+                this.edgeStyles.width.mapping.min = parseFloat(e.target.value);
                 this.applyEdgeStyles();
             });
         }
         if (widthMax) {
-            widthMax.addEventListener('input', () => {
+            widthMax.addEventListener('input', (e) => {
+                if (!this.edgeStyles.width.mapping) {
+                    this.edgeStyles.width.mapping = {};
+                }
+                this.edgeStyles.width.mapping.max = parseFloat(e.target.value);
                 this.applyEdgeStyles();
             });
         }
@@ -1441,12 +1489,12 @@ class StylePanel {
 
         // プロパティに応じた範囲マッピング
         if (property === 'size') {
-            const minSize = parseInt(document.getElementById('node-size-min')?.value) || 20;
-            const maxSize = parseInt(document.getElementById('node-size-max')?.value) || 60;
+            const minSize = styleConfig.mapping?.min || parseInt(document.getElementById('node-size-min')?.value) || 20;
+            const maxSize = styleConfig.mapping?.max || parseInt(document.getElementById('node-size-max')?.value) || 60;
             return minSize + normalized * (maxSize - minSize);
         } else if (property === 'width') {
-            const minWidth = parseFloat(document.getElementById('edge-width-min')?.value) || 0.5;
-            const maxWidth = parseFloat(document.getElementById('edge-width-max')?.value) || 5;
+            const minWidth = styleConfig.mapping?.min || parseFloat(document.getElementById('edge-width-min')?.value) || 0.5;
+            const maxWidth = styleConfig.mapping?.max || parseFloat(document.getElementById('edge-width-max')?.value) || 5;
             return minWidth + normalized * (maxWidth - minWidth);
         } else if (property === 'opacity') {
             // Opacity: 20-100% (パーセント表示)
@@ -1459,23 +1507,23 @@ class StylePanel {
             return normalized * 50;
         } else if (property === 'fillColor') {
             // Fill Colorのグラデーション
-            const minColor = document.getElementById('node-fillColor-min')?.value || '#2563eb';
-            const maxColor = document.getElementById('node-fillColor-max')?.value || '#dc2626';
+            const minColor = styleConfig.mapping?.min || document.getElementById('node-fillColor-min')?.value || '#2563eb';
+            const maxColor = styleConfig.mapping?.max || document.getElementById('node-fillColor-max')?.value || '#dc2626';
             return this.interpolateColor(minColor, maxColor, normalized);
         } else if (property === 'labelColor') {
             // Label Colorのグラデーション
-            const minColor = document.getElementById('node-labelColor-min')?.value || '#000000';
-            const maxColor = document.getElementById('node-labelColor-max')?.value || '#dc2626';
+            const minColor = styleConfig.mapping?.min || document.getElementById('node-labelColor-min')?.value || '#000000';
+            const maxColor = styleConfig.mapping?.max || document.getElementById('node-labelColor-max')?.value || '#dc2626';
             return this.interpolateColor(minColor, maxColor, normalized);
         } else if (property === 'borderColor') {
             // Border Colorのグラデーション
-            const minColor = document.getElementById('node-borderColor-min')?.value || '#000000';
-            const maxColor = document.getElementById('node-borderColor-max')?.value || '#dc2626';
+            const minColor = styleConfig.mapping?.min || document.getElementById('node-borderColor-min')?.value || '#000000';
+            const maxColor = styleConfig.mapping?.max || document.getElementById('node-borderColor-max')?.value || '#dc2626';
             return this.interpolateColor(minColor, maxColor, normalized);
         } else if (property === 'lineColor') {
             // Line Colorのグラデーション
-            const minColor = document.getElementById('edge-lineColor-min')?.value || '#94a3b8';
-            const maxColor = document.getElementById('edge-lineColor-max')?.value || '#dc2626';
+            const minColor = styleConfig.mapping?.min || document.getElementById('edge-lineColor-min')?.value || '#94a3b8';
+            const maxColor = styleConfig.mapping?.max || document.getElementById('edge-lineColor-max')?.value || '#dc2626';
             return this.interpolateColor(minColor, maxColor, normalized);
         }
 
@@ -1507,8 +1555,137 @@ class StylePanel {
 
     // 外部からスタイルを適用（ネットワーク読み込み時など）
     reapplyStyles() {
+        console.log('reapplyStyles called with nodeStyles:', this.nodeStyles, 'edgeStyles:', this.edgeStyles);
         this.refreshAttributes();
+        this.updateUIFromStyles(); // UIコントロールを更新
         this.applyStyles();
+    }
+
+    // スタイル設定からUIコントロールを更新
+    updateUIFromStyles() {
+        // Node Stylesを更新
+        Object.entries(this.nodeStyles).forEach(([property, config]) => {
+            this.updateUIControl('node', property, config);
+        });
+
+        // Edge Stylesを更新
+        Object.entries(this.edgeStyles).forEach(([property, config]) => {
+            this.updateUIControl('edge', property, config);
+        });
+    }
+
+    // 個別のUIコントロールを更新
+    updateUIControl(elementType, property, config) {
+        const { type, value, attribute, mapping } = config;
+        
+        console.log(`updateUIControl: ${elementType}-${property}, type=${type}, value=${value}, attribute=${attribute}, mapping=`, mapping);
+        
+        // マッピングタイプのセレクトボックスを更新
+        const mappingSelect = document.querySelector(`.style-mapping-type[data-property="${property}"][data-element="${elementType}"]`);
+        if (mappingSelect) {
+            if (mappingSelect.value !== type) {
+                console.log(`  Updating mapping type from ${mappingSelect.value} to ${type}`);
+                mappingSelect.value = type;
+            }
+        } else {
+            console.log(`  Mapping select not found for ${elementType}-${property}`);
+        }
+
+        // プロパティに応じた入力フィールドを更新
+        if (property === 'fillColor' || property === 'labelColor' || property === 'borderColor' || property === 'lineColor') {
+            // カラー入力
+            const colorInput = document.getElementById(`${elementType}-${property}`);
+            console.log(`  Color input found: ${!!colorInput}, current value: ${colorInput?.value}, new value: ${value}`);
+            if (colorInput && colorInput.value !== value) {
+                console.log(`  Updating color from ${colorInput.value} to ${value}`);
+                colorInput.value = value;
+            }
+            
+            // Continuousマッピングの場合、min/maxカラーを更新
+            if (type === 'continuous' && mapping) {
+                const minInput = document.getElementById(`${elementType}-${property}-min`);
+                const maxInput = document.getElementById(`${elementType}-${property}-max`);
+                if (minInput && mapping.min !== undefined) {
+                    console.log(`  Updating min color to ${mapping.min}`);
+                    minInput.value = mapping.min;
+                }
+                if (maxInput && mapping.max !== undefined) {
+                    console.log(`  Updating max color to ${mapping.max}`);
+                    maxInput.value = mapping.max;
+                }
+            }
+        } else if (property === 'size' || property === 'labelFontSize' || property === 'labelWidth' || 
+                   property === 'borderWidth' || property === 'opacity' || property === 'width') {
+            // 数値入力
+            const numberInput = document.getElementById(`${elementType}-${property}`);
+            if (numberInput && numberInput.value != value) {
+                numberInput.value = value;
+            }
+            
+            // Continuousマッピングの場合、min/max値を更新
+            if (type === 'continuous' && mapping) {
+                const minInput = document.getElementById(`${elementType}-${property}-min`);
+                const maxInput = document.getElementById(`${elementType}-${property}-max`);
+                if (minInput && mapping.min !== undefined) {
+                    console.log(`  Updating min value to ${mapping.min}`);
+                    minInput.value = mapping.min;
+                }
+                if (maxInput && mapping.max !== undefined) {
+                    console.log(`  Updating max value to ${mapping.max}`);
+                    maxInput.value = mapping.max;
+                }
+            }
+        } else if (property === 'shape' || property === 'labelPosition' || property === 'style' || 
+                   property === 'targetArrow' || property === 'curveStyle') {
+            // セレクトボックス
+            const selectInput = document.getElementById(`${elementType}-${property}`);
+            if (selectInput && selectInput.value !== value) {
+                selectInput.value = value;
+            }
+        }
+
+        // 属性セレクトを更新
+        const attrSelect = document.getElementById(`${elementType}-${property}-attr`);
+        if (attrSelect && attribute) {
+            console.log(`  Updating attribute select to ${attribute}`);
+            attrSelect.value = attribute;
+        }
+
+        // マッピングタイプに応じた表示/非表示を更新
+        const propertyGroup = mappingSelect?.closest('.style-property-group');
+        if (propertyGroup) {
+            const colorInput = propertyGroup.querySelector('.style-color-input, .style-number-input, .style-select-input');
+            const attrSelectElement = propertyGroup.querySelector('.style-attribute-select');
+            const discreteDiv = propertyGroup.querySelector('.style-discrete-mapping');
+            const rangeDiv = propertyGroup.querySelector('.style-continuous-range, .style-color-range');
+
+            if (type === 'default') {
+                if (colorInput) colorInput.classList.remove('hidden');
+                if (attrSelectElement) attrSelectElement.classList.add('hidden');
+                if (discreteDiv) discreteDiv.classList.add('hidden');
+                if (rangeDiv) rangeDiv.classList.add('hidden');
+            } else if (type === 'discrete') {
+                if (colorInput) colorInput.classList.add('hidden');
+                if (attrSelectElement) attrSelectElement.classList.remove('hidden');
+                if (discreteDiv && attribute) {
+                    console.log(`  Building discrete mapping table for ${attribute}`);
+                    this.buildDiscreteMappingTable(discreteDiv, property, elementType, attribute);
+                    discreteDiv.classList.remove('hidden');
+                }
+                if (rangeDiv) rangeDiv.classList.add('hidden');
+            } else if (type === 'passthrough') {
+                if (colorInput) colorInput.classList.add('hidden');
+                if (attrSelectElement) attrSelectElement.classList.remove('hidden');
+                if (discreteDiv) discreteDiv.classList.add('hidden');
+                if (rangeDiv) rangeDiv.classList.add('hidden');
+            } else if (type === 'continuous') {
+                if (colorInput) colorInput.classList.add('hidden');
+                if (attrSelectElement) attrSelectElement.classList.remove('hidden');
+                if (discreteDiv) discreteDiv.classList.add('hidden');
+                if (rangeDiv) rangeDiv.classList.remove('hidden');
+                console.log(`  Continuous mapping UI updated, range div visible`);
+            }
+        }
     }
 }
 

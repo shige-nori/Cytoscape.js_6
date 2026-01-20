@@ -241,20 +241,10 @@ class FileHandler {
                 });
             }
             
-            // スタイルを復元（保存されている場合）
-            if (cx2Data.styleSettings && stylePanel) {
-                stylePanel.nodeStyles = cx2Data.styleSettings.nodeStyles || stylePanel.nodeStyles;
-                stylePanel.edgeStyles = cx2Data.styleSettings.edgeStyles || stylePanel.edgeStyles;
-                stylePanel.reapplyStyles();
-            }
-            
-            // Table Panelの全カラムを表示
-            if (tablePanel) {
-                tablePanel.resetToShowAllColumns();
-            }
-            
-            // Edge Bends設定を復元（保存されている場合）
+            // Edge Bends設定を先に復元（スタイル適用前）
             if (cx2Data.edgeBendsSettings && edgeBends) {
+                console.log('Restoring Edge Bends settings:', cx2Data.edgeBendsSettings);
+                
                 // Bend Strengthを復元
                 edgeBends.currentBendStrength = cx2Data.edgeBendsSettings.bendStrength || 40;
                 const slider = document.getElementById('bend-strength-slider');
@@ -283,6 +273,14 @@ class FileHandler {
                         }
                     });
                 }
+            }
+            
+            // スタイルを復元（Edge Bends復元後）
+            if (cx2Data.styleSettings && stylePanel) {
+                console.log('Restoring Style settings:', cx2Data.styleSettings);
+                stylePanel.nodeStyles = cx2Data.styleSettings.nodeStyles || stylePanel.nodeStyles;
+                stylePanel.edgeStyles = cx2Data.styleSettings.edgeStyles || stylePanel.edgeStyles;
+                stylePanel.reapplyStyles();
             }
             
             // ファイトを適用
@@ -361,6 +359,9 @@ class FileHandler {
                 nodeStyles: stylePanel.nodeStyles,
                 edgeStyles: stylePanel.edgeStyles
             } : null;
+            
+            console.log('Saving Edge Bends settings:', edgeBendsSettings);
+            console.log('Saving Style settings:', styleSettings);
             
             const cx2Data = {
                 nodes: nodes,

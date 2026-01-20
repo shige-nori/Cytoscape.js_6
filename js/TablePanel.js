@@ -275,7 +275,13 @@ class TablePanel {
         this.updateAvailableColumns('node', nodes, true);
         this.updateAvailableColumns('edge', edges, true);
         
-        // テーブルが表示されている場合は更新
+        // キャッシュをクリア（新しいネットワークが読み込まれた時のため）
+        this._lastNodeSelectionIds = null;
+        this._lastNodeFilterString = null;
+        this._lastEdgeSelectionIds = null;
+        this._lastEdgeFilterString = null;
+        
+        // テーブルを更新（表示されていない場合でも次回表示時に正しく描画されるよう準備）
         if (this.isVisible) {
             this.refreshTable();
         }
