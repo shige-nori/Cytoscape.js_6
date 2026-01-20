@@ -26,6 +26,11 @@ class TablePanel {
         this.startHeight = 0;
         this.minHeight = 150;
         this.defaultHeight = 300;
+        // キャッシュ用
+        this._lastNodeSelectionIds = '';
+        this._lastNodeFilterString = '';
+        this._lastEdgeSelectionIds = '';
+        this._lastEdgeFilterString = '';
     }
 
     initialize() {
@@ -99,21 +104,42 @@ class TablePanel {
             // ネットワーク図の空き領域クリックでフィルタークリア
             networkManager.cy.on('tap', (e) => {
                 if (e.target === networkManager.cy && this.isVisible) {
+                    // フィルターが空かつ全ノード・エッジ未選択なら何もしない
+                    const hasNodeFilter = Object.values(this.nodeFilters).some(v => v);
+                    const hasEdgeFilter = Object.values(this.edgeFilters).some(v => v);
+                    const anySelected = networkManager.cy.$(':selected').length > 0;
+                    if (!hasNodeFilter && !hasEdgeFilter && !anySelected) return;
                     this.clearAllFilters();
+                    // 選択があればテーブル再描画
+                    if (anySelected) this.refreshTable();
                 }
             });
             
             networkManager.cy.on('select', (e) => {
                 if (this.isVisible) {
+                    // 選択されたノード/エッジのみテーブルに表示（遅延描画）
                     this.clearAllFilters();
-                    this.refreshTable();
+                    window.requestAnimationFrame(() => {
+                        if (this.currentTab === 'node') {
+                            this.renderNodeTable(true);
+                        } else {
+                            this.renderEdgeTable(true);
+                        }
+                    });
                 }
             });
             
             networkManager.cy.on('unselect', (e) => {
                 if (this.isVisible) {
+                    // 選択解除時は全ノード/エッジをテーブルに表示（遅延描画）
                     this.clearAllFilters();
-                    this.refreshTable();
+                    window.requestAnimationFrame(() => {
+                        if (this.currentTab === 'node') {
+                            this.renderNodeTable(true);
+                        } else {
+                            this.renderEdgeTable(true);
+                        }
+                    });
                 }
             });
         }
@@ -264,6 +290,16 @@ class TablePanel {
         // 選択されたノードがあればそれらのみ、なければ全て
         const selectedNodes = networkManager.cy.nodes(':selected');
         const nodes = selectedNodes.length > 0 ? selectedNodes : networkManager.cy.nodes();
+        
+        // キャッシュ用: 選択IDとフィルター状態を文字列化
+        const selectedIds = Array.from(selectedNodes).map(n => n.id()).sort().join(',');
+        const filterString = JSON.stringify(this.nodeFilters);
+        if (selectedIds === this._lastNodeSelectionIds && filterString === this._lastNodeFilterString) {
+            // 前回と同じなら再描画スキップ
+            return;
+        }
+        this._lastNodeSelectionIds = selectedIds;
+        this._lastNodeFilterString = filterString;
         
         // 利用可能なカラムを更新
         this.updateAvailableColumns('node', nodes);
@@ -419,6 +455,16 @@ class TablePanel {
         // 選択されたエッジがあればそれらのみ、なければ全て
         const selectedEdges = networkManager.cy.edges(':selected');
         const edges = selectedEdges.length > 0 ? selectedEdges : networkManager.cy.edges();
+        
+        // キャッシュ用: 選択IDとフィルター状態を文字列化
+        const selectedIds = Array.from(selectedEdges).map(e => e.id()).sort().join(',');
+        const filterString = JSON.stringify(this.edgeFilters);
+        if (selectedIds === this._lastEdgeSelectionIds && filterString === this._lastEdgeFilterString) {
+            // 前回と同じなら再描画スキップ
+            return;
+        }
+        this._lastEdgeSelectionIds = selectedIds;
+        this._lastEdgeFilterString = filterString;
         
         // 利用可能なカラムを更新
         this.updateAvailableColumns('edge', edges);
