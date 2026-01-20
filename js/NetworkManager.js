@@ -218,12 +218,18 @@ class NetworkManager {
 
         // 論文IDを持つノードかチェック
         const hoveredPaperIds = node.data('論文ID');
-        if (!hoveredPaperIds || (Array.isArray(hoveredPaperIds) && hoveredPaperIds.length === 0)) {
+        if (!hoveredPaperIds) {
             return; // 論文IDがない場合は何もしない
         }
 
+        // 論文IDを配列に正規化
+        const paperIdArray = Array.isArray(hoveredPaperIds) ? hoveredPaperIds : [hoveredPaperIds];
+        if (paperIdArray.length === 0) {
+            return;
+        }
+
         // ホバーされたノードの論文IDをSetに変換（高速検索用）
-        const paperIdSet = new Set(hoveredPaperIds);
+        const paperIdSet = new Set(paperIdArray);
 
         // ハイライト対象の要素を収集
         const pathElements = this.cy.collection();
@@ -238,9 +244,11 @@ class NetworkManager {
         const matchedEdges = this.cy.collection();
         allPathEdges.forEach(edge => {
             const edgePaperIds = edge.data('論文ID');
-            if (edgePaperIds && Array.isArray(edgePaperIds)) {
+            if (edgePaperIds) {
+                // エッジの論文IDを配列に正規化
+                const edgePaperIdArray = Array.isArray(edgePaperIds) ? edgePaperIds : [edgePaperIds];
                 // エッジの論文IDのいずれかがホバーされたノードの論文IDと一致するかチェック
-                const hasMatch = edgePaperIds.some(id => paperIdSet.has(id));
+                const hasMatch = edgePaperIdArray.some(id => paperIdSet.has(id));
                 if (hasMatch) {
                     matchedEdges.merge(edge);
                 }
@@ -256,14 +264,21 @@ class NetworkManager {
             pathElements.merge(edge.target());
         });
 
+        // ハイライト対象のIDをSetに変換（高速検索用）
+        const highlightIds = new Set();
+        pathElements.forEach(ele => highlightIds.add(ele.id()));
+
         // すべての要素を取得
         const allElements = this.cy.elements();
         
         // ハイライトされない要素の透明度を80%に
         allElements.forEach(ele => {
-            if (!pathElements.contains(ele)) {
-                // 元の透明度を保存
-                ele.data('_hoverOriginalOpacity', ele.style('opacity'));
+            const isHighlighted = highlightIds.has(ele.id());
+            if (!isHighlighted) {
+                // 元の透明度を保存（まだ保存されていない場合のみ）
+                if (ele.data('_hoverOriginalOpacity') === undefined) {
+                    ele.data('_hoverOriginalOpacity', ele.style('opacity'));
+                }
                 ele.style('opacity', 0.2);
             }
         });
@@ -271,12 +286,16 @@ class NetworkManager {
         // ハイライト対象要素の色を変更
         pathElements.forEach(ele => {
             if (ele.isNode()) {
-                // ノードの元の色を保存
-                ele.data('_hoverOriginalBg', ele.style('background-color'));
+                // ノードの元の色を保存（まだ保存されていない場合のみ）
+                if (ele.data('_hoverOriginalBg') === undefined) {
+                    ele.data('_hoverOriginalBg', ele.style('background-color'));
+                }
                 ele.style('background-color', '#ec4899'); // ピンク色
             } else if (ele.isEdge()) {
-                // エッジの元の色を保存
-                ele.data('_hoverOriginalLineColor', ele.style('line-color'));
+                // エッジの元の色を保存（まだ保存されていない場合のみ）
+                if (ele.data('_hoverOriginalLineColor') === undefined) {
+                    ele.data('_hoverOriginalLineColor', ele.style('line-color'));
+                }
                 ele.style('line-color', '#ec4899'); // ピンク色
                 ele.style('target-arrow-color', '#ec4899');
             }
@@ -290,18 +309,27 @@ class NetworkManager {
      * ハイライトをクリア
      */
     clearHighlight() {
+        // すべての要素の透明度を元に戻す（先に実行）
+        this.cy.elements().forEach(ele => {
+            const originalOpacity = ele.data('_hoverOriginalOpacity');
+            if (originalOpacity !== undefined) {
+                ele.style('opacity', originalOpacity);
+                ele.removeData('_hoverOriginalOpacity');
+            }
+        });
+        
         if (this.hoveredElements) {
             // ハイライトされた要素の色を元に戻す
             this.hoveredElements.forEach(ele => {
                 if (ele.isNode()) {
                     const originalBg = ele.data('_hoverOriginalBg');
-                    if (originalBg) {
+                    if (originalBg !== undefined) {
                         ele.style('background-color', originalBg);
                         ele.removeData('_hoverOriginalBg');
                     }
                 } else if (ele.isEdge()) {
                     const originalLineColor = ele.data('_hoverOriginalLineColor');
-                    if (originalLineColor) {
+                    if (originalLineColor !== undefined) {
                         ele.style('line-color', originalLineColor);
                         ele.style('target-arrow-color', originalLineColor);
                         ele.removeData('_hoverOriginalLineColor');
@@ -310,15 +338,6 @@ class NetworkManager {
             });
             this.hoveredElements = null;
         }
-        
-        // すべての要素の透明度を元に戻す
-        this.cy.elements().forEach(ele => {
-            const originalOpacity = ele.data('_hoverOriginalOpacity');
-            if (originalOpacity !== undefined) {
-                ele.style('opacity', originalOpacity);
-                ele.removeData('_hoverOriginalOpacity');
-            }
-        });
     }
 
     /**
