@@ -110,6 +110,29 @@ class EdgeBends {
         if (this.panel) this.panel.classList.remove('active');
     }
 
+    resetToDefault() {
+        console.log('EdgeBends: Resetting to default');
+        this.currentBendStrength = 40;
+        
+        // UIを更新
+        const slider = document.getElementById('bend-strength-slider');
+        const valueInput = document.getElementById('bend-strength-value');
+        if (slider) slider.value = 40;
+        if (valueInput) valueInput.value = 40;
+        
+        // すべてのエッジのcurve-styleをデフォルトにリセット
+        if (networkManager && networkManager.cy) {
+            networkManager.cy.edges().forEach(edge => {
+                edge.style({
+                    'curve-style': 'bezier',
+                    'control-point-distances': undefined,
+                    'control-point-weights': undefined,
+                    'control-point-step-size': undefined
+                });
+            });
+        }
+    }
+
     applyEdgeBends() {
         if (typeof networkManager === 'undefined' || !networkManager || !networkManager.cy) {
             console.log('EdgeBends: networkManager or cy not available');

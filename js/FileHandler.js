@@ -213,6 +213,16 @@ class FileHandler {
                 networkManager.closeNetwork();
             }
             
+            // スタイル設定をデフォルトにリセット
+            if (stylePanel) {
+                stylePanel.resetToDefault();
+            }
+            
+            // Edge Bends設定をデフォルトにリセット
+            if (edgeBends) {
+                edgeBends.resetToDefault();
+            }
+            
             // Cytoscapeデータに変換
             const elements = {
                 nodes: cx2Data.nodes.map(node => ({
@@ -280,6 +290,10 @@ class FileHandler {
                 console.log('Restoring Style settings:', cx2Data.styleSettings);
                 stylePanel.nodeStyles = cx2Data.styleSettings.nodeStyles || stylePanel.nodeStyles;
                 stylePanel.edgeStyles = cx2Data.styleSettings.edgeStyles || stylePanel.edgeStyles;
+                stylePanel.reapplyStyles();
+            } else if (stylePanel) {
+                // スタイル設定がない場合、デフォルトスタイルをUIに反映
+                console.log('No style settings in file, applying default styles');
                 stylePanel.reapplyStyles();
             }
             

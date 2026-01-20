@@ -1553,6 +1553,35 @@ class StylePanel {
         return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
     }
 
+    // スタイル設定をデフォルトにリセット
+    resetToDefault() {
+        console.log('Resetting styles to default');
+        
+        // ノードスタイルをデフォルトにリセット
+        this.nodeStyles = {
+            fillColor: { type: 'default', value: '#2563eb', mapping: null, attribute: null },
+            shape: { type: 'default', value: 'ellipse', mapping: null, attribute: null },
+            size: { type: 'default', value: 40, mapping: null, attribute: null },
+            labelFontSize: { type: 'default', value: 10, mapping: null, attribute: null },
+            labelColor: { type: 'default', value: '#000000', mapping: null, attribute: null },
+            labelPosition: { type: 'default', value: 'top', mapping: null, attribute: null },
+            labelWidth: { type: 'default', value: 80, mapping: null, attribute: null },
+            borderWidth: { type: 'default', value: 0, mapping: null, attribute: null },
+            borderColor: { type: 'default', value: '#000000', mapping: null, attribute: null },
+            opacity: { type: 'default', value: 100, mapping: null, attribute: null }
+        };
+        
+        // エッジスタイルをデフォルトにリセット
+        this.edgeStyles = {
+            lineColor: { type: 'default', value: '#94a3b8', mapping: null, attribute: null },
+            width: { type: 'default', value: 2, mapping: null, attribute: null },
+            style: { type: 'default', value: 'solid', mapping: null, attribute: null },
+            targetArrow: { type: 'default', value: 'none', mapping: null, attribute: null },
+            opacity: { type: 'default', value: 100, mapping: null, attribute: null },
+            curveStyle: { type: 'default', value: 'bezier', mapping: null, attribute: null }
+        };
+    }
+
     // 外部からスタイルを適用（ネットワーク読み込み時など）
     reapplyStyles() {
         console.log('reapplyStyles called with nodeStyles:', this.nodeStyles, 'edgeStyles:', this.edgeStyles);
