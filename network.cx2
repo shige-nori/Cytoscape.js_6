@@ -849,7 +849,8 @@
         "所属1": null,
         "所属2": null,
         "NodeWeight": 148,
-        "NodeClass": "対象材料"
+        "NodeClass": "対象材料",
+        "_originalBg": "rgb(125,70,141)"
       }
     },
     {
@@ -1283,7 +1284,8 @@
         "所属1": null,
         "所属2": "東北大",
         "NodeWeight": 211,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "rgb(162,57,100)"
       }
     },
     {
@@ -1911,7 +1913,8 @@
         "所属1": null,
         "所属2": "東北大",
         "NodeWeight": 308,
-        "NodeClass": "評価方法"
+        "NodeClass": "評価方法",
+        "_originalBg": "rgb(220,38,38)"
       }
     },
     {
@@ -3046,7 +3049,8 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 208,
-        "NodeClass": "研究目的"
+        "NodeClass": "研究目的",
+        "_originalBg": "rgb(160,58,102)"
       }
     },
     {
@@ -3438,7 +3442,8 @@
         "所属1": null,
         "所属2": null,
         "NodeWeight": 101,
-        "NodeClass": "研究目的"
+        "NodeClass": "研究目的",
+        "_originalBg": "rgb(97,79,171)"
       }
     },
     {
@@ -3659,7 +3664,8 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 104,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "rgb(98,79,169)"
       }
     },
     {
@@ -5092,7 +5098,8 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 293,
-        "NodeClass": "対象材料"
+        "NodeClass": "対象材料",
+        "_originalBg": "rgb(211,41,48)"
       }
     },
     {
@@ -6043,7 +6050,8 @@
         "所属1": null,
         "所属2": null,
         "NodeWeight": 95,
-        "NodeClass": "対象材料"
+        "NodeClass": "対象材料",
+        "_originalBg": "rgb(93,80,175)"
       }
     },
     {
@@ -6749,7 +6757,8 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 31,
-        "NodeClass": "対象材料"
+        "NodeClass": "対象材料",
+        "_originalBg": "rgb(55,93,216)"
       }
     },
     {
@@ -6858,7 +6867,8 @@
         "所属1": null,
         "所属2": null,
         "NodeWeight": 48,
-        "NodeClass": "評価方法"
+        "NodeClass": "評価方法",
+        "_originalBg": "rgb(65,90,205)"
       }
     },
     {
@@ -7779,7 +7789,8 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 119,
-        "NodeClass": "対象材料"
+        "NodeClass": "対象材料",
+        "_originalBg": "rgb(107,76,159)"
       }
     },
     {
@@ -8077,7 +8088,8 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 142,
-        "NodeClass": "評価方法"
+        "NodeClass": "評価方法",
+        "_originalBg": "rgb(121,71,145)"
       }
     },
     {
@@ -8706,8 +8718,7 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 130,
-        "NodeClass": "適用手法",
-        "_originalBg": "rgb(114,73,152)"
+        "NodeClass": "適用手法"
       }
     },
     {
@@ -9146,7 +9157,8 @@
         "所属1": "東大",
         "所属2": null,
         "NodeWeight": 212,
-        "NodeClass": "研究目的"
+        "NodeClass": "研究目的",
+        "_originalBg": "rgb(163,57,100)"
       }
     },
     {
@@ -9241,7 +9253,8 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 41,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "rgb(61,91,209)"
       }
     },
     {
@@ -10175,7 +10188,8 @@
         "所属1": "東大",
         "所属2": "東北大",
         "NodeWeight": 119,
-        "NodeClass": "研究目的"
+        "NodeClass": "研究目的",
+        "_originalBg": "rgb(107,76,159)"
       }
     },
     {
@@ -10839,7 +10853,8 @@
         "所属1": "東大",
         "所属2": null,
         "NodeWeight": 68,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "rgb(77,86,192)"
       }
     },
     {
@@ -11029,7 +11044,8 @@
         "所属1": "東大",
         "所属2": null,
         "NodeWeight": 59,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "rgb(72,87,198)"
       }
     },
     {
@@ -11197,7 +11213,8 @@
         "所属1": null,
         "所属2": null,
         "NodeWeight": 23,
-        "NodeClass": "評価方法"
+        "NodeClass": "評価方法",
+        "_originalBg": "rgb(50,95,221)"
       }
     },
     {
@@ -11705,7 +11722,9 @@
           "Author Correction: Reasons for success and lessons learnt from nanoscale vaccines against COVID-19"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "2.5418848167539267px"
       }
     },
     {
@@ -12296,7 +12315,9 @@
           "Targeting and reducing abdominal fat using polycations"
         ],
         "所属1": null,
-        "所属2": "東北大"
+        "所属2": "東北大",
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "20px"
       }
     },
     {
@@ -12498,7 +12519,9 @@
           "Lipid nanoparticles target haematopoietic stem cells"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "3.154450261780105px"
       }
     },
     {
@@ -12630,7 +12653,9 @@
           "Author Correction: A bispecific nanosystem activates endogenous natural killer cells in the bone marrow for haematologic malignancies therapy"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "1.7251308900523559px"
       }
     },
     {
@@ -13049,7 +13074,9 @@
           "Scalable CMOS back-end-of-line-compatible AlScN/two-dimensional channel ferroelectric field-effect transistors"
         ],
         "所属1": "東大",
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "6.829842931937173px"
       }
     },
     {
@@ -13327,7 +13354,9 @@
           "Harmonizing single photons with a laser pulse"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "2.1335078534031418px"
       }
     },
     {
@@ -13657,7 +13686,9 @@
           "Author Correction: A light-fuelled nanoratchet shifts a coupled chemical equilibrium"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "2.5418848167539267px"
       }
     },
     {
@@ -14057,7 +14088,9 @@
           "High-resolution three-dimensional imaging of topological textures in nanoscale single-diamond networks"
         ],
         "所属1": "東大",
-        "所属2": "東北大"
+        "所属2": "東北大",
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "4.175392670157068px"
       }
     },
     {
@@ -14533,7 +14566,9 @@
           "Large non-reciprocal charge transport mediated by quantum anomalous Hall edge states"
         ],
         "所属1": "東大",
-        "所属2": "東北大"
+        "所属2": "東北大",
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "5.50261780104712px"
       }
     },
     {
@@ -14829,7 +14864,9 @@
           "Giant bulk piezophotovoltaic effect in 3R-MoS2"
         ],
         "所属1": "東大",
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "5.196335078534031px"
       }
     },
     {
@@ -14997,7 +15034,9 @@
           "Controlled transformation of skyrmions and antiskyrmions in a non-centrosymmetric magnet"
         ],
         "所属1": "東大",
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "4.68586387434555px"
       }
     },
     {
@@ -15767,7 +15806,9 @@
           "Reply to: Primary role of photothermal heating in light-driven reduction of nitroarenes"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "2.43979057591623px"
       }
     },
     {
@@ -15903,7 +15944,9 @@
           "Nanoscale C–H/C–D mapping of organic materials using electron spectroscopy"
         ],
         "所属1": "東大",
-        "所属2": "東北大"
+        "所属2": "東北大",
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "2.031413612565445px"
       }
     },
     {
@@ -16005,7 +16048,9 @@
           "New dimensions for fluorescence-based barcoding in complex mixtures"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "1.2146596858638743px"
       }
     },
     {
@@ -16185,9 +16230,7 @@
           "Time-domain observation of ballistic orbital-angular-momentum currents with giant relaxation length in tungsten"
         ],
         "所属1": "東大",
-        "所属2": "東北大",
-        "_originalLineColor": "rgb(177,187,200)",
-        "_originalWidth": "1.725130890052356px"
+        "所属2": "東北大"
       }
     },
     {
@@ -16251,7 +16294,9 @@
           "Author Correction: Charge disproportionate molecular redox for discrete memristive and memcapacitive switching"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "2.9502617801047117px"
       }
     },
     {
@@ -16592,7 +16637,9 @@
           "Author Correction: Direct patterning of colloidal quantum dots with adaptable dual-ligand surface"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "1.0104712041884816px"
       }
     },
     {
@@ -17211,7 +17258,9 @@
           "An information ratchet improves selectivity in molecular recognition under non-equilibrium conditions"
         ],
         "所属1": null,
-        "所属2": "東北大"
+        "所属2": "東北大",
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "0.9083769633507854px"
       }
     },
     {
@@ -17706,7 +17755,9 @@
           "Time-domain observation of ballistic orbital-angular-momentum currents with giant relaxation length in tungsten"
         ],
         "所属1": "東大",
-        "所属2": "東北大"
+        "所属2": "東北大",
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "3.154450261780105px"
       }
     },
     {
@@ -18166,7 +18217,9 @@
           "Author Correction: Vitamin lipid nanoparticles enable adoptive macrophage transfer for the treatment of multidrug-resistant bacterial sepsis"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "1.2146596858638743px"
       }
     },
     {
@@ -18226,7 +18279,9 @@
           "Two-terminal reconfigurable and non-volatile photovoltaic detectors"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "2.7460732984293195px"
       }
     },
     {
@@ -18292,7 +18347,9 @@
           "Off balance and over the edge"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "3.0523560209424083px"
       }
     },
     {
@@ -18520,7 +18577,9 @@
           "Nucleic acid delivery differences across species"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "3.56282722513089px"
       }
     },
     {
@@ -18671,8 +18730,8 @@
         ],
         "所属1": null,
         "所属2": "東北大",
-        "_originalLineColor": "rgb(177,187,200)",
-        "_originalWidth": "1.3481675392670156px"
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "4.175392670157068px"
       }
     },
     {
@@ -18776,7 +18835,9 @@
           "Organic radio-afterglow nanoprobes for cancer theranostics"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "1.6230366492146597px"
       }
     },
     {
@@ -18922,7 +18983,9 @@
           "Author Correction: Tuning of the Berry curvature in 2D perovskite polaritons"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "2.031413612565445px"
       }
     },
     {
@@ -19144,7 +19207,9 @@
           "Single-electron turnstile stirring quantized heat flow"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "3.0523560209424083px"
       }
     },
     {
@@ -19176,9 +19241,7 @@
           "Antiferromagnetic spin-torque diode effect in a kagome Weyl semimetal"
         ],
         "所属1": "東大",
-        "所属2": "東北大",
-        "_originalLineColor": "rgb(177,187,200)",
-        "_originalWidth": "0.6884816753926701px"
+        "所属2": "東北大"
       }
     },
     {
@@ -19198,7 +19261,9 @@
           "Carbon nanotubes activate inflammatory signalling through binding to Siglec-14"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "0.7041884816753927px"
       }
     },
     {
@@ -20282,7 +20347,9 @@
           "Quantum nanoscience"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "1.9293193717277486px"
       }
     },
     {
@@ -20562,7 +20629,9 @@
           "Carbon nanotubes added to the SIN List as a nanomaterial of Very High Concern"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "0.5px"
       }
     },
     {
@@ -21082,7 +21151,9 @@
           "Using single vacancies to build quantum antidots with atomic precision"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "2.1335078534031418px"
       }
     },
     {
@@ -21164,7 +21235,9 @@
           "Non-reciprocal multifarious self-organization"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "0.6020942408376964px"
       }
     },
     {
@@ -22202,7 +22275,9 @@
           "Chemistry under nanoconfinement"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "1.0104712041884816px"
       }
     },
     {
@@ -22392,7 +22467,9 @@
           "Breakdown of the Nernst–Einstein relation in carbon nanotube porins"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "0.6020942408376964px"
       }
     },
     {
@@ -23046,7 +23123,9 @@
           "Complete structural characterization of single carbon nanotubes by Rayleigh scattering circular dichroism"
         ],
         "所属1": "東大",
-        "所属2": "東北大"
+        "所属2": "東北大",
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "1.3167539267015709px"
       }
     },
     {
@@ -23722,7 +23801,9 @@
           "Pumping between phases with a pulsed-fuel molecular ratchet"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "0.5px"
       }
     },
     {
@@ -24064,7 +24145,9 @@
           "Powering a DNA origami nanoengine with chemical fuel"
         ],
         "所属1": null,
-        "所属2": null
+        "所属2": null,
+        "_originalLineColor": "rgb(148,163,184)",
+        "_originalWidth": "0.9083769633507854px"
       }
     },
     {
@@ -25846,232 +25929,232 @@
   ],
   "layout": [
     {
-      "x": -570,
-      "y": -1.950117286522925
+      "x": -590,
+      "y": 91.16612813275822
     },
     {
-      "x": 170,
-      "y": 314.3171094905066
+      "x": 140,
+      "y": 348.0549409713413
     },
     {
-      "x": 900,
-      "y": 382.8676414027691
+      "x": 880,
+      "y": 403.7352747885712
     },
     {
-      "x": 1640,
-      "y": 442.2781023933966
+      "x": 1610,
+      "y": 451.99156409683707
     },
     {
-      "x": 170,
-      "y": 554.2439711834254
+      "x": 140,
+      "y": 542.9361093316456
     },
     {
-      "x": 900,
-      "y": 494.26225576019567
+      "x": 880,
+      "y": 494.2158172415696
     },
     {
-      "x": 1640,
-      "y": -285.50004474179036
+      "x": 1610,
+      "y": -139.14797992941948
     },
     {
-      "x": -570,
-      "y": -143.72508101415676
+      "x": -590,
+      "y": -23.990925898330744
     },
     {
-      "x": 900,
-      "y": 1051.2353275473286
+      "x": 880,
+      "y": 946.618529506562
     },
     {
-      "x": -570,
-      "y": -285.5000447417906
+      "x": -590,
+      "y": -139.1479799294197
     },
     {
-      "x": 900,
-      "y": -62.71081602693721
+      "x": 880,
+      "y": 41.81310497657725
     },
     {
-      "x": 170,
-      "y": 1274.0245562621817
+      "x": 140,
+      "y": 1127.5796144125588
     },
     {
-      "x": 1640,
-      "y": 650.214715860593
+      "x": 1610,
+      "y": 620.8885766757676
     },
     {
-      "x": 170,
-      "y": 674.2074020298847
+      "x": 140,
+      "y": 640.3766935117978
     },
     {
-      "x": 900,
-      "y": 605.6568701176222
+      "x": 880,
+      "y": 584.6963596945682
     },
     {
-      "x": 1640,
-      "y": 26.404875459004074
+      "x": 1610,
+      "y": 114.19753893897621
     },
     {
-      "x": 170,
-      "y": -285.50004474179036
+      "x": 140,
+      "y": -139.1479799294197
     },
     {
-      "x": -570,
-      "y": 423.37477389637854
+      "x": -590,
+      "y": 436.6372902260251
     },
     {
-      "x": 170,
-      "y": 74.39024779758779
+      "x": 140,
+      "y": 153.1737726110369
     },
     {
-      "x": 1640,
-      "y": 130.3731821926022
+      "x": 1610,
+      "y": 198.64604522844144
     },
     {
-      "x": 170,
-      "y": -165.53661389533096
+      "x": 140,
+      "y": -41.707395749267505
     },
     {
-      "x": 900,
-      "y": -174.10543038436379
+      "x": 880,
+      "y": -48.66743747642123
     },
     {
-      "x": 1640,
-      "y": 234.34148892620033
+      "x": 1610,
+      "y": 283.09455151790667
     },
     {
-      "x": -570,
-      "y": 1132.2495925345477
+      "x": -590,
+      "y": 1012.4225603814698
     },
     {
-      "x": 170,
-      "y": -45.573183048871584
+      "x": 140,
+      "y": 55.733188430884695
     },
     {
-      "x": 1640,
-      "y": 1170.0562495285835
+      "x": 1610,
+      "y": 1043.1311081230936
     },
     {
-      "x": -570,
-      "y": 565.1497376240125
+      "x": -590,
+      "y": 551.7943442571141
     },
     {
-      "x": 900,
-      "y": 717.0514844750488
+      "x": 880,
+      "y": 675.1769021475666
     },
     {
-      "x": 170,
-      "y": 194.3536786440472
+      "x": 140,
+      "y": 250.6143567911891
     },
     {
-      "x": 1640,
-      "y": -77.56343127459408
+      "x": 1610,
+      "y": 29.74903264951098
     },
     {
-      "x": 170,
-      "y": 914.1342637228036
+      "x": 140,
+      "y": 835.2578618721022
     },
     {
-      "x": 1640,
-      "y": -181.53173800819224
+      "x": 1610,
+      "y": -54.69947363995425
     },
     {
-      "x": 900,
-      "y": 160.07841268791594
+      "x": 880,
+      "y": 222.7741898825742
     },
     {
-      "x": -570,
-      "y": 281.59981016874474
+      "x": -590,
+      "y": 321.48023619493614
     },
     {
-      "x": 900,
-      "y": 48.68379833048937
+      "x": 880,
+      "y": 132.29364742957574
     },
     {
-      "x": 1640,
-      "y": 754.183022594191
+      "x": 1610,
+      "y": 705.3370829652329
     },
     {
-      "x": 900,
-      "y": -285.50004474179036
+      "x": 880,
+      "y": -139.1479799294197
     },
     {
-      "x": -570,
-      "y": 990.4746288069139
+      "x": -590,
+      "y": 897.265506350381
     },
     {
-      "x": 900,
-      "y": 828.4460988324754
+      "x": 880,
+      "y": 765.657444600565
     },
     {
-      "x": -570,
-      "y": 1274.0245562621815
+      "x": -590,
+      "y": 1127.5796144125588
     },
     {
-      "x": -570,
-      "y": 139.82484644111094
+      "x": -590,
+      "y": 206.3231821638472
     },
     {
-      "x": -570,
-      "y": 706.9247013516463
+      "x": -590,
+      "y": 666.9513982882031
     },
     {
-      "x": 1640,
-      "y": 338.3097956597985
+      "x": 1610,
+      "y": 367.5430578073719
     },
     {
-      "x": 170,
-      "y": 434.28054033696594
+      "x": 140,
+      "y": 445.4955251514935
     },
     {
-      "x": 900,
-      "y": 939.8407131899019
+      "x": 880,
+      "y": 856.1379870535636
     },
     {
-      "x": 900,
-      "y": 1162.6299419047552
+      "x": 880,
+      "y": 1037.0990719595604
     },
     {
-      "x": 900,
-      "y": 271.4730270453425
+      "x": 880,
+      "y": 313.25473233557267
     },
     {
-      "x": 170,
-      "y": 794.1708328763441
+      "x": 140,
+      "y": 737.81727769195
     },
     {
-      "x": 1640,
-      "y": 546.2464091269948
+      "x": 1610,
+      "y": 536.4400703863023
     },
     {
-      "x": -570,
-      "y": 848.6996650792801
+      "x": -590,
+      "y": 782.1084523192919
     },
     {
-      "x": 1640,
-      "y": 1066.0879427949856
+      "x": 1610,
+      "y": 958.6826018336285
     },
     {
-      "x": 1640,
-      "y": 962.1196360613874
+      "x": 1610,
+      "y": 874.2340955441632
     },
     {
-      "x": 1640,
-      "y": 858.1513293277892
+      "x": 1610,
+      "y": 789.7855892546979
     },
     {
-      "x": 170,
-      "y": 1034.097694569263
+      "x": 140,
+      "y": 932.6984460522544
     },
     {
-      "x": 1640,
-      "y": 1274.0245562621817
+      "x": 1610,
+      "y": 1127.5796144125588
     },
     {
-      "x": 170,
-      "y": 1154.0611254157222
+      "x": 140,
+      "y": 1030.1390302324066
     },
     {
-      "x": 900,
-      "y": 1274.0245562621817
+      "x": 880,
+      "y": 1127.5796144125588
     }
   ],
   "edgeBendsSettings": {
@@ -28675,7 +28758,7 @@
       },
       "labelFontSize": {
         "type": "default",
-        "value": 18,
+        "value": 21,
         "mapping": null,
         "attribute": null
       },
@@ -28693,19 +28776,19 @@
       },
       "labelWidth": {
         "type": "default",
-        "value": 775,
+        "value": 942,
         "mapping": null,
         "attribute": null
       },
       "borderWidth": {
         "type": "default",
-        "value": 6,
+        "value": 0,
         "mapping": null,
         "attribute": null
       },
       "borderColor": {
         "type": "default",
-        "value": "#c7c7c7",
+        "value": "#000000",
         "mapping": null,
         "attribute": null
       },
@@ -28719,7 +28802,7 @@
     "edgeStyles": {
       "lineColor": {
         "type": "default",
-        "value": "#b1bbc8",
+        "value": "#94a3b8",
         "mapping": null,
         "attribute": null
       },

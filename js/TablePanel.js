@@ -66,12 +66,6 @@ class TablePanel {
             columnBtn.addEventListener('click', () => this.openColumnSettings());
         }
 
-        // フィルター解除ボタン
-        const clearFiltersBtn = document.getElementById('table-clear-filters-btn');
-        if (clearFiltersBtn) {
-            clearFiltersBtn.addEventListener('click', () => this.clearAllFilters());
-        }
-
         // 閉じるボタン
         const closeBtn = document.getElementById('table-panel-close-btn');
         if (closeBtn) {
@@ -99,14 +93,23 @@ class TablePanel {
 
         // Cytoscape選択イベントとの連動
         if (networkManager && networkManager.cy) {
+            // ネットワーク図の空き領域クリックでフィルタークリア
+            networkManager.cy.on('tap', (e) => {
+                if (e.target === networkManager.cy && this.isVisible) {
+                    this.clearAllFilters();
+                }
+            });
+            
             networkManager.cy.on('select', (e) => {
                 if (this.isVisible) {
+                    this.clearAllFilters();
                     this.refreshTable();
                 }
             });
             
             networkManager.cy.on('unselect', (e) => {
                 if (this.isVisible) {
+                    this.clearAllFilters();
                     this.refreshTable();
                 }
             });
@@ -322,35 +325,24 @@ class TablePanel {
             const input = document.createElement('input');
             input.type = 'text';
             input.classList.add('column-filter');
-            input.placeholder = '検索...';
             input.value = this.nodeFilters[col] || '';
             input.dataset.column = col;
-            
-            // IME入力中フラグ
+            // placeholderは値が空のとき非表示
+            input.placeholder = (input.value === '') ? '' : '検索...';
             let isComposing = false;
-            
-            // IME入力開始
-            input.addEventListener('compositionstart', () => {
-                isComposing = true;
-            });
-            
-            // IME入力終了
+            input.addEventListener('compositionstart', () => { isComposing = true; });
             input.addEventListener('compositionend', (e) => {
                 isComposing = false;
                 this.nodeFilters[col] = e.target.value;
                 this.applyFilters('node');
             });
-            
-            // フィルター入力イベント
             input.addEventListener('input', (e) => {
-                // IME入力中はスキップ
-                if (isComposing) {
-                    return;
-                }
+                if (isComposing) return;
                 this.nodeFilters[col] = e.target.value;
+                // placeholder制御
+                input.placeholder = (e.target.value === '') ? '' : '検索...';
                 this.applyFilters('node');
             });
-            
             th.appendChild(input);
             filterRow.appendChild(th);
         });
@@ -488,35 +480,22 @@ class TablePanel {
             const input = document.createElement('input');
             input.type = 'text';
             input.classList.add('column-filter');
-            input.placeholder = '検索...';
             input.value = this.edgeFilters[col] || '';
             input.dataset.column = col;
-            
-            // IME入力中フラグ
+            input.placeholder = (input.value === '') ? '' : '検索...';
             let isComposing = false;
-            
-            // IME入力開始
-            input.addEventListener('compositionstart', () => {
-                isComposing = true;
-            });
-            
-            // IME入力終了
+            input.addEventListener('compositionstart', () => { isComposing = true; });
             input.addEventListener('compositionend', (e) => {
                 isComposing = false;
                 this.edgeFilters[col] = e.target.value;
                 this.applyFilters('edge');
             });
-            
-            // フィルター入力イベント
             input.addEventListener('input', (e) => {
-                // IME入力中はスキップ
-                if (isComposing) {
-                    return;
-                }
+                if (isComposing) return;
                 this.edgeFilters[col] = e.target.value;
+                input.placeholder = (e.target.value === '') ? '' : '検索...';
                 this.applyFilters('edge');
             });
-            
             th.appendChild(input);
             filterRow.appendChild(th);
         });
@@ -686,16 +665,30 @@ class TablePanel {
     /**
      * すべてのフィルターをクリア
      */
+    /**
+     * すべてのフィルターをクリア
+     */
     clearAllFilters() {
-        // 現在のタブのフィルターをクリア
+        // 検索ボックスに値が入っている場合のみクリア
+        let cleared = false;
         if (this.currentTab === 'node') {
-            this.nodeFilters = {};
+            for (const key in this.nodeFilters) {
+                if (this.nodeFilters[key]) {
+                    cleared = true;
+                    break;
+                }
+            }
+            if (cleared) this.nodeFilters = {};
         } else {
-            this.edgeFilters = {};
+            for (const key in this.edgeFilters) {
+                if (this.edgeFilters[key]) {
+                    cleared = true;
+                    break;
+                }
+            }
+            if (cleared) this.edgeFilters = {};
         }
-        
-        // テーブルを再描画
-        this.refreshTable();
+        if (cleared) this.refreshTable();
     }
 
     sortData(data, column) {
