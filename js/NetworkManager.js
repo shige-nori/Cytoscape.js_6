@@ -5,6 +5,7 @@ class NetworkManager {
     constructor() {
         this.cy = null;
         this.isSelectingNodesFromEdge = false; // エッジ選択によるノード選択中フラグ
+        this.hoveredElements = null; // ホバー中のハイライト要素
         this.init();
     }
 
@@ -157,6 +158,15 @@ class NetworkManager {
                 this.cy.elements().unselect();
             }
         });
+
+        // ノードホバー時の論文ID経路ハイライト
+        this.cy.on('mouseover', 'node', (event) => {
+            this.highlightPaperIdPath(event.target);
+        });
+
+        this.cy.on('mouseout', 'node', (event) => {
+            this.clearHighlight();
+        });
     }
 
     /**
@@ -194,6 +204,119 @@ class NetworkManager {
             // 両端のノードが両方とも選択されていない場合は選択解除
             if (!source.selected() || !target.selected()) {
                 edge.unselect();
+            }
+        });
+    }
+
+    /**
+     * 論文ID経路の上流/下流パスをハイライト
+     * @param {Object} node - ホバーされたノード
+     */
+    highlightPaperIdPath(node) {
+        // 既存のハイライトをクリア
+        this.clearHighlight();
+
+        // 論文IDを持つノードかチェック
+        const hoveredPaperIds = node.data('論文ID');
+        if (!hoveredPaperIds || (Array.isArray(hoveredPaperIds) && hoveredPaperIds.length === 0)) {
+            return; // 論文IDがない場合は何もしない
+        }
+
+        // ホバーされたノードの論文IDをSetに変換（高速検索用）
+        const paperIdSet = new Set(hoveredPaperIds);
+
+        // ハイライト対象の要素を収集
+        const pathElements = this.cy.collection();
+        
+        // ホバーされたノード自身を追加
+        pathElements.merge(node);
+        
+        // 上流と下流のすべてのエッジを取得
+        const allPathEdges = node.predecessors('edge').union(node.successors('edge'));
+        
+        // 論文IDが一致するエッジのみをフィルタリングして追加
+        const matchedEdges = this.cy.collection();
+        allPathEdges.forEach(edge => {
+            const edgePaperIds = edge.data('論文ID');
+            if (edgePaperIds && Array.isArray(edgePaperIds)) {
+                // エッジの論文IDのいずれかがホバーされたノードの論文IDと一致するかチェック
+                const hasMatch = edgePaperIds.some(id => paperIdSet.has(id));
+                if (hasMatch) {
+                    matchedEdges.merge(edge);
+                }
+            }
+        });
+        
+        // マッチしたエッジをハイライト対象に追加
+        pathElements.merge(matchedEdges);
+        
+        // マッチしたエッジで接続されているノードを追加
+        matchedEdges.forEach(edge => {
+            pathElements.merge(edge.source());
+            pathElements.merge(edge.target());
+        });
+
+        // すべての要素を取得
+        const allElements = this.cy.elements();
+        
+        // ハイライトされない要素の透明度を80%に
+        allElements.forEach(ele => {
+            if (!pathElements.contains(ele)) {
+                // 元の透明度を保存
+                ele.data('_hoverOriginalOpacity', ele.style('opacity'));
+                ele.style('opacity', 0.2);
+            }
+        });
+
+        // ハイライト対象要素の色を変更
+        pathElements.forEach(ele => {
+            if (ele.isNode()) {
+                // ノードの元の色を保存
+                ele.data('_hoverOriginalBg', ele.style('background-color'));
+                ele.style('background-color', '#ec4899'); // ピンク色
+            } else if (ele.isEdge()) {
+                // エッジの元の色を保存
+                ele.data('_hoverOriginalLineColor', ele.style('line-color'));
+                ele.style('line-color', '#ec4899'); // ピンク色
+                ele.style('target-arrow-color', '#ec4899');
+            }
+        });
+
+        // ハイライトされた要素を保存
+        this.hoveredElements = pathElements;
+    }
+
+    /**
+     * ハイライトをクリア
+     */
+    clearHighlight() {
+        if (this.hoveredElements) {
+            // ハイライトされた要素の色を元に戻す
+            this.hoveredElements.forEach(ele => {
+                if (ele.isNode()) {
+                    const originalBg = ele.data('_hoverOriginalBg');
+                    if (originalBg) {
+                        ele.style('background-color', originalBg);
+                        ele.removeData('_hoverOriginalBg');
+                    }
+                } else if (ele.isEdge()) {
+                    const originalLineColor = ele.data('_hoverOriginalLineColor');
+                    if (originalLineColor) {
+                        ele.style('line-color', originalLineColor);
+                        ele.style('target-arrow-color', originalLineColor);
+                        ele.removeData('_hoverOriginalLineColor');
+                    }
+                }
+            });
+            this.hoveredElements = null;
+        }
+        
+        // すべての要素の透明度を元に戻す
+        this.cy.elements().forEach(ele => {
+            const originalOpacity = ele.data('_hoverOriginalOpacity');
+            if (originalOpacity !== undefined) {
+                ele.style('opacity', originalOpacity);
+                ele.removeData('_hoverOriginalOpacity');
             }
         });
     }
