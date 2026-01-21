@@ -174,6 +174,18 @@ class MenuManager {
             this.closeAllMenus();
         });
 
+        // Path Trace
+        document.getElementById('path-trace-menu').addEventListener('click', () => {
+            if (networkManager.hasNetwork()) {
+                layoutTools.closePanel();
+                edgeBends.closePanel();
+                sortNodesPanel.closePanel();
+                if (stylePanel) stylePanel.closePanel();
+                if (pathTracePanel) pathTracePanel.openPanel();
+            }
+            this.closeAllMenus();
+        });
+
         // メニュー外クリックで閉じる
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.menubar')) {

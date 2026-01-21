@@ -6,6 +6,7 @@ class NetworkManager {
         this.cy = null;
         this.isSelectingNodesFromEdge = false; // エッジ選択によるノード選択中フラグ
         this.hoveredElements = null; // ホバー中のハイライト要素
+        this.hoverHighlightEnabled = false; // ホバーハイライト機能の有効/無効（初期設定はOFF）
         this.init();
     }
 
@@ -164,6 +165,10 @@ class NetworkManager {
         // ノードホバー時の論文ID経路ハイライト
         this.cy.on('mouseover', 'node', (event) => {
             const node = event.target;
+            // ホバーハイライトが無効な場合は何もしない
+            if (!this.hoverHighlightEnabled) {
+                return;
+            }
             // フィルターがアクティブな場合はハイライトしない
             if (this.isFilterActive()) {
                 return;
@@ -631,6 +636,36 @@ class NetworkManager {
      */
     getEdges() {
         return this.cy.edges();
+    }
+
+    /**
+     * ホバーハイライト機能の有効/無効を切り替え
+     * @param {boolean} enabled - trueで有効、falseで無効
+     */
+    toggleHoverHighlight(enabled) {
+        this.hoverHighlightEnabled = enabled;
+        // 無効にするときは現在のハイライトをクリア
+        if (!enabled) {
+            this.clearHighlight();
+        }
+    }
+
+    /**
+     * 選択機能の有効/無効を切り替え
+     * @param {boolean} enabled - trueで有効、falseで無効
+     */
+    toggleSelection(enabled) {
+        if (this.cy) {
+            // ボックス選択の有効/無効
+            this.cy.boxSelectionEnabled(enabled);
+            // ノードとエッジの選択可能/不可を設定
+            this.cy.elements().selectify();
+            if (!enabled) {
+                this.cy.elements().unselectify();
+                // 現在の選択を解除
+                this.cy.elements().unselect();
+            }
+        }
     }
 }
 
