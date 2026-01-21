@@ -244,7 +244,7 @@ class FilterPanel {
             logicalSelect.className = 'filter-logical-select';
             logicalSelect.innerHTML = `
                 <option value="AND">AND</option>
-                <option value="OR">OR</option>
+                <option value="OR" selected>OR</option>
                 <option value="NOT">NOT</option>
             `;
             logicalSelect.value = condition.logicalOp;
@@ -364,29 +364,15 @@ class FilterPanel {
      * 演算子選択肢を更新
      */
     updateOperatorSelectOptions(selectElement, columnValue) {
-        const columns = this.getAvailableColumns();
-        const column = columns.find(c => c.value === columnValue);
-        const dataType = column ? column.type : 'string';
-        
-        selectElement.innerHTML = '';
-        
-        if (dataType === 'number' || dataType === 'date') {
-            // 数値・日付型: 全ての演算子
-            selectElement.innerHTML = `
-                <option value="=">=</option>
-                <option value=">=">=</option>
-                <option value=">">></option>
-                <option value="<"><</option>
-                <option value="<="><=</option>
-                <option value="<>"><></option>
-            `;
-        } else {
-            // 文字列型: 一部の演算子のみ
-            selectElement.innerHTML = `
-                <option value="=">=</option>
-                <option value="<>"><></option>
-            `;
-        }
+        // すべてのデータ型で全ての演算子を使用可能に
+        selectElement.innerHTML = `
+            <option value="=">=</option>
+            <option value=">=">≧</option>
+            <option value=">">></option>
+            <option value="<"><</option>
+            <option value="<=">≦</option>
+            <option value="<>"><></option>
+        `;
     }
 
     /**
@@ -522,10 +508,29 @@ class FilterPanel {
             value = '';
         }
         
+        // 配列の場合は各要素をチェック
+        if (Array.isArray(value)) {
+            // 配列の要素のいずれかが条件に合致すればtrueを返す
+            return value.some(item => this.evaluateSingleValue(item, operator, targetValue));
+        }
+        
+        // 単一値の場合
+        return this.evaluateSingleValue(value, operator, targetValue);
+    }
+
+    /**
+     * 単一値に対する条件評価
+     */
+    evaluateSingleValue(value, operator, targetValue) {
+        // nullやundefinedの処理
+        if (value === null || value === undefined) {
+            value = '';
+        }
+        
         // 数値変換を試みる
         const numValue = Number(value);
         const numTarget = Number(targetValue);
-        const isNumeric = !isNaN(numValue) && !isNaN(numTarget);
+        const isNumeric = !isNaN(numValue) && !isNaN(numTarget) && value !== '' && targetValue !== '';
         
         if (isNumeric) {
             // 数値比較
@@ -539,12 +544,16 @@ class FilterPanel {
                 default: return false;
             }
         } else {
-            // 文字列比較
+            // 文字列比較（辞書順）
             const strValue = String(value).toLowerCase();
             const strTarget = String(targetValue).toLowerCase();
             
             switch (operator) {
                 case '=': return strValue === strTarget;
+                case '>=': return strValue >= strTarget;
+                case '>': return strValue > strTarget;
+                case '<': return strValue < strTarget;
+                case '<=': return strValue <= strTarget;
                 case '<>': return strValue !== strTarget;
                 default: return false;
             }

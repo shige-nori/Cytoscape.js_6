@@ -1324,7 +1324,7 @@ body {
     position: fixed;
     top: 60px;
     left: 20px;
-    width: 400px;
+    width: 450px;
     max-height: 70vh;
     background: white;
     border: 1px solid var(--border-color);

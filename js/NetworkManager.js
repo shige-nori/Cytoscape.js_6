@@ -164,6 +164,10 @@ class NetworkManager {
         // ノードホバー時の論文ID経路ハイライト
         this.cy.on('mouseover', 'node', (event) => {
             const node = event.target;
+            // フィルターがアクティブな場合はハイライトしない
+            if (this.isFilterActive()) {
+                return;
+            }
             // 選択中ノードはホバーでピンクにしない
             if (!node.selected()) {
                 this.highlightPaperIdPath(node);
@@ -356,6 +360,21 @@ class NetworkManager {
             });
             this.hoveredElements = null;
         }
+    }
+
+    /**
+     * フィルターがアクティブかどうかをチェック
+     */
+    isFilterActive() {
+        // 透明度が1未満の要素があればフィルターがアクティブ
+        const elements = this.cy.elements();
+        for (let i = 0; i < elements.length; i++) {
+            const opacity = elements[i].style('opacity');
+            if (opacity < 1) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
