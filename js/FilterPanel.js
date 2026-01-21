@@ -8,6 +8,8 @@ class FilterPanel {
         this.isVisible = false;
         this.conditions = []; // フィルター条件の配列
         this.nextConditionId = 0;
+        this.isDragging = false;
+        this.dragOffset = { x: 0, y: 0 };
     }
 
     initialize() {
@@ -19,6 +21,7 @@ class FilterPanel {
         }
 
         this.setupEventListeners();
+        this.setupPanelDrag();
         
         // 初期条件を1つ追加
         this.addCondition();
@@ -45,6 +48,36 @@ class FilterPanel {
         if (closeBtn) {
             closeBtn.addEventListener('click', () => this.closePanel());
         }
+    }
+
+    setupPanelDrag() {
+        if (!this.panel) return;
+        const header = this.panel.querySelector('.filter-panel-header');
+        if (!header) return;
+
+        header.addEventListener('mousedown', (e) => {
+            if (e.target.classList.contains('filter-panel-close-btn')) return;
+            this.isDragging = true;
+            const rect = this.panel.getBoundingClientRect();
+            this.dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            header.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!this.isDragging) return;
+            const x = e.clientX - this.dragOffset.x;
+            const y = e.clientY - this.dragOffset.y;
+            this.panel.style.left = `${x}px`;
+            this.panel.style.top = `${y}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (this.isDragging) {
+                this.isDragging = false;
+                const header = this.panel.querySelector('.filter-panel-header');
+                if (header) header.style.cursor = 'grab';
+            }
+        });
     }
 
     /**
@@ -95,7 +128,7 @@ class FilterPanel {
             column: '',
             operator: '=',
             value: '',
-            logicalOp: 'AND'
+            logicalOp: 'OR'
         };
         
         if (afterId !== null) {
@@ -438,29 +471,43 @@ class FilterPanel {
      * 条件を評価
      */
     evaluateConditions(element, elementType, conditions) {
-        let result = true;
-        let lastLogicalOp = 'AND';
+        // この要素タイプに関連する条件のみを抽出
+        const relevantConditions = conditions.filter(c => {
+            const [type] = c.column.split('.');
+            return type === elementType;
+        });
         
-        for (let i = 0; i < conditions.length; i++) {
-            const condition = conditions[i];
+        // この要素タイプに関連する条件がない場合はfalseを返す
+        if (relevantConditions.length === 0) {
+            return false;
+        }
+        
+        let result = true;
+        let lastLogicalOp = 'OR'; // 初期値（最初の条件用、実際には使われない）
+        
+        for (let i = 0; i < relevantConditions.length; i++) {
+            const condition = relevantConditions[i];
             const [type, columnName] = condition.column.split('.');
-            
-            // 要素タイプが一致しない場合はスキップ
-            if (type !== elementType) continue;
             
             const value = element.data(columnName);
             const conditionResult = this.evaluateCondition(value, condition.operator, condition.value);
             
-            // 論理演算子で結合
-            if (lastLogicalOp === 'AND') {
-                result = result && conditionResult;
-            } else if (lastLogicalOp === 'OR') {
-                result = result || conditionResult;
-            } else if (lastLogicalOp === 'NOT') {
-                result = result && !conditionResult;
+            // 最初の条件はそのまま使用
+            if (i === 0) {
+                result = conditionResult;
+            } else {
+                // 論理演算子で結合
+                if (lastLogicalOp === 'AND') {
+                    result = result && conditionResult;
+                } else if (lastLogicalOp === 'OR') {
+                    result = result || conditionResult;
+                } else if (lastLogicalOp === 'NOT') {
+                    result = result && !conditionResult;
+                }
             }
             
-            lastLogicalOp = condition.logicalOp || 'AND';
+            // 次の条件のために論理演算子を保存
+            lastLogicalOp = condition.logicalOp || 'OR';
         }
         
         return result;
@@ -520,10 +567,10 @@ class FilterPanel {
         matchedNodes.forEach(node => node.select());
         matchedEdges.forEach(edge => edge.select());
         
-        // 条件に合致しない要素を薄く表示
+        // 条件に合致しない要素を薄く表示（透明度80%）
         allNodes.forEach(node => {
             if (!matchedNodes.includes(node)) {
-                node.style('opacity', 0.2);
+                node.style('opacity', 0.8);
             } else {
                 node.style('opacity', 1);
             }
@@ -531,7 +578,7 @@ class FilterPanel {
         
         allEdges.forEach(edge => {
             if (!matchedEdges.includes(edge)) {
-                edge.style('opacity', 0.2);
+                edge.style('opacity', 0.8);
             } else {
                 edge.style('opacity', 1);
             }

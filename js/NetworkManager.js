@@ -154,26 +154,10 @@ class NetworkManager {
             }
         });
 
-        // 背景クリックで選択解除とフィルタークリア
+        // 背景クリックで選択解除
         this.cy.on('tap', (event) => {
             if (event.target === this.cy) {
                 this.cy.elements().unselect();
-                
-                // フィルターがアクティブな場合はクリア
-                if (filterPanel) {
-                    // すべての要素の透明度をリセット
-                    this.cy.elements().style('opacity', 1);
-                    
-                    // フィルター条件もリセット
-                    filterPanel.conditions = [];
-                    filterPanel.nextConditionId = 0;
-                    filterPanel.addCondition();
-                    
-                    // Table Panelを更新
-                    if (tablePanel && tablePanel.isVisible) {
-                        tablePanel.refreshTable();
-                    }
-                }
             }
         });
 

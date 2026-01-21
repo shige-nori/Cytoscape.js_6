@@ -1323,12 +1323,12 @@ body {
     display: none;
     position: fixed;
     top: 60px;
-    right: 20px;
-    width: 500px;
-    max-height: 80vh;
+    left: 20px;
+    width: 400px;
+    max-height: 70vh;
     background: white;
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 6px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     z-index: 2500;
     overflow: hidden;
@@ -1340,18 +1340,20 @@ body {
 }
 
 .filter-panel-header {
-    padding: 12px 16px;
+    padding: 8px 12px;
     background-color: var(--menubar-bg);
     border-bottom: 1px solid var(--border-color);
-    border-radius: 8px 8px 0 0;
+    border-radius: 6px 6px 0 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    cursor: grab;
+    user-select: none;
 }
 
 .filter-panel-header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 13px;
     font-weight: 600;
     color: white;
 }
@@ -1360,15 +1362,15 @@ body {
     background: none;
     border: none;
     color: white;
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
     padding: 0;
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px;
+    border-radius: 3px;
     transition: background-color 0.2s;
 }
 
@@ -1377,7 +1379,7 @@ body {
 }
 
 .filter-panel-body {
-    padding: 16px;
+    padding: 12px;
     overflow-y: auto;
     flex: 1;
 }
@@ -1385,28 +1387,28 @@ body {
 .filter-conditions-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
 }
 
 .filter-condition {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .filter-condition-row {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
 }
 
 .filter-column-select,
 .filter-operator-select,
 .filter-logical-select {
-    padding: 8px;
+    padding: 6px;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-size: 14px;
+    border-radius: 3px;
+    font-size: 12px;
     background-color: white;
     cursor: pointer;
 }
@@ -1421,25 +1423,26 @@ body {
 
 .filter-value-input {
     flex: 1.5;
-    padding: 8px;
+    padding: 6px;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    font-size: 14px;
+    border-radius: 3px;
+    font-size: 12px;
 }
 
 .filter-remove-btn {
     background-color: #ef4444;
     color: white;
     border: none;
-    border-radius: 4px;
-    width: 30px;
-    height: 30px;
+    border-radius: 3px;
+    width: 26px;
+    height: 26px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background-color 0.2s;
+    flex-shrink: 0;
 }
 
 .filter-remove-btn:hover {
@@ -1449,26 +1452,26 @@ body {
 .filter-logical-row {
     display: flex;
     justify-content: center;
-    padding: 4px 0;
+    padding: 3px 0;
 }
 
 .filter-logical-select {
-    width: 120px;
+    width: 100px;
 }
 
 .filter-add-row {
     display: flex;
     justify-content: center;
-    padding: 8px 0;
+    padding: 6px 0;
 }
 
 .filter-add-btn {
-    padding: 8px 16px;
+    padding: 6px 12px;
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 4px;
-    font-size: 14px;
+    border-radius: 3px;
+    font-size: 12px;
     cursor: pointer;
     transition: background-color 0.2s;
 }
@@ -1478,19 +1481,19 @@ body {
 }
 
 .filter-panel-footer {
-    padding: 12px 16px;
+    padding: 8px 12px;
     border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
-    gap: 8px;
+    gap: 6px;
 }
 
 #filter-clear-btn,
 #filter-apply-btn {
-    padding: 8px 16px;
+    padding: 6px 12px;
     border: none;
-    border-radius: 4px;
-    font-size: 14px;
+    border-radius: 3px;
+    font-size: 12px;
     cursor: pointer;
     transition: background-color 0.2s;
 }
