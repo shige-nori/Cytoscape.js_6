@@ -120,6 +120,7 @@ class MenuManager {
                 edgeBends.closePanel(); // Edge Bendsパネルを閉じる
                 sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
                 if (stylePanel) stylePanel.closePanel(); // Style Panelを閉じる
+                if (pathTracePanel) pathTracePanel.closePanel(); // Path Traceパネルを閉じる
                 layoutTools.openPanel();
             }
             this.closeAllMenus();
@@ -131,6 +132,7 @@ class MenuManager {
                 layoutTools.closePanel(); // Layout Toolsパネルを閉じる
                 sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
                 if (stylePanel) stylePanel.closePanel(); // Style Panelを閉じる
+                if (pathTracePanel) pathTracePanel.closePanel(); // Path Traceパネルを閉じる
                 edgeBends.openPanel();
             }
             this.closeAllMenus();
@@ -142,6 +144,7 @@ class MenuManager {
                 layoutTools.closePanel();
                 edgeBends.closePanel();
                 if (stylePanel) stylePanel.closePanel();
+                if (pathTracePanel) pathTracePanel.closePanel();
                 sortNodesPanel.openPanel();
             }
             this.closeAllMenus();
@@ -153,6 +156,7 @@ class MenuManager {
                 layoutTools.closePanel();
                 edgeBends.closePanel();
                 sortNodesPanel.closePanel();
+                if (pathTracePanel) pathTracePanel.closePanel();
                 if (stylePanel) stylePanel.openPanel();
             }
             this.closeAllMenus();

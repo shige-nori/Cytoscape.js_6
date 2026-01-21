@@ -39,6 +39,15 @@ class PathTracePanel {
         if (closeBtn) {
             closeBtn.addEventListener('click', () => this.closePanel());
         }
+
+        // ネットワーク図の空白クリックでパネルを閉じる
+        if (networkManager && networkManager.cy) {
+            networkManager.cy.on('tap', (e) => {
+                if (e.target === networkManager.cy && this.panel && this.panel.classList.contains('active')) {
+                    this.closePanel();
+                }
+            });
+        }
     }
 
     setupPanelDrag() {
@@ -115,6 +124,11 @@ class PathTracePanel {
         this.isEnabled = enabled;
         
         if (networkManager) {
+            // ONにする場合、既存の選択をすべて解除
+            if (enabled && networkManager.cy) {
+                networkManager.cy.elements().unselect();
+            }
+            
             // ホバーハイライトの有効/無効を切り替え
             networkManager.toggleHoverHighlight(enabled);
             
