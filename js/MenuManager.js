@@ -166,6 +166,14 @@ class MenuManager {
             this.closeAllMenus();
         });
 
+        // Filter Panel
+        document.getElementById('toggle-filter-panel').addEventListener('click', () => {
+            if (networkManager.hasNetwork()) {
+                if (filterPanel) filterPanel.togglePanel();
+            }
+            this.closeAllMenus();
+        });
+
         // メニュー外クリックで閉じる
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.menubar')) {

@@ -23,6 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
     stylePanel.initialize();
     tablePanel = new TablePanel();
     tablePanel.initialize();
+    filterPanel = new FilterPanel();
+    filterPanel.initialize();
     modalManager = new ModalManager();
     menuManager = new MenuManager();
     

@@ -1102,20 +1102,21 @@ class StylePanel {
     refreshAttributes() {
         if (!networkManager || !networkManager.cy) return;
 
-        // ノード属性を収集
+        // ノード属性を収集（内部用属性は除外）
         const nodeAttrs = new Set();
+        const excludeKeys = ['_hoverOriginalBg', '_hoverOriginalOpacity', '_originalBg'];
         networkManager.cy.nodes().forEach(node => {
             Object.keys(node.data()).forEach(key => {
-                if (key !== 'id') nodeAttrs.add(key);
+                if (key !== 'id' && !excludeKeys.includes(key)) nodeAttrs.add(key);
             });
         });
         this.nodeAttributes = Array.from(nodeAttrs).sort();
 
-        // エッジ属性を収集
+        // エッジ属性を収集（内部用属性は除外）
         const edgeAttrs = new Set();
         networkManager.cy.edges().forEach(edge => {
             Object.keys(edge.data()).forEach(key => {
-                if (!['id', 'source', 'target'].includes(key)) edgeAttrs.add(key);
+                if (!['id', 'source', 'target'].includes(key) && !excludeKeys.includes(key)) edgeAttrs.add(key);
             });
         });
         this.edgeAttributes = Array.from(edgeAttrs).sort();
