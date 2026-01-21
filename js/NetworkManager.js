@@ -6,6 +6,8 @@ class NetworkManager {
         this.cy = null;
         this.isSelectingNodesFromEdge = false; // エッジ選択によるノード選択中フラグ
         this.hoveredElements = null; // ホバー中のハイライト要素
+        this.isHoverHighlightEnabled = false; // ホバーハイライト機能のON/OFF
+        this.isSelectionEnabled = true; // 選択機能のON/OFF
         this.init();
     }
 
@@ -83,11 +85,20 @@ class NetworkManager {
     setupEventListeners() {
         // 選択時のスタイル変更
         this.cy.on('select', 'node', (event) => {
+            // 選択が無効化されている場合は選択をキャンセル
+            if (!this.isSelectionEnabled) {
+                event.target.unselect();
+                return;
+            }
+            
             const node = event.target;
-            // ホバー中ならピンク色ではなく、ホバー前の色を保存
-            const hoverBg = node.data('_hoverOriginalBg');
-            const currentBg = node.style('background-color');
-            node.data('_originalBg', hoverBg !== undefined ? hoverBg : currentBg);
+            
+            // 元の色を保存（初回のみ）
+            if (node.data('_baseColor') === undefined) {
+                node.data('_baseColor', node.style('background-color'));
+            }
+            
+            // 選択状態の色を適用（2層目）
             node.style({
                 'background-color': '#eab308',
                 'border-width': 3,
@@ -103,11 +114,11 @@ class NetworkManager {
 
         this.cy.on('unselect', 'node', (event) => {
             const node = event.target;
-            const originalBg = node.data('_originalBg');
-            if (originalBg) {
-                node.style('background-color', originalBg);
-            }
+            
+            // 元の色に戻す（1層目）
+            const baseColor = node.data('_baseColor') || '#2563eb';
             node.style({
+                'background-color': baseColor,
                 'border-width': stylePanel ? stylePanel.nodeStyles.borderWidth.value : 0,
                 'border-color': stylePanel ? stylePanel.getStyleValue(node, 'borderColor', stylePanel.nodeStyles.borderColor) : '#000000'
             });
@@ -117,11 +128,23 @@ class NetworkManager {
         });
 
         this.cy.on('select', 'edge', (event) => {
+            // 選択が無効化されている場合は選択をキャンセル
+            if (!this.isSelectionEnabled) {
+                event.target.unselect();
+                return;
+            }
+            
             const edge = event.target;
-            const currentColor = edge.style('line-color');
-            const currentWidth = edge.style('width');
-            edge.data('_originalLineColor', currentColor);
-            edge.data('_originalWidth', currentWidth);
+            
+            // 元の色を保存（初回のみ）
+            if (edge.data('_baseLineColor') === undefined) {
+                edge.data('_baseLineColor', edge.style('line-color'));
+            }
+            if (edge.data('_baseWidth') === undefined) {
+                edge.data('_baseWidth', edge.style('width'));
+            }
+            
+            // 選択状態の色を適用
             edge.style({
                 'line-color': '#ef4444',
                 'target-arrow-color': '#ef4444',
@@ -143,48 +166,53 @@ class NetworkManager {
 
         this.cy.on('unselect', 'edge', (event) => {
             const edge = event.target;
-            const originalColor = edge.data('_originalLineColor');
-            const originalWidth = edge.data('_originalWidth');
-            if (originalColor) {
-                edge.style('line-color', originalColor);
-                edge.style('target-arrow-color', originalColor);
-            }
-            if (originalWidth) {
-                edge.style('width', originalWidth);
-            }
+            
+            // 元の色に戻す
+            const baseColor = edge.data('_baseLineColor') || '#94a3b8';
+            const baseWidth = edge.data('_baseWidth') || 2;
+            edge.style({
+                'line-color': baseColor,
+                'target-arrow-color': baseColor,
+                'width': baseWidth
+            });
         });
 
-        // 背景クリックで選択解除
+        // 背景クリックで選択解除と色リセット
         this.cy.on('tap', (event) => {
             if (event.target === this.cy) {
+                // ホバーハイライトをクリア
+                this.clearHighlight();
+                
+                // すべての選択を解除
                 this.cy.elements().unselect();
+                
+                // 全要素の色を元に戻す（念のため）
+                this.resetAllColors();
             }
         });
 
         // ノードホバー時の論文ID経路ハイライト
         this.cy.on('mouseover', 'node', (event) => {
             const node = event.target;
+            
+            // ホバーハイライトが無効な場合はスキップ
+            if (!this.isHoverHighlightEnabled) {
+                return;
+            }
+            
             // フィルターがアクティブな場合はハイライトしない
             if (this.isFilterActive()) {
                 return;
             }
-            // 選択中ノードはホバーでピンクにしない
-            if (!node.selected()) {
-                this.highlightPaperIdPath(node);
-            }
+            
+            // ホバーハイライトを適用（3層目）
+            this.highlightPaperIdPath(node);
         });
 
         this.cy.on('mouseout', 'node', (event) => {
             const node = event.target;
-            // ホバー解除時、選択中なら黄色に戻す（ピンク解除）
-            if (node.selected()) {
-                // 選択スタイルを再適用
-                node.style({
-                    'background-color': '#eab308',
-                    'border-width': 3,
-                    'border-color': '#ca8a04'
-                });
-            }
+            
+            // ホバーハイライトをクリア（3層目を透明に）
             this.clearHighlight();
         });
     }
@@ -326,10 +354,10 @@ class NetworkManager {
     }
 
     /**
-     * ハイライトをクリア
+     * ハイライトをクリア（3層目を透明に）
      */
     clearHighlight() {
-        // すべての要素の透明度を元に戻す（先に実行）
+        // すべての要素の透明度を元に戻す
         this.cy.elements().forEach(ele => {
             const originalOpacity = ele.data('_hoverOriginalOpacity');
             if (originalOpacity !== undefined) {
@@ -337,16 +365,14 @@ class NetworkManager {
                 ele.removeData('_hoverOriginalOpacity');
             }
         });
+        
         if (this.hoveredElements) {
             // ハイライトされた要素の色を元に戻す
             this.hoveredElements.forEach(ele => {
                 if (ele.isNode()) {
                     const originalBg = ele.data('_hoverOriginalBg');
                     if (originalBg !== undefined) {
-                        // 選択中ノードは黄色を維持
-                        if (!ele.selected()) {
-                            ele.style('background-color', originalBg);
-                        }
+                        ele.style('background-color', originalBg);
                         ele.removeData('_hoverOriginalBg');
                     }
                 } else if (ele.isEdge()) {
@@ -359,6 +385,59 @@ class NetworkManager {
                 }
             });
             this.hoveredElements = null;
+        }
+    }
+
+    /**
+     * 全要素の色を元に戻す（1層目に戻す）
+     */
+    resetAllColors() {
+        this.cy.elements().forEach(ele => {
+            if (ele.isNode()) {
+                const baseColor = ele.data('_baseColor') || '#2563eb';
+                ele.style({
+                    'background-color': baseColor,
+                    'border-width': stylePanel ? stylePanel.nodeStyles.borderWidth.value : 0,
+                    'border-color': stylePanel ? stylePanel.getStyleValue(ele, 'borderColor', stylePanel.nodeStyles.borderColor) : '#000000'
+                });
+                // ホバー用の一時データもクリア
+                ele.removeData('_hoverOriginalBg');
+                ele.removeData('_hoverOriginalOpacity');
+            } else if (ele.isEdge()) {
+                const baseColor = ele.data('_baseLineColor') || '#94a3b8';
+                const baseWidth = ele.data('_baseWidth') || 2;
+                ele.style({
+                    'line-color': baseColor,
+                    'target-arrow-color': baseColor,
+                    'width': baseWidth
+                });
+                // ホバー用の一時データもクリア
+                ele.removeData('_hoverOriginalLineColor');
+                ele.removeData('_hoverOriginalOpacity');
+            }
+            // 透明度を完全にリセット
+            ele.style('opacity', 1);
+        });
+    }
+
+    /**
+     * ホバーハイライト機能のON/OFF
+     */
+    toggleHoverHighlight(enabled) {
+        this.isHoverHighlightEnabled = enabled;
+        if (!enabled) {
+            this.clearHighlight();
+        }
+    }
+
+    /**
+     * 選択機能のON/OFF
+     */
+    setSelectionEnabled(enabled) {
+        this.isSelectionEnabled = enabled;
+        if (!enabled) {
+            // 選択を無効化するときは、現在の選択を解除
+            this.cy.elements().unselect();
         }
     }
 

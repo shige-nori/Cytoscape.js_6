@@ -174,6 +174,14 @@ class MenuManager {
             this.closeAllMenus();
         });
 
+        // Path Trace Panel
+        document.getElementById('toggle-path-trace-panel').addEventListener('click', () => {
+            if (networkManager.hasNetwork()) {
+                if (pathTracePanel) pathTracePanel.togglePanel();
+            }
+            this.closeAllMenus();
+        });
+
         // メニュー外クリックで閉じる
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.menubar')) {
