@@ -25,8 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     tablePanel.initialize();
     filterPanel = new FilterPanel();
     filterPanel.initialize();
-    pathTracePanel = new PathTracePanel();
-    pathTracePanel.initialize();
     modalManager = new ModalManager();
     menuManager = new MenuManager();
     

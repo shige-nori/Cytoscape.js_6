@@ -1,11 +1,11 @@
 /**
- * PathTracePanel - Path Trace機能の設定パネル
+ * PathTracePanel - Path Trace機能の管理クラス
  */
 class PathTracePanel {
     constructor() {
         this.panel = null;
         this.isVisible = false;
-        this.isPathTraceEnabled = false;
+        this.isEnabled = false; // Path Traceの有効/無効状態
         this.isDragging = false;
         this.dragOffset = { x: 0, y: 0 };
     }
@@ -30,9 +30,7 @@ class PathTracePanel {
         const toggleSwitch = document.getElementById('path-trace-toggle');
         if (toggleSwitch) {
             toggleSwitch.addEventListener('change', (e) => {
-                this.isPathTraceEnabled = e.target.checked;
-                this.updatePathTraceState();
-                this.updateStatusLabel();
+                this.togglePathTrace(e.target.checked);
             });
         }
 
@@ -45,11 +43,11 @@ class PathTracePanel {
 
     setupPanelDrag() {
         if (!this.panel) return;
-        const header = this.panel.querySelector('.path-trace-panel-header');
+        const header = this.panel.querySelector('.tools-panel-header');
         if (!header) return;
 
         header.addEventListener('mousedown', (e) => {
-            if (e.target.classList.contains('path-trace-panel-close-btn')) return;
+            if (e.target.classList.contains('tools-panel-close')) return;
             this.isDragging = true;
             const rect = this.panel.getBoundingClientRect();
             this.dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
@@ -62,44 +60,16 @@ class PathTracePanel {
             const y = e.clientY - this.dragOffset.y;
             this.panel.style.left = `${x}px`;
             this.panel.style.top = `${y}px`;
+            this.panel.style.right = 'auto';
         });
 
         document.addEventListener('mouseup', () => {
             if (this.isDragging) {
                 this.isDragging = false;
-                const header = this.panel.querySelector('.path-trace-panel-header');
+                const header = this.panel.querySelector('.tools-panel-header');
                 if (header) header.style.cursor = 'grab';
             }
         });
-    }
-
-    /**
-     * Path Trace状態を更新
-     */
-    updatePathTraceState() {
-        if (!networkManager) return;
-
-        if (this.isPathTraceEnabled) {
-            // Path Trace ON: ホバーハイライトを有効化、選択を無効化
-            networkManager.toggleHoverHighlight(true);
-            networkManager.setSelectionEnabled(false);
-            console.log('Path Trace: ON');
-        } else {
-            // Path Trace OFF: ホバーハイライトを無効化、選択を有効化
-            networkManager.toggleHoverHighlight(false);
-            networkManager.setSelectionEnabled(true);
-            console.log('Path Trace: OFF');
-        }
-    }
-
-    /**
-     * ステータスラベルを更新
-     */
-    updateStatusLabel() {
-        const statusLabel = document.getElementById('path-trace-status');
-        if (statusLabel) {
-            statusLabel.textContent = this.isPathTraceEnabled ? 'ON' : 'OFF';
-        }
     }
 
     /**
@@ -108,11 +78,12 @@ class PathTracePanel {
     openPanel() {
         if (!this.panel) return;
         
-        if (!networkManager || !networkManager.hasNetwork()) {
-            alert('Please load a network first.');
-            return;
-        }
-
+        // 他のパネルを閉じる
+        if (layoutTools) layoutTools.closePanel();
+        if (edgeBends) edgeBends.closePanel();
+        if (sortNodesPanel) sortNodesPanel.closePanel();
+        if (stylePanel) stylePanel.closePanel();
+        
         this.panel.classList.add('active');
         this.isVisible = true;
     }
@@ -135,6 +106,30 @@ class PathTracePanel {
         } else {
             this.openPanel();
         }
+    }
+
+    /**
+     * Path Trace機能のON/OFF
+     */
+    togglePathTrace(enabled) {
+        this.isEnabled = enabled;
+        
+        if (networkManager) {
+            // ホバーハイライトの有効/無効を切り替え
+            networkManager.toggleHoverHighlight(enabled);
+            
+            // 選択機能の有効/無効を切り替え
+            networkManager.toggleSelection(!enabled);
+            
+            console.log(`Path Trace: ${enabled ? 'ON' : 'OFF'}`);
+        }
+    }
+
+    /**
+     * Path Trace機能の状態を取得
+     */
+    isPathTraceEnabled() {
+        return this.isEnabled;
     }
 }
 
