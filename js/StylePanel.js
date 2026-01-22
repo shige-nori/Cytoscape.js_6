@@ -889,6 +889,16 @@ class StylePanel {
                 attrSelect.classList.remove('hidden');
                 this.updateAttributeOptions(attrSelect, element);
             }
+            // 既に属性が選択済みの場合はマッピング表を即時表示
+            if (discreteDiv) {
+                const styleConfig = element === 'node' ? this.nodeStyles[property] : this.edgeStyles[property];
+                const selectedAttr = attrSelect && attrSelect.value ? attrSelect.value : styleConfig.attribute;
+                if (selectedAttr) {
+                    styleConfig.attribute = selectedAttr;
+                    this.buildDiscreteMappingTable(discreteDiv, property, element, selectedAttr);
+                    discreteDiv.classList.remove('hidden');
+                }
+            }
         } else if (mappingType === 'passthrough') {
             // Passthroughモード: 属性選択のみ表示
             if (attrSelect) {

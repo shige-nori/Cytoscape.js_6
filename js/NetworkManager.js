@@ -126,7 +126,7 @@ class NetworkManager {
             edge.style({
                 'line-color': '#ef4444',
                 'target-arrow-color': '#ef4444',
-                'width': 3
+                'width': currentWidth
             });
             
             // 両端のノードも選択（フラグを立てて他のエッジが選択されないようにする）
@@ -615,27 +615,6 @@ class NetworkManager {
                 menuManager.updateLayoutCheckmarks();
             }
         }
-    }
-
-    /**
-     * グラフをビューにフィット
-     */
-    fit(padding = 50) {
-        this.cy.fit(padding);
-    }
-
-    /**
-     * ノードを取得
-     */
-    getNodes() {
-        return this.cy.nodes();
-    }
-
-    /**
-     * エッジを取得
-     */
-    getEdges() {
-        return this.cy.edges();
     }
 
     /**
