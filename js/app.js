@@ -1,6 +1,20 @@
 /**
  * Network Visualizer - メインアプリケーション
  */
+import { appContext } from './AppContext.js';
+import { progressOverlay } from './ProgressOverlay.js';
+import { NetworkManager } from './NetworkManager.js';
+import { FileHandler } from './FileHandler.js';
+import { LayoutManager } from './LayoutManager.js';
+import { LayoutTools } from './LayoutTools.js';
+import { EdgeBends } from './EdgeBendsPanel.js';
+import { SortNodesPanel } from './SortNodesPanel.js';
+import { StylePanel } from './StylePanel.js';
+import { TablePanel } from './TablePanel.js';
+import { FilterPanel } from './FilterPanel.js';
+import { PathTracePanel } from './PathTracePanel.js';
+import { ModalManager } from './ModalManager.js';
+import { MenuManager } from './MenuManager.js';
 
 // アプリケーション初期化
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,33 +24,33 @@ document.addEventListener('DOMContentLoaded', () => {
     progressOverlay.init();
     
     // 各マネージャーを初期化
-    networkManager = new NetworkManager();
-    fileHandler = new FileHandler();
-    layoutManager = new LayoutManager();
-    layoutTools = new LayoutTools();
-    layoutTools.initialize();
-    edgeBends = new EdgeBends();
-    edgeBends.initialize();
-    sortNodesPanel = new SortNodesPanel();
-    sortNodesPanel.initialize();
-    stylePanel = new StylePanel();
-    stylePanel.initialize();
-    tablePanel = new TablePanel();
-    tablePanel.initialize();
-    filterPanel = new FilterPanel();
-    filterPanel.initialize();
-    pathTracePanel = new PathTracePanel();
-    pathTracePanel.initialize();
-    modalManager = new ModalManager();
-    menuManager = new MenuManager();
+    appContext.networkManager = new NetworkManager();
+    appContext.fileHandler = new FileHandler();
+    appContext.layoutManager = new LayoutManager();
+    appContext.layoutTools = new LayoutTools();
+    appContext.layoutTools.initialize();
+    appContext.edgeBends = new EdgeBends();
+    appContext.edgeBends.initialize();
+    appContext.sortNodesPanel = new SortNodesPanel();
+    appContext.sortNodesPanel.initialize();
+    appContext.stylePanel = new StylePanel();
+    appContext.stylePanel.initialize();
+    appContext.tablePanel = new TablePanel();
+    appContext.tablePanel.initialize();
+    appContext.filterPanel = new FilterPanel();
+    appContext.filterPanel.initialize();
+    appContext.pathTracePanel = new PathTracePanel();
+    appContext.pathTracePanel.initialize();
+    appContext.modalManager = new ModalManager();
+    appContext.menuManager = new MenuManager();
     
     // 初期メニュー状態を設定
-    menuManager.updateMenuStates();
+    appContext.menuManager.updateMenuStates();
     
     // ウィンドウリサイズ対応
     window.addEventListener('resize', () => {
-        if (networkManager && networkManager.cy) {
-            networkManager.cy.resize();
+        if (appContext.networkManager && appContext.networkManager.cy) {
+            appContext.networkManager.cy.resize();
         }
     });
     

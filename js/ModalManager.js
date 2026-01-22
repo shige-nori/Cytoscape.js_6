@@ -1,7 +1,10 @@
+import { appContext } from './AppContext.js';
+import { progressOverlay } from './ProgressOverlay.js';
+
 /**
  * ModalManager - モーダルウィンドウ管理クラス
  */
-class ModalManager {
+export class ModalManager {
     constructor() {
         this.modal = null;
         this.tableBody = null;
@@ -40,7 +43,7 @@ class ModalManager {
         
         columns.forEach((column, index) => {
             // データ型を推測
-            const guessedType = fileHandler.guessDataType(fileHandler.currentData, column);
+            const guessedType = appContext.fileHandler.guessDataType(appContext.fileHandler.currentData, column);
             
             // デフォルトロールを設定
             let defaultRole = 'Attribute';
@@ -178,7 +181,7 @@ class ModalManager {
         
         // UIをブロックしないよう非同期処理
         setTimeout(() => {
-            fileHandler.executeImport(this.currentMappings);
+            appContext.fileHandler.executeImport(this.currentMappings);
         }, 50);
     }
 
@@ -196,6 +199,3 @@ class ModalManager {
         this.modal.classList.remove('active');
     }
 }
-
-// グローバルインスタンス
-let modalManager;

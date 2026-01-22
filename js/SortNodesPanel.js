@@ -1,7 +1,10 @@
+import { appContext } from './AppContext.js';
+import { progressOverlay } from './ProgressOverlay.js';
+
 /**
  * SortNodesPanel - Sort Nodes (A-Z)パネル管理クラス
  */
-class SortNodesPanel {
+export class SortNodesPanel {
     constructor() {
         this.panel = null;
         this.currentAxis = 'x-axis'; // デフォルトはX-axis（行単位）
@@ -11,8 +14,6 @@ class SortNodesPanel {
         this.panel = document.getElementById('sort-nodes-panel');
         this.setupEventListeners();
         
-        // 互換性のためグローバルに登録
-        window.sortNodesPanel = this;
     }
 
     setupEventListeners() {
@@ -32,9 +33,9 @@ class SortNodesPanel {
         }
 
         // ネットワーク図の空白クリックでパネルを閉じる
-        if (networkManager && networkManager.cy) {
-            networkManager.cy.on('tap', (e) => {
-                if (e.target === networkManager.cy && this.panel && this.panel.classList.contains('active')) {
+        if (appContext.networkManager && appContext.networkManager.cy) {
+            appContext.networkManager.cy.on('tap', (e) => {
+                if (e.target === appContext.networkManager.cy && this.panel && this.panel.classList.contains('active')) {
                     this.closePanel();
                 }
             });
@@ -52,21 +53,19 @@ class SortNodesPanel {
     }
 
     applySort() {
-        if (!networkManager || !networkManager.hasNetwork()) return;
+        if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
 
         progressOverlay.show('Sorting nodes...');
         
         setTimeout(() => {
             if (this.currentAxis === 'x-axis') {
                 // X-axis: 行単位（階層単位）でソート
-                layoutManager.sortNodesAZ();
+                appContext.layoutManager.sortNodesAZ();
             } else {
                 // Y-axis: 列単位でソート
-                layoutManager.sortNodesByColumn();
+                appContext.layoutManager.sortNodesByColumn();
             }
             progressOverlay.hide();
         }, 50);
     }
 }
-
-// グローバルインスタンスは app.js で生成

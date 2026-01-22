@@ -1,7 +1,10 @@
+import { appContext } from './AppContext.js';
+import { progressOverlay } from './ProgressOverlay.js';
+
 /**
  * MenuManager - メニューバー管理クラス
  */
-class MenuManager {
+export class MenuManager {
     constructor() {
         this.init();
     }
@@ -34,7 +37,7 @@ class MenuManager {
                     });
                     
                     const file = await fileHandle.getFile();
-                    await fileHandler.openCX2File(file, fileHandle);
+                    await appContext.fileHandler.openCX2File(file, fileHandle);
                 } catch (err) {
                     if (err.name !== 'AbortError') {
                         console.error('Error opening file:', err);
@@ -48,16 +51,16 @@ class MenuManager {
 
         // Save Network
         document.getElementById('save-network').addEventListener('click', () => {
-            if (fileHandler.currentFilePath) {
-                fileHandler.saveCX2File(fileHandler.currentFilePath);
+            if (appContext.fileHandler.currentFilePath) {
+                appContext.fileHandler.saveCX2File(appContext.fileHandler.currentFilePath);
             }
             this.closeAllMenus();
         });
 
         // Save As Network
         document.getElementById('save-as-network').addEventListener('click', () => {
-            if (networkManager.hasNetwork()) {
-                fileHandler.saveCX2File(null, true); // useFileDialog = true
+            if (appContext.networkManager.hasNetwork()) {
+                appContext.fileHandler.saveCX2File(null, true); // useFileDialog = true
             }
             this.closeAllMenus();
         });
@@ -70,7 +73,7 @@ class MenuManager {
 
         // Import Table File
         document.getElementById('import-table').addEventListener('click', () => {
-            if (!networkManager.hasNetwork()) {
+            if (!appContext.networkManager.hasNetwork()) {
                 alert('Please import a network file first.');
                 this.closeAllMenus();
                 return;
@@ -81,9 +84,9 @@ class MenuManager {
 
         // Close Network
         document.getElementById('close-network').addEventListener('click', () => {
-            if (networkManager.hasNetwork()) {
+            if (appContext.networkManager.hasNetwork()) {
                 if (confirm('Are you sure you want to close the current network?')) {
-                    networkManager.closeNetwork();
+                    appContext.networkManager.closeNetwork();
                     this.updateMenuStates();
                 }
             }
@@ -92,10 +95,10 @@ class MenuManager {
 
         // Layout - Dagre (Defaults)
         document.getElementById('layout-dagre').addEventListener('click', () => {
-            if (networkManager.hasNetwork()) {
+            if (appContext.networkManager.hasNetwork()) {
                 progressOverlay.show('Applying layout...');
                 setTimeout(() => {
-                    layoutManager.applyDagreLayout();
+                    appContext.layoutManager.applyDagreLayout();
                     progressOverlay.hide();
                 }, 50);
             }
@@ -104,10 +107,10 @@ class MenuManager {
 
         // Layout - Equal
         document.getElementById('layout-equal').addEventListener('click', () => {
-            if (networkManager.hasNetwork()) {
+            if (appContext.networkManager.hasNetwork()) {
                 progressOverlay.show('Applying layout...');
                 setTimeout(() => {
-                    layoutManager.applyEqualLayout();
+                    appContext.layoutManager.applyEqualLayout();
                     progressOverlay.hide();
                 }, 50);
             }
@@ -116,76 +119,76 @@ class MenuManager {
 
         // Layout - Tools
         document.getElementById('layout-tools').addEventListener('click', () => {
-            if (networkManager.hasNetwork()) {
-                edgeBends.closePanel(); // Edge Bendsパネルを閉じる
-                sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
-                if (stylePanel) stylePanel.closePanel(); // Style Panelを閉じる
-                if (pathTracePanel) pathTracePanel.closePanel(); // Path Traceパネルを閉じる
-                layoutTools.openPanel();
+            if (appContext.networkManager.hasNetwork()) {
+                appContext.edgeBends.closePanel(); // Edge Bendsパネルを閉じる
+                appContext.sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
+                if (appContext.stylePanel) appContext.stylePanel.closePanel(); // Style Panelを閉じる
+                if (appContext.pathTracePanel) appContext.pathTracePanel.closePanel(); // Path Traceパネルを閉じる
+                appContext.layoutTools.openPanel();
             }
             this.closeAllMenus();
         });
 
         // Edge Bends
         document.getElementById('edge-bends').addEventListener('click', () => {
-            if (networkManager.hasNetwork()) {
-                layoutTools.closePanel(); // Layout Toolsパネルを閉じる
-                sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
-                if (stylePanel) stylePanel.closePanel(); // Style Panelを閉じる
-                if (pathTracePanel) pathTracePanel.closePanel(); // Path Traceパネルを閉じる
-                edgeBends.openPanel();
+            if (appContext.networkManager.hasNetwork()) {
+                appContext.layoutTools.closePanel(); // Layout Toolsパネルを閉じる
+                appContext.sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
+                if (appContext.stylePanel) appContext.stylePanel.closePanel(); // Style Panelを閉じる
+                if (appContext.pathTracePanel) appContext.pathTracePanel.closePanel(); // Path Traceパネルを閉じる
+                appContext.edgeBends.openPanel();
             }
             this.closeAllMenus();
         });
 
         // Sort Nodes (A-Z)
         document.getElementById('sort-nodes-az').addEventListener('click', () => {
-            if (networkManager.hasNetwork()) {
-                layoutTools.closePanel();
-                edgeBends.closePanel();
-                if (stylePanel) stylePanel.closePanel();
-                if (pathTracePanel) pathTracePanel.closePanel();
-                sortNodesPanel.openPanel();
+            if (appContext.networkManager.hasNetwork()) {
+                appContext.layoutTools.closePanel();
+                appContext.edgeBends.closePanel();
+                if (appContext.stylePanel) appContext.stylePanel.closePanel();
+                if (appContext.pathTracePanel) appContext.pathTracePanel.closePanel();
+                appContext.sortNodesPanel.openPanel();
             }
             this.closeAllMenus();
         });
 
         // Style Panel
         document.getElementById('open-style-panel').addEventListener('click', () => {
-            if (networkManager.hasNetwork()) {
-                layoutTools.closePanel();
-                edgeBends.closePanel();
-                sortNodesPanel.closePanel();
-                if (pathTracePanel) pathTracePanel.closePanel();
-                if (stylePanel) stylePanel.openPanel();
+            if (appContext.networkManager.hasNetwork()) {
+                appContext.layoutTools.closePanel();
+                appContext.edgeBends.closePanel();
+                appContext.sortNodesPanel.closePanel();
+                if (appContext.pathTracePanel) appContext.pathTracePanel.closePanel();
+                if (appContext.stylePanel) appContext.stylePanel.openPanel();
             }
             this.closeAllMenus();
         });
 
         // Table Panel
         document.getElementById('toggle-table-panel').addEventListener('click', () => {
-            if (networkManager.hasNetwork()) {
-                if (tablePanel) tablePanel.togglePanel();
+            if (appContext.networkManager.hasNetwork()) {
+                if (appContext.tablePanel) appContext.tablePanel.togglePanel();
             }
             this.closeAllMenus();
         });
 
         // Filter Panel
         document.getElementById('toggle-filter-panel').addEventListener('click', () => {
-            if (networkManager.hasNetwork()) {
-                if (filterPanel) filterPanel.togglePanel();
+            if (appContext.networkManager.hasNetwork()) {
+                if (appContext.filterPanel) appContext.filterPanel.togglePanel();
             }
             this.closeAllMenus();
         });
 
         // Path Trace
         document.getElementById('path-trace-menu').addEventListener('click', () => {
-            if (networkManager.hasNetwork()) {
-                layoutTools.closePanel();
-                edgeBends.closePanel();
-                sortNodesPanel.closePanel();
-                if (stylePanel) stylePanel.closePanel();
-                if (pathTracePanel) pathTracePanel.openPanel();
+            if (appContext.networkManager.hasNetwork()) {
+                appContext.layoutTools.closePanel();
+                appContext.edgeBends.closePanel();
+                appContext.sortNodesPanel.closePanel();
+                if (appContext.stylePanel) appContext.stylePanel.closePanel();
+                if (appContext.pathTracePanel) appContext.pathTracePanel.openPanel();
             }
             this.closeAllMenus();
         });
@@ -206,7 +209,7 @@ class MenuManager {
         document.getElementById('file-input-cx2').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
-                await fileHandler.openCX2File(file);
+                await appContext.fileHandler.openCX2File(file);
             }
             e.target.value = ''; // リセット
         });
@@ -215,7 +218,7 @@ class MenuManager {
         document.getElementById('file-input-network').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
-                await fileHandler.startNetworkImport(file);
+                await appContext.fileHandler.startNetworkImport(file);
             }
             e.target.value = ''; // リセット
         });
@@ -224,7 +227,7 @@ class MenuManager {
         document.getElementById('file-input-table').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
-                await fileHandler.startTableImport(file);
+                await appContext.fileHandler.startTableImport(file);
             }
             e.target.value = ''; // リセット
         });
@@ -243,8 +246,8 @@ class MenuManager {
      * メニュー項目の有効/無効状態を更新
      */
     updateMenuStates() {
-        const hasNetwork = networkManager && networkManager.hasNetwork();
-        const hasSavePath = fileHandler && fileHandler.currentFilePath;
+        const hasNetwork = appContext.networkManager && appContext.networkManager.hasNetwork();
+        const hasSavePath = appContext.fileHandler && appContext.fileHandler.currentFilePath;
         
         // Saveメニュー
         const saveItem = document.getElementById('save-network');
@@ -295,7 +298,7 @@ class MenuManager {
         const equalItem = document.getElementById('layout-equal');
         const hierarchicalMenu = document.querySelector('[data-submenu="hierarchical"]');
         
-        if (!layoutManager) return;
+        if (!appContext.layoutManager) return;
         
         // すべてのチェックマークを削除
         if (dagreItem) dagreItem.classList.remove('checked');
@@ -303,10 +306,10 @@ class MenuManager {
         if (hierarchicalMenu) hierarchicalMenu.classList.remove('checked');
         
         // 現在のレイアウトに応じてチェックマークを追加
-        if (layoutManager.currentLayout === 'dagre') {
+        if (appContext.layoutManager.currentLayout === 'dagre') {
             if (dagreItem) dagreItem.classList.add('checked');
             if (hierarchicalMenu) hierarchicalMenu.classList.add('checked');
-        } else if (layoutManager.currentLayout === 'equal') {
+        } else if (appContext.layoutManager.currentLayout === 'equal') {
             if (equalItem) equalItem.classList.add('checked');
             if (hierarchicalMenu) hierarchicalMenu.classList.add('checked');
         }
@@ -319,13 +322,10 @@ class MenuManager {
         const tablePanelItem = document.getElementById('toggle-table-panel');
         if (!tablePanelItem) return;
         
-        if (tablePanel && tablePanel.isVisible) {
+        if (appContext.tablePanel && appContext.tablePanel.isVisible) {
             tablePanelItem.classList.add('checked');
         } else {
             tablePanelItem.classList.remove('checked');
         }
     }
 }
-
-// グローバルインスタンス
-let menuManager;

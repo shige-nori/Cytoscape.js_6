@@ -1,8 +1,11 @@
+import { appContext } from './AppContext.js';
+import { progressOverlay } from './ProgressOverlay.js';
+
 /**
  * FilterPanel - フィルターパネル管理クラス
  * ノードとエッジのデータをフィルタリングして選択・表示を制御
  */
-class FilterPanel {
+export class FilterPanel {
     constructor() {
         this.panel = null;
         this.isVisible = false;
@@ -26,8 +29,6 @@ class FilterPanel {
         // 初期条件を1つ追加
         this.addCondition();
         
-        // 互換性のためグローバルに登録
-        window.filterPanel = this;
     }
 
     setupEventListeners() {
@@ -86,7 +87,7 @@ class FilterPanel {
     openPanel() {
         if (!this.panel) return;
         
-        if (!networkManager || !networkManager.hasNetwork()) {
+        if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) {
             alert('Please load a network first.');
             return;
         }
@@ -279,7 +280,7 @@ class FilterPanel {
      * カラム選択肢を設定
      */
     populateColumnOptions(selectElement) {
-        if (!networkManager || !networkManager.hasNetwork()) return;
+        if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
         
         const columns = this.getAvailableColumns();
         
@@ -297,10 +298,10 @@ class FilterPanel {
     getAvailableColumns() {
         const columns = [];
         
-        if (!networkManager || !networkManager.hasNetwork()) return columns;
+        if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return columns;
         
-        const nodes = networkManager.cy.nodes();
-        const edges = networkManager.cy.edges();
+        const nodes = appContext.networkManager.cy.nodes();
+        const edges = appContext.networkManager.cy.edges();
         
         // ノードのカラム
         if (nodes.length > 0) {
@@ -409,7 +410,7 @@ class FilterPanel {
      * フィルターを適用
      */
     applyFilter() {
-        if (!networkManager || !networkManager.hasNetwork()) return;
+        if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
         
         // 条件の検証
         const validConditions = this.conditions.filter(c => c.column && c.value);
@@ -425,8 +426,8 @@ class FilterPanel {
         // フィルター処理を非同期で実行（UIをブロックしないため）
         setTimeout(() => {
             // フィルター処理
-            const nodes = networkManager.cy.nodes();
-            const edges = networkManager.cy.edges();
+            const nodes = appContext.networkManager.cy.nodes();
+            const edges = appContext.networkManager.cy.edges();
             
             const matchedNodes = [];
             const matchedEdges = [];
@@ -564,13 +565,13 @@ class FilterPanel {
      * フィルター結果を適用
      */
     applyFilterResults(matchedNodes, matchedEdges) {
-        if (!networkManager || !networkManager.hasNetwork()) return;
+        if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
         
-        const allNodes = networkManager.cy.nodes();
-        const allEdges = networkManager.cy.edges();
+        const allNodes = appContext.networkManager.cy.nodes();
+        const allEdges = appContext.networkManager.cy.edges();
         
         // すべての選択を解除
-        networkManager.cy.elements().unselect();
+        appContext.networkManager.cy.elements().unselect();
         
         // 条件に合致した要素を選択
         matchedNodes.forEach(node => node.select());
@@ -594,8 +595,8 @@ class FilterPanel {
         });
         
         // Table Panelを更新
-        if (tablePanel && tablePanel.isVisible) {
-            tablePanel.refreshTable();
+        if (appContext.tablePanel && appContext.tablePanel.isVisible) {
+            appContext.tablePanel.refreshTable();
         }
         
         console.log(`Filter applied: ${matchedNodes.length} nodes, ${matchedEdges.length} edges matched`);
@@ -605,26 +606,23 @@ class FilterPanel {
      * フィルターをクリア
      */
     clearFilter() {
-        if (!networkManager || !networkManager.hasNetwork()) return;
+        if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
         
         // すべての選択を解除
-        networkManager.cy.elements().unselect();
+        appContext.networkManager.cy.elements().unselect();
         
         // すべての要素の透明度をリセット
-        networkManager.cy.elements().style('opacity', 1);
+        appContext.networkManager.cy.elements().style('opacity', 1);
         
         // 条件をリセット
         this.conditions = [];
         this.addCondition();
         
         // Table Panelを更新
-        if (tablePanel && tablePanel.isVisible) {
-            tablePanel.refreshTable();
+        if (appContext.tablePanel && appContext.tablePanel.isVisible) {
+            appContext.tablePanel.refreshTable();
         }
         
         console.log('Filter cleared');
     }
 }
-
-// グローバルインスタンス
-let filterPanel;

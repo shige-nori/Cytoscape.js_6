@@ -1,7 +1,9 @@
+import { appContext } from './AppContext.js';
+
 /**
  * NetworkManager - Cytoscape.jsグラフの管理クラス
  */
-class NetworkManager {
+export class NetworkManager {
     constructor() {
         this.cy = null;
         this.isSelectingNodesFromEdge = false; // エッジ選択によるノード選択中フラグ
@@ -109,8 +111,8 @@ class NetworkManager {
                 node.style('background-color', originalBg);
             }
             node.style({
-                'border-width': stylePanel ? stylePanel.nodeStyles.borderWidth.value : 0,
-                'border-color': stylePanel ? stylePanel.getStyleValue(node, 'borderColor', stylePanel.nodeStyles.borderColor) : '#000000'
+                'border-width': appContext.stylePanel ? appContext.stylePanel.nodeStyles.borderWidth.value : 0,
+                'border-color': appContext.stylePanel ? appContext.stylePanel.getStyleValue(node, 'borderColor', appContext.stylePanel.nodeStyles.borderColor) : '#000000'
             });
             
             // 選択解除されたノードに接続されたエッジをチェック
@@ -396,13 +398,13 @@ class NetworkManager {
      */
     createNetwork(data, mappings) {
         // StylePanelをリセット
-        if (typeof stylePanel !== 'undefined' && stylePanel) {
-            stylePanel.resetStyles();
+        if (appContext.stylePanel) {
+            appContext.stylePanel.resetStyles();
         }
         
         // FileHandlerのファイルパスをクリア（Import時）
-        if (typeof fileHandler !== 'undefined' && fileHandler) {
-            fileHandler.currentFilePath = null;
+        if (appContext.fileHandler) {
+            appContext.fileHandler.currentFilePath = null;
         }
         
         const nodes = new Map();
@@ -464,8 +466,8 @@ class NetworkManager {
         this.cy.add([...nodes.values(), ...edges]);
 
         // Style Panelのスタイルを適用
-        if (typeof stylePanel !== 'undefined' && stylePanel) {
-            setTimeout(() => stylePanel.reapplyStyles(), 100);
+        if (appContext.stylePanel) {
+            setTimeout(() => appContext.stylePanel.reapplyStyles(), 100);
         }
 
         return {
@@ -544,8 +546,8 @@ class NetworkManager {
         });
 
         // Style Panelのスタイルを再適用
-        if (typeof stylePanel !== 'undefined' && stylePanel) {
-            setTimeout(() => stylePanel.reapplyStyles(), 100);
+        if (appContext.stylePanel) {
+            setTimeout(() => appContext.stylePanel.reapplyStyles(), 100);
         }
 
         return {
@@ -572,47 +574,47 @@ class NetworkManager {
         }
         
         // テーブルパネルをクリア
-        if (window.tablePanel) {
-            tablePanel.clearTable();
+        if (appContext.tablePanel) {
+            appContext.tablePanel.clearTable();
         }
         
         // Layout Toolsパネルをクリア
-        if (window.layoutTools) {
-            layoutTools.closePanel();
-            layoutTools.resetOriginalPositions();
+        if (appContext.layoutTools) {
+            appContext.layoutTools.closePanel();
+            appContext.layoutTools.resetOriginalPositions();
         }
         
         // StylePanelをリセット
-        if (window.stylePanel) {
-            stylePanel.resetStyles();
+        if (appContext.stylePanel) {
+            appContext.stylePanel.resetStyles();
         }
         
         // FileHandlerのファイルパスをクリア
-        if (window.fileHandler) {
-            fileHandler.currentFilePath = null;
-            fileHandler.currentFileHandle = null;
+        if (appContext.fileHandler) {
+            appContext.fileHandler.currentFilePath = null;
+            appContext.fileHandler.currentFileHandle = null;
         }
         
         // Edge Bendsパネルをクリア
-        if (window.edgeBends) {
-            edgeBends.closePanel();
+        if (appContext.edgeBends) {
+            appContext.edgeBends.closePanel();
         }
         
         // Sort Nodesパネルをクリア
-        if (window.sortNodesPanel) {
-            sortNodesPanel.closePanel();
+        if (appContext.sortNodesPanel) {
+            appContext.sortNodesPanel.closePanel();
         }
         
         // Style Panelをクリア
-        if (window.stylePanel) {
-            stylePanel.closePanel();
+        if (appContext.stylePanel) {
+            appContext.stylePanel.closePanel();
         }
         
         // Layout Managerの設定をクリア
-        if (window.layoutManager) {
-            layoutManager.currentLayout = null;
-            if (window.menuManager) {
-                menuManager.updateLayoutCheckmarks();
+        if (appContext.layoutManager) {
+            appContext.layoutManager.currentLayout = null;
+            if (appContext.menuManager) {
+                appContext.menuManager.updateLayoutCheckmarks();
             }
         }
     }
@@ -647,6 +649,3 @@ class NetworkManager {
         }
     }
 }
-
-// グローバルインスタンス
-let networkManager;

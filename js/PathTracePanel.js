@@ -1,7 +1,9 @@
+import { appContext } from './AppContext.js';
+
 /**
  * PathTracePanel - Path Trace機能の管理クラス
  */
-class PathTracePanel {
+export class PathTracePanel {
     constructor() {
         this.panel = null;
         this.isVisible = false;
@@ -21,8 +23,6 @@ class PathTracePanel {
         this.setupEventListeners();
         this.setupPanelDrag();
         
-        // 互換性のためグローバルに登録
-        window.pathTracePanel = this;
     }
 
     setupEventListeners() {
@@ -41,9 +41,9 @@ class PathTracePanel {
         }
 
         // ネットワーク図の空白クリックでパネルを閉じる
-        if (networkManager && networkManager.cy) {
-            networkManager.cy.on('tap', (e) => {
-                if (e.target === networkManager.cy && this.panel && this.panel.classList.contains('active')) {
+        if (appContext.networkManager && appContext.networkManager.cy) {
+            appContext.networkManager.cy.on('tap', (e) => {
+                if (e.target === appContext.networkManager.cy && this.panel && this.panel.classList.contains('active')) {
                     this.closePanel();
                 }
             });
@@ -88,10 +88,10 @@ class PathTracePanel {
         if (!this.panel) return;
         
         // 他のパネルを閉じる
-        if (layoutTools) layoutTools.closePanel();
-        if (edgeBends) edgeBends.closePanel();
-        if (sortNodesPanel) sortNodesPanel.closePanel();
-        if (stylePanel) stylePanel.closePanel();
+        if (appContext.layoutTools) appContext.layoutTools.closePanel();
+        if (appContext.edgeBends) appContext.edgeBends.closePanel();
+        if (appContext.sortNodesPanel) appContext.sortNodesPanel.closePanel();
+        if (appContext.stylePanel) appContext.stylePanel.closePanel();
         
         this.panel.classList.add('active');
         this.isVisible = true;
@@ -123,17 +123,17 @@ class PathTracePanel {
     togglePathTrace(enabled) {
         this.isEnabled = enabled;
         
-        if (networkManager) {
+        if (appContext.networkManager) {
             // ONにする場合、既存の選択をすべて解除
-            if (enabled && networkManager.cy) {
-                networkManager.cy.elements().unselect();
+            if (enabled && appContext.networkManager.cy) {
+                appContext.networkManager.cy.elements().unselect();
             }
             
             // ホバーハイライトの有効/無効を切り替え
-            networkManager.toggleHoverHighlight(enabled);
+            appContext.networkManager.toggleHoverHighlight(enabled);
             
             // 選択機能の有効/無効を切り替え
-            networkManager.toggleSelection(!enabled);
+            appContext.networkManager.toggleSelection(!enabled);
             
             console.log(`Path Trace: ${enabled ? 'ON' : 'OFF'}`);
         }
@@ -146,6 +146,3 @@ class PathTracePanel {
         return this.isEnabled;
     }
 }
-
-// グローバルインスタンス
-let pathTracePanel;

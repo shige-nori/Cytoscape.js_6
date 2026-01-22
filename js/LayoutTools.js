@@ -1,7 +1,9 @@
+import { appContext } from './AppContext.js';
+
 /**
  * LayoutTools - 03_Cytoscape.js と互換のレイアウト調整ツール
  */
-class LayoutTools {
+export class LayoutTools {
     constructor() {
         this.panel = null;
         this.scaleSlider = null;
@@ -27,8 +29,6 @@ class LayoutTools {
         this.setupEventListeners();
         this.setupDraggable();
 
-        // 互換性のためグローバルに登録
-        window.layoutTools = this;
     }
 
     setupEventListeners() {
@@ -75,9 +75,9 @@ class LayoutTools {
         });
 
         // ネットワーク図の空白クリックでパネルを閉じる
-        if (networkManager && networkManager.cy) {
-            networkManager.cy.on('tap', (e) => {
-                if (e.target === networkManager.cy && this.panel && this.panel.classList.contains('active')) {
+        if (appContext.networkManager && appContext.networkManager.cy) {
+            appContext.networkManager.cy.on('tap', (e) => {
+                if (e.target === appContext.networkManager.cy && this.panel && this.panel.classList.contains('active')) {
                     this.closePanel();
                 }
             });
@@ -147,8 +147,8 @@ class LayoutTools {
 
     storeOriginalPositions() {
         this.originalPositions.clear();
-        if (!networkManager || !networkManager.cy) return;
-        const nodes = networkManager.cy.nodes();
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
+        const nodes = appContext.networkManager.cy.nodes();
         nodes.forEach(node => {
             const pos = node.position();
             this.originalPositions.set(node.id(), { x: pos.x, y: pos.y });
@@ -258,11 +258,11 @@ class LayoutTools {
     }
 
     applyTransform() {
-        if (!networkManager || !networkManager.cy) return;
-        const nodes = networkManager.cy.nodes();
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
+        const nodes = appContext.networkManager.cy.nodes();
         if (nodes.length === 0) return;
         
-        networkManager.cy.batch(() => {
+        appContext.networkManager.cy.batch(() => {
             const centerX = this.originalCenter.x;
             const centerY = this.originalCenter.y;
             const scale = this.currentScale;

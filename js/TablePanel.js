@@ -1,8 +1,10 @@
+import { appContext } from './AppContext.js';
+
 /**
  * TablePanel - テーブルパネル管理クラス
  * 画面下部にNode/Edge tableを表示し、ソート・選択連動・カラム設定などを提供
  */
-class TablePanel {
+export class TablePanel {
     constructor() {
         this.panel = null;
         this.resizeHandle = null;
@@ -49,8 +51,6 @@ class TablePanel {
         // 初期高さ設定
         this.panel.style.height = `${this.defaultHeight}px`;
         
-        // 互換性のためグローバルに登録
-        window.tablePanel = this;
     }
 
     setupEventListeners() {
@@ -102,14 +102,14 @@ class TablePanel {
         }
 
         // Cytoscape選択イベントとの連動
-        if (networkManager && networkManager.cy) {
+        if (appContext.networkManager && appContext.networkManager.cy) {
             // ネットワーク図の空き領域クリックでフィルタークリア
-            networkManager.cy.on('tap', (e) => {
-                if (e.target === networkManager.cy && this.isVisible) {
+            appContext.networkManager.cy.on('tap', (e) => {
+                if (e.target === appContext.networkManager.cy && this.isVisible) {
                     // フィルターが空かつ全ノード・エッジ未選択なら何もしない
                     const hasNodeFilter = Object.values(this.nodeFilters).some(v => v);
                     const hasEdgeFilter = Object.values(this.edgeFilters).some(v => v);
-                    const anySelected = networkManager.cy.$(':selected').length > 0;
+                    const anySelected = appContext.networkManager.cy.$(':selected').length > 0;
                     if (!hasNodeFilter && !hasEdgeFilter && !anySelected) return;
                     this.clearAllFilters();
                     // 選択があればテーブル再描画
@@ -117,7 +117,7 @@ class TablePanel {
                 }
             });
             
-            networkManager.cy.on('select', (e) => {
+            appContext.networkManager.cy.on('select', (e) => {
                 if (this.isVisible) {
                     // 選択されたノード/エッジのみテーブルに表示（遅延描画）
                     this.clearAllFilters();
@@ -131,7 +131,7 @@ class TablePanel {
                 }
             });
             
-            networkManager.cy.on('unselect', (e) => {
+            appContext.networkManager.cy.on('unselect', (e) => {
                 if (this.isVisible) {
                     // 選択解除時は全ノード/エッジをテーブルに表示（遅延描画）
                     this.clearAllFilters();
@@ -160,16 +160,16 @@ class TablePanel {
         }
         
         // Cytoscapeをリサイズ
-        if (networkManager && networkManager.cy) {
-            networkManager.cy.resize();
+        if (appContext.networkManager && appContext.networkManager.cy) {
+            appContext.networkManager.cy.resize();
         }
         
         // テーブルデータを更新
         this.refreshTable();
         
         // メニューのチェックマークを更新
-        if (menuManager) {
-            menuManager.updateTablePanelCheckmark();
+        if (appContext.menuManager) {
+            appContext.menuManager.updateTablePanelCheckmark();
         }
     }
 
@@ -185,13 +185,13 @@ class TablePanel {
         }
         
         // Cytoscapeをリサイズ
-        if (networkManager && networkManager.cy) {
-            networkManager.cy.resize();
+        if (appContext.networkManager && appContext.networkManager.cy) {
+            appContext.networkManager.cy.resize();
         }
         
         // メニューのチェックマークを更新
-        if (menuManager) {
-            menuManager.updateTablePanelCheckmark();
+        if (appContext.menuManager) {
+            appContext.menuManager.updateTablePanelCheckmark();
         }
     }
 
@@ -233,7 +233,7 @@ class TablePanel {
     }
 
     refreshTable() {
-        if (!networkManager || !networkManager.hasNetwork()) {
+        if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) {
             this.renderEmptyTable();
             return;
         }
@@ -276,10 +276,10 @@ class TablePanel {
      * 全カラムを表示するようにリセット（ファイル読み込み時に使用）
      */
     resetToShowAllColumns() {
-        if (!networkManager || !networkManager.hasNetwork()) return;
+        if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
         
-        const nodes = networkManager.cy.nodes();
-        const edges = networkManager.cy.edges();
+        const nodes = appContext.networkManager.cy.nodes();
+        const edges = appContext.networkManager.cy.edges();
         
         // 全カラムを表示するよう更新
         this.updateAvailableColumns('node', nodes, true);
@@ -306,8 +306,8 @@ class TablePanel {
         if (!tbody || !thead) return;
 
         // 選択されたノードがあればそれらのみ、なければ全て
-        const selectedNodes = networkManager.cy.nodes(':selected');
-        const nodes = selectedNodes.length > 0 ? selectedNodes : networkManager.cy.nodes();
+        const selectedNodes = appContext.networkManager.cy.nodes(':selected');
+        const nodes = selectedNodes.length > 0 ? selectedNodes : appContext.networkManager.cy.nodes();
         
         // キャッシュ用: 選択ID、フィルター状態、表示カラムを文字列化
         const selectedIds = Array.from(selectedNodes).map(n => n.id()).sort().join(',');
@@ -453,7 +453,7 @@ class TablePanel {
                     }
                 } else {
                     // 通常クリックで単一選択
-                    networkManager.cy.elements().unselect();
+                    appContext.networkManager.cy.elements().unselect();
                     rowData._element.select();
                 }
             });
@@ -475,8 +475,8 @@ class TablePanel {
         if (!tbody || !thead) return;
 
         // 選択されたエッジがあればそれらのみ、なければ全て
-        const selectedEdges = networkManager.cy.edges(':selected');
-        const edges = selectedEdges.length > 0 ? selectedEdges : networkManager.cy.edges();
+        const selectedEdges = appContext.networkManager.cy.edges(':selected');
+        const edges = selectedEdges.length > 0 ? selectedEdges : appContext.networkManager.cy.edges();
         
         // キャッシュ用: 選択ID、フィルター状態、表示カラムを文字列化
         const selectedIds = Array.from(selectedEdges).map(e => e.id()).sort().join(',');
@@ -620,7 +620,7 @@ class TablePanel {
                     }
                 } else {
                     // 通常クリックで単一選択
-                    networkManager.cy.elements().unselect();
+                    appContext.networkManager.cy.elements().unselect();
                     rowData._element.select();
                 }
             });
@@ -922,8 +922,8 @@ class TablePanel {
             }
             
             // Cytoscapeをリサイズ
-            if (networkManager && networkManager.cy) {
-                networkManager.cy.resize();
+            if (appContext.networkManager && appContext.networkManager.cy) {
+                appContext.networkManager.cy.resize();
             }
         }
     }

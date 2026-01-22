@@ -1,7 +1,9 @@
+import { appContext } from './AppContext.js';
+
 /**
  * LayoutManager - レイアウト管理クラス
  */
-class LayoutManager {
+export class LayoutManager {
     constructor() {
         // cytoscape-dagre拡張を登録
         if (typeof cytoscape !== 'undefined' && typeof cytoscapeDagre !== 'undefined') {
@@ -16,9 +18,9 @@ class LayoutManager {
      * Dagreレイアウトを適用（デフォルト）
      */
     applyDagreLayout() {
-        if (!networkManager || !networkManager.cy) return;
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
         
-        const layout = networkManager.cy.layout({
+        const layout = appContext.networkManager.cy.layout({
             name: 'dagre',
             rankDir: 'TB',          // Top to Bottom
             nodeSep: 50,            // ノード間の水平間隔
@@ -37,8 +39,8 @@ class LayoutManager {
         this.currentLayout = 'dagre';
         
         // メニューのチェックマークを更新
-        if (typeof menuManager !== 'undefined' && menuManager) {
-            menuManager.updateLayoutCheckmarks();
+        if (appContext.menuManager) {
+            appContext.menuManager.updateLayoutCheckmarks();
         }
     }
 
@@ -46,9 +48,9 @@ class LayoutManager {
      * Equalレイアウトを適用（縦横比1:1で均等配置）
      */
     applyEqualLayout() {
-        if (!networkManager || !networkManager.cy) return;
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
 
-        const nodes = networkManager.cy.nodes();
+        const nodes = appContext.networkManager.cy.nodes();
         if (nodes.length === 0) return;
 
         // 現在のY座標で階層をグループ化
@@ -118,9 +120,9 @@ class LayoutManager {
         });
 
         // アニメーションでビューをフィット
-        networkManager.cy.animate({
+        appContext.networkManager.cy.animate({
             fit: {
-                eles: networkManager.cy.elements(),
+                eles: appContext.networkManager.cy.elements(),
                 padding: 50
             },
             duration: 500
@@ -130,8 +132,8 @@ class LayoutManager {
         this.currentLayout = 'equal';
         
         // メニューのチェックマークを更新
-        if (typeof menuManager !== 'undefined' && menuManager) {
-            menuManager.updateLayoutCheckmarks();
+        if (appContext.menuManager) {
+            appContext.menuManager.updateLayoutCheckmarks();
         }
     }
 
@@ -161,9 +163,9 @@ class LayoutManager {
      * 注意: 並び替えは常に階層単位で実施され、階層間の順序は変更しない
      */
     sortNodesAZ() {
-        if (!networkManager || !networkManager.cy) return;
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
 
-        const nodes = networkManager.cy.nodes();
+        const nodes = appContext.networkManager.cy.nodes();
         if (nodes.length === 0) return;
 
         // ステップ1: 現在のY座標で階層をグループ化（階層間の順序は変更しない）
@@ -195,17 +197,17 @@ class LayoutManager {
         });
 
         // アニメーションでビューをフィット
-        networkManager.cy.animate({
+        appContext.networkManager.cy.animate({
             fit: {
-                eles: networkManager.cy.elements(),
+                eles: appContext.networkManager.cy.elements(),
                 padding: 50
             },
             duration: 500
         });
         
         // Layout Toolsの基準位置をリセット（並び替えを維持するため）
-        if (typeof layoutTools !== 'undefined' && layoutTools) {
-            layoutTools.resetOriginalPositions();
+        if (appContext.layoutTools) {
+            appContext.layoutTools.resetOriginalPositions();
         }
     }
 
@@ -214,9 +216,9 @@ class LayoutManager {
      * 注意: 並び替えは常に列単位で実施され、列間の順序は変更しない
      */
     sortNodesByColumn() {
-        if (!networkManager || !networkManager.cy) return;
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
 
-        const nodes = networkManager.cy.nodes();
+        const nodes = appContext.networkManager.cy.nodes();
         if (nodes.length === 0) return;
 
         // ステップ1: X座標で列をグループ化（列間の順序は変更しない）
@@ -257,20 +259,17 @@ class LayoutManager {
         });
 
         // アニメーションでビューをフィット
-        networkManager.cy.animate({
+        appContext.networkManager.cy.animate({
             fit: {
-                eles: networkManager.cy.elements(),
+                eles: appContext.networkManager.cy.elements(),
                 padding: 50
             },
             duration: 500
         });
         
         // Layout Toolsの基準位置をリセット（並び替えを維持するため）
-        if (typeof layoutTools !== 'undefined' && layoutTools) {
-            layoutTools.resetOriginalPositions();
+        if (appContext.layoutTools) {
+            appContext.layoutTools.resetOriginalPositions();
         }
     }
 }
-
-// グローバルインスタンス
-let layoutManager;

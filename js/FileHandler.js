@@ -1,7 +1,10 @@
+import { appContext } from './AppContext.js';
+import { progressOverlay } from './ProgressOverlay.js';
+
 /**
  * FileHandler - ファイル読み込み処理クラス
  */
-class FileHandler {
+export class FileHandler {
     constructor() {
         this.currentData = null;
         this.currentColumns = [];
@@ -81,7 +84,7 @@ class FileHandler {
             this.currentColumns = result.columns;
             
             progressOverlay.hide();
-            modalManager.showColumnMapping(result.columns, this.importMode);
+            appContext.modalManager.showColumnMapping(result.columns, this.importMode);
         } catch (error) {
             progressOverlay.hide();
             alert('Error: ' + error.message);
@@ -93,7 +96,7 @@ class FileHandler {
      * @param {File} file 
      */
     async startTableImport(file) {
-        if (!networkManager.hasNetwork()) {
+        if (!appContext.networkManager.hasNetwork()) {
             alert('Please import a network file first.');
             return;
         }
@@ -107,7 +110,7 @@ class FileHandler {
             this.currentColumns = result.columns;
             
             progressOverlay.hide();
-            modalManager.showColumnMapping(result.columns, this.importMode);
+            appContext.modalManager.showColumnMapping(result.columns, this.importMode);
         } catch (error) {
             progressOverlay.hide();
             alert('Error: ' + error.message);
@@ -121,28 +124,28 @@ class FileHandler {
     executeImport(mappings) {
         try {
             if (this.importMode === 'network') {
-                const result = networkManager.createNetwork(this.currentData, mappings);
-                layoutManager.applyDagreLayout();
+                const result = appContext.networkManager.createNetwork(this.currentData, mappings);
+                appContext.layoutManager.applyDagreLayout();
                 progressOverlay.hide();
                 console.log(`Network created: ${result.nodeCount} nodes, ${result.edgeCount} edges`);
                 
                 // メニュー状態を更新
-                if (menuManager) {
-                    menuManager.updateMenuStates();
+                if (appContext.menuManager) {
+                    appContext.menuManager.updateMenuStates();
                 }
                 
                 // Table Panelの全カラムを表示
-                if (tablePanel) {
-                    tablePanel.resetToShowAllColumns();
+                if (appContext.tablePanel) {
+                    appContext.tablePanel.resetToShowAllColumns();
                 }
             } else {
-                const result = networkManager.addTableData(this.currentData, mappings);
+                const result = appContext.networkManager.addTableData(this.currentData, mappings);
                 progressOverlay.hide();
                 console.log(`Table imported: ${result.matchedCount}/${result.totalRows} rows matched`);
                 
                 // Table Panelの全カラムを表示
-                if (tablePanel) {
-                    tablePanel.resetToShowAllColumns();
+                if (appContext.tablePanel) {
+                    appContext.tablePanel.resetToShowAllColumns();
                 }
             }
             
@@ -209,18 +212,18 @@ class FileHandler {
             }
             
             // ネットワークをクリア
-            if (networkManager.hasNetwork()) {
-                networkManager.closeNetwork();
+            if (appContext.networkManager.hasNetwork()) {
+                appContext.networkManager.closeNetwork();
             }
             
             // スタイル設定をデフォルトにリセット
-            if (stylePanel) {
-                stylePanel.resetToDefault();
+            if (appContext.stylePanel) {
+                appContext.stylePanel.resetToDefault();
             }
             
             // Edge Bends設定をデフォルトにリセット
-            if (edgeBends) {
-                edgeBends.resetToDefault();
+            if (appContext.edgeBends) {
+                appContext.edgeBends.resetToDefault();
             }
             
             // Cytoscapeデータに変換
@@ -239,33 +242,33 @@ class FileHandler {
             };
             
             // ネットワークを作成
-            networkManager.cy.add(elements);
+            appContext.networkManager.cy.add(elements);
             
             // レイアウトを復元（保存されている場合）
             if (cx2Data.layout) {
                 cx2Data.nodes.forEach((node, index) => {
                     if (cx2Data.layout[index]) {
-                        const cyNode = networkManager.cy.getElementById(node.id);
+                        const cyNode = appContext.networkManager.cy.getElementById(node.id);
                         cyNode.position(cx2Data.layout[index]);
                     }
                 });
             }
             
             // Edge Bends設定を先に復元（スタイル適用前）
-            if (cx2Data.edgeBendsSettings && edgeBends) {
+            if (cx2Data.edgeBendsSettings && appContext.edgeBends) {
                 console.log('Restoring Edge Bends settings:', cx2Data.edgeBendsSettings);
                 
                 // Bend Strengthを復元
-                edgeBends.currentBendStrength = cx2Data.edgeBendsSettings.bendStrength || 40;
+                appContext.edgeBends.currentBendStrength = cx2Data.edgeBendsSettings.bendStrength || 40;
                 const slider = document.getElementById('bend-strength-slider');
                 const valueInput = document.getElementById('bend-strength-value');
-                if (slider) slider.value = edgeBends.currentBendStrength;
-                if (valueInput) valueInput.value = edgeBends.currentBendStrength;
+                if (slider) slider.value = appContext.edgeBends.currentBendStrength;
+                if (valueInput) valueInput.value = appContext.edgeBends.currentBendStrength;
                 
                 // 各エッジの曲げ設定を復元
                 if (cx2Data.edgeBendsSettings.edgeStyles) {
                     cx2Data.edgeBendsSettings.edgeStyles.forEach(edgeStyle => {
-                        const edge = networkManager.cy.getElementById(edgeStyle.id);
+                        const edge = appContext.networkManager.cy.getElementById(edgeStyle.id);
                         if (edge.length > 0) {
                             const style = {};
                             if (edgeStyle.curveStyle && edgeStyle.curveStyle !== 'undefined') {
@@ -286,23 +289,23 @@ class FileHandler {
             }
             
             // スタイルを復元（Edge Bends復元後）
-            if (cx2Data.styleSettings && stylePanel) {
+            if (cx2Data.styleSettings && appContext.stylePanel) {
                 console.log('Restoring Style settings:', cx2Data.styleSettings);
-                stylePanel.nodeStyles = cx2Data.styleSettings.nodeStyles || stylePanel.nodeStyles;
-                stylePanel.edgeStyles = cx2Data.styleSettings.edgeStyles || stylePanel.edgeStyles;
-                stylePanel.reapplyStyles();
-            } else if (stylePanel) {
+                appContext.stylePanel.nodeStyles = cx2Data.styleSettings.nodeStyles || appContext.stylePanel.nodeStyles;
+                appContext.stylePanel.edgeStyles = cx2Data.styleSettings.edgeStyles || appContext.stylePanel.edgeStyles;
+                appContext.stylePanel.reapplyStyles();
+            } else if (appContext.stylePanel) {
                 // スタイル設定がない場合、デフォルトスタイルをUIに反映
                 console.log('No style settings in file, applying default styles');
-                stylePanel.reapplyStyles();
+                appContext.stylePanel.reapplyStyles();
             }
             
             // ファイトを適用
-            networkManager.cy.fit();
+            appContext.networkManager.cy.fit();
             
             // Table Panelの全カラムを表示
-            if (tablePanel) {
-                tablePanel.resetToShowAllColumns();
+            if (appContext.tablePanel) {
+                appContext.tablePanel.resetToShowAllColumns();
             }
             
             // 現在のファイル情報を保存
@@ -310,8 +313,8 @@ class FileHandler {
             this.currentFileHandle = fileHandle; // ファイルハンドルを保存
             
             // Saveメニューを有効化
-            if (menuManager) {
-                menuManager.updateMenuStates();
+            if (appContext.menuManager) {
+                appContext.menuManager.updateMenuStates();
             }
             
             progressOverlay.hide();
@@ -327,14 +330,14 @@ class FileHandler {
      * @param {boolean} useFileDialog - ファイルダイアログを使用するか（Save As用）
      */
     async saveCX2File(filename, useFileDialog = false) {
-        if (!networkManager.hasNetwork()) {
+        if (!appContext.networkManager.hasNetwork()) {
             alert('No network to save.');
             return;
         }
         
         try {
             // CX2フォーマットに変換
-            const nodes = networkManager.cy.nodes().map(node => {
+            const nodes = appContext.networkManager.cy.nodes().map(node => {
                 const data = node.data();
                 const { id, ...attributes } = data;
                 return {
@@ -343,7 +346,7 @@ class FileHandler {
                 };
             });
             
-            const edges = networkManager.cy.edges().map(edge => {
+            const edges = appContext.networkManager.cy.edges().map(edge => {
                 const data = edge.data();
                 const { id, source, target, ...attributes } = data;
                 return {
@@ -355,12 +358,12 @@ class FileHandler {
             });
             
             // レイアウト情報を保存
-            const layout = networkManager.cy.nodes().map(node => node.position());
+            const layout = appContext.networkManager.cy.nodes().map(node => node.position());
             
             // Edge Bends設定を保存
             const edgeBendsSettings = {
-                bendStrength: edgeBends ? edgeBends.currentBendStrength : 40,
-                edgeStyles: networkManager.cy.edges().map(edge => ({
+                bendStrength: appContext.edgeBends ? appContext.edgeBends.currentBendStrength : 40,
+                edgeStyles: appContext.networkManager.cy.edges().map(edge => ({
                     id: edge.id(),
                     curveStyle: edge.style('curve-style'),
                     controlPointDistances: edge.style('control-point-distances'),
@@ -369,9 +372,9 @@ class FileHandler {
             };
             
             // スタイル設定を保存
-            const styleSettings = stylePanel ? {
-                nodeStyles: stylePanel.nodeStyles,
-                edgeStyles: stylePanel.edgeStyles
+            const styleSettings = appContext.stylePanel ? {
+                nodeStyles: appContext.stylePanel.nodeStyles,
+                edgeStyles: appContext.stylePanel.edgeStyles
             } : null;
             
             console.log('Saving Edge Bends settings:', edgeBendsSettings);
@@ -422,8 +425,8 @@ class FileHandler {
                     await writable.close();
                     
                     // Saveメニューを有効化
-                    if (menuManager) {
-                        menuManager.updateMenuStates();
+                    if (appContext.menuManager) {
+                        appContext.menuManager.updateMenuStates();
                     }
                     
                     return;
@@ -455,36 +458,11 @@ class FileHandler {
             this.currentFilePath = finalName;
             
             // Saveメニューを有効化
-            if (menuManager) {
-                menuManager.updateMenuStates();
+            if (appContext.menuManager) {
+                appContext.menuManager.updateMenuStates();
             }
         } catch (error) {
             alert('Error saving CX2 file: ' + error.message);
         }
     }
 }
-
-// グローバルインスタンス
-let fileHandler;
-
-/**
- * プログレスオーバーレイ管理
- */
-const progressOverlay = {
-    element: null,
-    textElement: null,
-
-    init() {
-        this.element = document.getElementById('progress-overlay');
-        this.textElement = this.element.querySelector('.progress-text');
-    },
-
-    show(message = 'Loading...') {
-        this.textElement.textContent = message;
-        this.element.classList.add('active');
-    },
-
-    hide() {
-        this.element.classList.remove('active');
-    }
-};

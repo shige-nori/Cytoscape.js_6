@@ -1,8 +1,10 @@
+import { appContext } from './AppContext.js';
+
 /**
  * StylePanel - VizMapper風データ駆動型スタイル設定パネル
  * ノードとエッジの視覚的プロパティをデータ属性に基づいて動的にマッピング
  */
-class StylePanel {
+export class StylePanel {
     constructor() {
         this.panel = null;
         this.currentTab = 'node'; // 'node' or 'edge'
@@ -41,7 +43,6 @@ class StylePanel {
         this.createPanel();
         this.setupEventListeners();
         this.setupPanelDrag();
-        window.stylePanel = this;
     }
 
     createPanel() {
@@ -472,11 +473,9 @@ class StylePanel {
         // プロパティグループの折りたたみ
         document.querySelectorAll('.style-property-header[data-toggle="collapse"]').forEach(header => {
             header.addEventListener('click', (e) => {
-                // マッピングタイプのselectをクリックした場合は折りたたみを実行しない
                 if (e.target.classList.contains('style-mapping-type')) {
                     return;
                 }
-                
                 const propertyGroup = header.closest('.style-property-group');
                 propertyGroup.classList.toggle('collapsed');
                 header.classList.toggle('collapsed');
@@ -504,9 +503,9 @@ class StylePanel {
         });
 
         // ネットワーク図の空白クリックでパネルを閉じる
-        if (networkManager && networkManager.cy) {
-            networkManager.cy.on('tap', (e) => {
-                if (e.target === networkManager.cy && this.panel && this.panel.classList.contains('active')) {
+        if (appContext.networkManager && appContext.networkManager.cy) {
+            appContext.networkManager.cy.on('tap', (e) => {
+                if (e.target === appContext.networkManager.cy && this.panel && this.panel.classList.contains('active')) {
                     this.closePanel();
                 }
             });
@@ -967,10 +966,10 @@ class StylePanel {
     }
 
     buildDiscreteMappingTable(container, property, element, attribute) {
-        if (!networkManager || !networkManager.cy) return;
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
 
         // 属性の一意な値を取得
-        const elements = element === 'node' ? networkManager.cy.nodes() : networkManager.cy.edges();
+        const elements = element === 'node' ? appContext.networkManager.cy.nodes() : appContext.networkManager.cy.edges();
         const uniqueValues = new Set();
         
         elements.forEach(el => {
@@ -1110,12 +1109,12 @@ class StylePanel {
     }
 
     refreshAttributes() {
-        if (!networkManager || !networkManager.cy) return;
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
 
         // ノード属性を収集（内部用属性は除外）
         const nodeAttrs = new Set();
         const excludeKeys = ['_hoverOriginalBg', '_hoverOriginalOpacity', '_originalBg'];
-        networkManager.cy.nodes().forEach(node => {
+        appContext.networkManager.cy.nodes().forEach(node => {
             Object.keys(node.data()).forEach(key => {
                 if (key !== 'id' && !excludeKeys.includes(key)) nodeAttrs.add(key);
             });
@@ -1124,7 +1123,7 @@ class StylePanel {
 
         // エッジ属性を収集（内部用属性は除外）
         const edgeAttrs = new Set();
-        networkManager.cy.edges().forEach(edge => {
+        appContext.networkManager.cy.edges().forEach(edge => {
             Object.keys(edge.data()).forEach(key => {
                 if (!['id', 'source', 'target'].includes(key) && !excludeKeys.includes(key)) edgeAttrs.add(key);
             });
@@ -1191,9 +1190,9 @@ class StylePanel {
         if (!this.panel) return;
         
         // 他のパネルを閉じる
-        if (typeof layoutTools !== 'undefined') layoutTools.closePanel();
-        if (typeof edgeBends !== 'undefined') edgeBends.closePanel();
-        if (typeof sortNodesPanel !== 'undefined') sortNodesPanel.closePanel();
+        if (appContext.layoutTools) appContext.layoutTools.closePanel();
+        if (appContext.edgeBends) appContext.edgeBends.closePanel();
+        if (appContext.sortNodesPanel) appContext.sortNodesPanel.closePanel();
         
         this.panel.classList.add('active');
         this.panel.style.top = '50px';
@@ -1237,7 +1236,7 @@ class StylePanel {
         this.resetUIControls();
         
         // スタイルを再適用
-        if (networkManager && networkManager.cy && networkManager.cy.nodes().length > 0) {
+        if (appContext.networkManager && appContext.networkManager.cy && appContext.networkManager.cy.nodes().length > 0) {
             this.applyStyles();
         }
     }
@@ -1342,8 +1341,8 @@ class StylePanel {
     }
 
     applyNodeStyles() {
-        if (!networkManager || !networkManager.cy) return;
-        const nodes = networkManager.cy.nodes();
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
+        const nodes = appContext.networkManager.cy.nodes();
         if (nodes.length === 0) return;
 
         nodes.forEach(node => {
@@ -1393,14 +1392,14 @@ class StylePanel {
         });
         
         // 選択スタイルを再適用
-        if (networkManager) {
-            networkManager.updateSelectionStyles();
+        if (appContext.networkManager) {
+            appContext.networkManager.updateSelectionStyles();
         }
     }
 
     applyEdgeStyles() {
-        if (!networkManager || !networkManager.cy) return;
-        const edges = networkManager.cy.edges();
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
+        const edges = appContext.networkManager.cy.edges();
         if (edges.length === 0) return;
 
         edges.forEach(edge => {
@@ -1711,6 +1710,3 @@ class StylePanel {
         }
     }
 }
-
-// グローバルインスタンス
-let stylePanel;

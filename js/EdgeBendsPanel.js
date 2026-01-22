@@ -1,7 +1,9 @@
+import { appContext } from './AppContext.js';
+
 /**
  * EdgeBends - 03_Cytoscape.js と互換のエッジ曲げ強度ツール
  */
-class EdgeBends {
+export class EdgeBends {
     constructor() {
         this.panel = null;
         this.currentBendStrength = 40;
@@ -17,8 +19,6 @@ class EdgeBends {
         }
         this.setupEventListeners();
         this.setupPanelDrag();
-        // グローバルに公開
-        window.edgeBends = this;
     }
 
     setupEventListeners() {
@@ -50,9 +50,9 @@ class EdgeBends {
         }
 
         // ネットワーク図の空白クリックでパネルを閉じる
-        if (networkManager && networkManager.cy) {
-            networkManager.cy.on('tap', (e) => {
-                if (e.target === networkManager.cy && this.panel && this.panel.classList.contains('active')) {
+        if (appContext.networkManager && appContext.networkManager.cy) {
+            appContext.networkManager.cy.on('tap', (e) => {
+                if (e.target === appContext.networkManager.cy && this.panel && this.panel.classList.contains('active')) {
                     this.closePanel();
                 }
             });
@@ -115,8 +115,8 @@ class EdgeBends {
         if (valueInput) valueInput.value = 40;
         
         // すべてのエッジのcurve-styleをデフォルトにリセット
-        if (networkManager && networkManager.cy) {
-            networkManager.cy.edges().forEach(edge => {
+        if (appContext.networkManager && appContext.networkManager.cy) {
+            appContext.networkManager.cy.edges().forEach(edge => {
                 edge.style({
                     'curve-style': 'bezier',
                     'control-point-distances': undefined,
@@ -128,10 +128,10 @@ class EdgeBends {
     }
 
     applyEdgeBends() {
-        if (typeof networkManager === 'undefined' || !networkManager || !networkManager.cy) {
+        if (!appContext.networkManager || !appContext.networkManager.cy) {
             return;
         }
-        const edges = networkManager.cy.edges();
+        const edges = appContext.networkManager.cy.edges();
         if (edges.length === 0) {
             return;
         }
