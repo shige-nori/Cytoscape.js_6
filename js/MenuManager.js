@@ -28,6 +28,9 @@ export class MenuManager {
             // File System Access APIを使用してファイルを開く
             if ('showOpenFilePicker' in window) {
                 try {
+                    if (appContext.networkManager.hasNetwork()) {
+                        appContext.networkManager.closeNetwork();
+                    }
                     const [fileHandle] = await window.showOpenFilePicker({
                         types: [{
                             description: 'CX2 Network File',
@@ -209,7 +212,13 @@ export class MenuManager {
         document.getElementById('file-input-cx2').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
+                if (appContext.networkManager.hasNetwork()) {
+                    appContext.networkManager.closeNetwork();
+                }
                 await appContext.fileHandler.openCX2File(file);
+                if (appContext.menuManager) {
+                    appContext.menuManager.updateMenuStates();
+                }
             }
             e.target.value = ''; // リセット
         });

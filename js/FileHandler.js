@@ -79,6 +79,11 @@ export class FileHandler {
         progressOverlay.show('Reading file...');
         
         try {
+            // 既存ネットワークがあればクローズしてから読み込む
+            if (appContext.networkManager.hasNetwork()) {
+                appContext.networkManager.closeNetwork();
+            }
+
             const result = await this.readExcelFile(file);
             this.currentData = result.data;
             this.currentColumns = result.columns;

@@ -411,6 +411,9 @@ export class FilterPanel {
      */
     applyFilter() {
         if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
+
+        // UIの最新値を条件に反映
+        this.syncConditionsFromUI();
         
         // 条件の検証
         const validConditions = this.conditions.filter(c => c.column && c.value);
@@ -452,6 +455,30 @@ export class FilterPanel {
             // プログレスオーバーレイを非表示
             progressOverlay.hide();
         }, 50);
+    }
+
+    /**
+     * 画面上の入力値をconditionsに同期
+     */
+    syncConditionsFromUI() {
+        const container = document.getElementById('filter-conditions-container');
+        if (!container) return;
+
+        container.querySelectorAll('.filter-condition').forEach(conditionDiv => {
+            const id = Number(conditionDiv.dataset.conditionId);
+            const condition = this.conditions.find(c => c.id === id);
+            if (!condition) return;
+
+            const columnSelect = conditionDiv.querySelector('.filter-column-select');
+            const operatorSelect = conditionDiv.querySelector('.filter-operator-select');
+            const valueInput = conditionDiv.querySelector('.filter-value-input');
+            const logicalSelect = conditionDiv.querySelector('.filter-logical-select');
+
+            if (columnSelect) condition.column = columnSelect.value;
+            if (operatorSelect) condition.operator = operatorSelect.value;
+            if (valueInput) condition.value = valueInput.value;
+            if (logicalSelect) condition.logicalOp = logicalSelect.value;
+        });
     }
 
     /**

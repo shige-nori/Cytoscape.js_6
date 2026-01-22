@@ -858,6 +858,9 @@ export class StylePanel {
             return;
         }
         
+        // 最新の属性一覧を取得
+        this.refreshAttributes();
+
         const attrSelect = controlDiv.querySelector('.style-attribute-select');
         const directInputs = Array.from(controlDiv.querySelectorAll('input, select')).filter(el => 
             !el.classList.contains('style-attribute-select') && !el.classList.contains('style-mapping-type')
@@ -911,6 +914,20 @@ export class StylePanel {
                 this.updateAttributeOptions(attrSelect, element);
             }
             if (rangeDiv) rangeDiv.classList.remove('hidden');
+
+            // 既に属性が選択済みなら、現在のMin/Maxをmappingに反映
+            const styleConfig = element === 'node' ? this.nodeStyles[property] : this.edgeStyles[property];
+            const selectedAttr = attrSelect && attrSelect.value ? attrSelect.value : styleConfig.attribute;
+            if (selectedAttr) {
+                styleConfig.attribute = selectedAttr;
+                if (!styleConfig.mapping) styleConfig.mapping = {};
+                const minInput = document.getElementById(`${element}-${property}-min`);
+                const maxInput = document.getElementById(`${element}-${property}-max`);
+                if (minInput && maxInput) {
+                    styleConfig.mapping.min = minInput.value;
+                    styleConfig.mapping.max = maxInput.value;
+                }
+            }
         }
 
         this.applyStyles();
@@ -922,6 +939,7 @@ export class StylePanel {
         const element = e.target.dataset.element;
         const propertyGroup = e.target.closest('.style-property-group');
         const discreteDiv = propertyGroup.querySelector('.style-discrete-mapping');
+        const rangeDiv = propertyGroup.querySelector('.style-continuous-range');
 
         if (element === 'node') {
             this.nodeStyles[property].attribute = attribute;
@@ -940,7 +958,33 @@ export class StylePanel {
             discreteDiv.classList.add('hidden');
         }
 
+        // Continuousマッピングの場合、現在のMin/Maxをmappingに反映
+        const styleConfig = element === 'node' ? this.nodeStyles[property] : this.edgeStyles[property];
+        if (attribute && styleConfig.type === 'continuous') {
+            if (!styleConfig.mapping) styleConfig.mapping = {};
+            const minInput = document.getElementById(`${element}-${property}-min`);
+            const maxInput = document.getElementById(`${element}-${property}-max`);
+            if (minInput && maxInput) {
+                styleConfig.mapping.min = minInput.value;
+                styleConfig.mapping.max = maxInput.value;
+            }
+            if (rangeDiv) rangeDiv.classList.remove('hidden');
+        }
+
         this.applyStyles();
+
+        // Continuousマッピングは属性選択直後に再評価して即時反映
+        if (styleConfig.type === 'continuous') {
+            if (element === 'node') {
+                this.applyNodeStyles();
+            } else {
+                this.applyEdgeStyles();
+            }
+            if (appContext.networkManager && appContext.networkManager.cy) {
+                appContext.networkManager.cy.style().update();
+            }
+            requestAnimationFrame(() => this.applyStyles());
+        }
     }
 
     updateAttributeOptions(selectElement, elementType) {
@@ -1119,6 +1163,12 @@ export class StylePanel {
                 if (key !== 'id' && !excludeKeys.includes(key)) nodeAttrs.add(key);
             });
         });
+        // ノード属性が空の場合はテーブルの列定義をフォールバックとして使用
+        if (nodeAttrs.size === 0 && appContext.tablePanel && Array.isArray(appContext.tablePanel.nodeColumns)) {
+            appContext.tablePanel.nodeColumns.forEach(key => {
+                if (key !== 'id' && !excludeKeys.includes(key)) nodeAttrs.add(key);
+            });
+        }
         this.nodeAttributes = Array.from(nodeAttrs).sort();
 
         // エッジ属性を収集（内部用属性は除外）
@@ -1128,6 +1178,12 @@ export class StylePanel {
                 if (!['id', 'source', 'target'].includes(key) && !excludeKeys.includes(key)) edgeAttrs.add(key);
             });
         });
+        // エッジ属性が空の場合はテーブルの列定義をフォールバックとして使用
+        if (edgeAttrs.size === 0 && appContext.tablePanel && Array.isArray(appContext.tablePanel.edgeColumns)) {
+            appContext.tablePanel.edgeColumns.forEach(key => {
+                if (!['id', 'source', 'target'].includes(key) && !excludeKeys.includes(key)) edgeAttrs.add(key);
+            });
+        }
         this.edgeAttributes = Array.from(edgeAttrs).sort();
 
         // 属性選択のドロップダウンを更新
@@ -1484,7 +1540,7 @@ export class StylePanel {
         if (isNaN(numValue)) return styleConfig.value;
 
         // データの最小・最大値を取得
-        const elements = element.isNode() ? networkManager.cy.nodes() : networkManager.cy.edges();
+        const elements = element.isNode() ? appContext.networkManager.cy.nodes() : appContext.networkManager.cy.edges();
         const allValues = elements.map(el => parseFloat(el.data(styleConfig.attribute))).filter(v => !isNaN(v));
         
         if (allValues.length === 0) return styleConfig.value;

@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // 各マネージャーを初期化
     appContext.networkManager = new NetworkManager();
+    // 互換性のためグローバルにも参照を置く（旧コード/拡張との互換）
+    window.networkManager = appContext.networkManager;
     appContext.fileHandler = new FileHandler();
     appContext.layoutManager = new LayoutManager();
     appContext.layoutTools = new LayoutTools();
