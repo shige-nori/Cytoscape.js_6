@@ -132,7 +132,6 @@ export class FileHandler {
                 const result = appContext.networkManager.createNetwork(this.currentData, mappings);
                 appContext.layoutManager.applyDagreLayout();
                 progressOverlay.hide();
-                console.log(`Network created: ${result.nodeCount} nodes, ${result.edgeCount} edges`);
                 
                 // メニュー状態を更新
                 if (appContext.menuManager) {
@@ -146,7 +145,6 @@ export class FileHandler {
             } else {
                 const result = appContext.networkManager.addTableData(this.currentData, mappings);
                 progressOverlay.hide();
-                console.log(`Table imported: ${result.matchedCount}/${result.totalRows} rows matched`);
                 
                 // Table Panelの全カラムを表示
                 if (appContext.tablePanel) {
@@ -261,7 +259,6 @@ export class FileHandler {
             
             // Edge Bends設定を先に復元（スタイル適用前）
             if (cx2Data.edgeBendsSettings && appContext.edgeBends) {
-                console.log('Restoring Edge Bends settings:', cx2Data.edgeBendsSettings);
                 
                 // Bend Strengthを復元
                 appContext.edgeBends.currentBendStrength = cx2Data.edgeBendsSettings.bendStrength || 40;
@@ -295,13 +292,11 @@ export class FileHandler {
             
             // スタイルを復元（Edge Bends復元後）
             if (cx2Data.styleSettings && appContext.stylePanel) {
-                console.log('Restoring Style settings:', cx2Data.styleSettings);
                 appContext.stylePanel.nodeStyles = cx2Data.styleSettings.nodeStyles || appContext.stylePanel.nodeStyles;
                 appContext.stylePanel.edgeStyles = cx2Data.styleSettings.edgeStyles || appContext.stylePanel.edgeStyles;
                 appContext.stylePanel.reapplyStyles();
             } else if (appContext.stylePanel) {
                 // スタイル設定がない場合、デフォルトスタイルをUIに反映
-                console.log('No style settings in file, applying default styles');
                 appContext.stylePanel.reapplyStyles();
             }
             
@@ -337,7 +332,7 @@ export class FileHandler {
     async saveCX2File(filename, useFileDialog = false) {
         if (!appContext.networkManager.hasNetwork()) {
             alert('No network to save.');
-            return;
+            return false;
         }
         
         try {
@@ -382,8 +377,6 @@ export class FileHandler {
                 edgeStyles: appContext.stylePanel.edgeStyles
             } : null;
             
-            console.log('Saving Edge Bends settings:', edgeBendsSettings);
-            console.log('Saving Style settings:', styleSettings);
             
             const cx2Data = {
                 nodes: nodes,
@@ -433,15 +426,16 @@ export class FileHandler {
                     if (appContext.menuManager) {
                         appContext.menuManager.updateMenuStates();
                     }
-                    
-                    return;
+
+                    this.restoreNetworkView();
+                    return true;
                 } catch (err) {
                     // ユーザーがキャンセルした場合など
                     if (err.name !== 'AbortError') {
                         console.error('Error using File System Access API:', err);
                         // フォールバックに続く
                     } else {
-                        return; // キャンセルされた
+                        return false; // キャンセルされた
                     }
                 }
             }
@@ -466,8 +460,22 @@ export class FileHandler {
             if (appContext.menuManager) {
                 appContext.menuManager.updateMenuStates();
             }
+
+            this.restoreNetworkView();
+            return true;
         } catch (error) {
             alert('Error saving CX2 file: ' + error.message);
+            return false;
         }
+    }
+
+    /**
+     * 保存後の表示を維持
+     */
+    restoreNetworkView() {
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
+        const cy = appContext.networkManager.cy;
+        cy.style().update();
+        cy.resize();
     }
 }

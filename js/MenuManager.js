@@ -53,17 +53,23 @@ export class MenuManager {
         });
 
         // Save Network
-        document.getElementById('save-network').addEventListener('click', () => {
+        document.getElementById('save-network').addEventListener('click', async () => {
             if (appContext.fileHandler.currentFilePath) {
-                appContext.fileHandler.saveCX2File(appContext.fileHandler.currentFilePath);
+                const saved = await appContext.fileHandler.saveCX2File(appContext.fileHandler.currentFilePath);
+                if (saved) {
+                    alert('保存しました。');
+                }
             }
             this.closeAllMenus();
         });
 
         // Save As Network
-        document.getElementById('save-as-network').addEventListener('click', () => {
+        document.getElementById('save-as-network').addEventListener('click', async () => {
             if (appContext.networkManager.hasNetwork()) {
-                appContext.fileHandler.saveCX2File(null, true); // useFileDialog = true
+                const saved = await appContext.fileHandler.saveCX2File(null, true); // useFileDialog = true
+                if (saved) {
+                    alert('保存しました。');
+                }
             }
             this.closeAllMenus();
         });

@@ -141,14 +141,7 @@ export class PathTracePanel {
             // 選択機能の有効/無効を切り替え
             appContext.networkManager.toggleSelection(!enabled);
             
-            console.log(`Path Trace: ${enabled ? 'ON' : 'OFF'}`);
         }
     }
 
-    /**
-     * Path Trace機能の状態を取得
-     */
-    isPathTraceEnabled() {
-        return this.isEnabled;
-    }
 }

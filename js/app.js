@@ -18,13 +18,14 @@ import { MenuManager } from './MenuManager.js';
 
 // アプリケーション初期化
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Network Visualizer initializing...');
     
     // プログレスオーバーレイ初期化
     progressOverlay.init();
     
     // 各マネージャーを初期化
     appContext.networkManager = new NetworkManager();
+    // 互換性のためグローバル参照を保持
+    window.networkManager = appContext.networkManager;
     appContext.fileHandler = new FileHandler();
     appContext.layoutManager = new LayoutManager();
     appContext.layoutTools = new LayoutTools();
@@ -54,5 +55,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    console.log('Network Visualizer ready!');
 });

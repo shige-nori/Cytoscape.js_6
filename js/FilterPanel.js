@@ -302,42 +302,54 @@ export class FilterPanel {
         
         const nodes = appContext.networkManager.cy.nodes();
         const edges = appContext.networkManager.cy.edges();
+        const nodeColumnMap = new Map();
+        const edgeColumnMap = new Map();
         
         // ノードのカラム
         if (nodes.length > 0) {
-            const nodeData = nodes[0].data();
             const excludedColumns = ['_originalBg', '_hoverOriginalBg', '_hoverOriginalOpacity', 'name', 'label', 'Label'];
-            
-            Object.keys(nodeData).forEach(key => {
-                if (!key.startsWith('_') || !excludedColumns.includes(key)) {
-                    if (!excludedColumns.includes(key)) {
-                        columns.push({
-                            value: `node.${key}`,
-                            label: `Node ${key}`,
-                            type: this.detectDataType(nodeData[key])
-                        });
+
+            nodes.forEach(node => {
+                const nodeData = node.data();
+                Object.keys(nodeData).forEach(key => {
+                    if (excludedColumns.includes(key)) return;
+                    if (!nodeColumnMap.has(key)) {
+                        nodeColumnMap.set(key, this.detectDataType(nodeData[key]));
                     }
-                }
+                });
             });
         }
         
         // エッジのカラム
         if (edges.length > 0) {
-            const edgeData = edges[0].data();
             const excludedColumns = ['_originalLineColor', '_originalWidth', '_hoverOriginalLineColor', '_hoverOriginalOpacity', 'interaction'];
-            
-            Object.keys(edgeData).forEach(key => {
-                if (!key.startsWith('_') || !excludedColumns.includes(key)) {
-                    if (!excludedColumns.includes(key)) {
-                        columns.push({
-                            value: `edge.${key}`,
-                            label: `Edge ${key}`,
-                            type: this.detectDataType(edgeData[key])
-                        });
+
+            edges.forEach(edge => {
+                const edgeData = edge.data();
+                Object.keys(edgeData).forEach(key => {
+                    if (excludedColumns.includes(key)) return;
+                    if (!edgeColumnMap.has(key)) {
+                        edgeColumnMap.set(key, this.detectDataType(edgeData[key]));
                     }
-                }
+                });
             });
         }
+
+        nodeColumnMap.forEach((type, key) => {
+            columns.push({
+                value: `node.${key}`,
+                label: `Node ${key}`,
+                type
+            });
+        });
+
+        edgeColumnMap.forEach((type, key) => {
+            columns.push({
+                value: `edge.${key}`,
+                label: `Edge ${key}`,
+                type
+            });
+        });
         
         return columns;
     }
@@ -413,7 +425,7 @@ export class FilterPanel {
         if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
 
         // Path TraceがONならOFFにしてから適用
-        if (appContext.pathTracePanel && appContext.pathTracePanel.isPathTraceEnabled()) {
+        if (appContext.pathTracePanel && appContext.pathTracePanel.isEnabled) {
             appContext.pathTracePanel.togglePathTrace(false);
         }
 
@@ -635,7 +647,6 @@ export class FilterPanel {
             appContext.tablePanel.refreshTable();
         }
         
-        console.log(`Filter applied: ${matchedNodes.length} nodes, ${matchedEdges.length} edges matched`);
     }
 
     /**
@@ -659,6 +670,5 @@ export class FilterPanel {
             appContext.tablePanel.refreshTable();
         }
         
-        console.log('Filter cleared');
     }
 }
