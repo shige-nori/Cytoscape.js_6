@@ -412,6 +412,11 @@ export class FilterPanel {
     applyFilter() {
         if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
 
+        // Path TraceがONならOFFにしてから適用
+        if (appContext.pathTracePanel && appContext.pathTracePanel.isPathTraceEnabled()) {
+            appContext.pathTracePanel.togglePathTrace(false);
+        }
+
         // UIの最新値を条件に反映
         this.syncConditionsFromUI();
         
@@ -600,6 +605,10 @@ export class FilterPanel {
         // すべての選択を解除
         appContext.networkManager.cy.elements().unselect();
         
+        // 選択可能にしてから選択（Path Trace等で選択が無効でも反映するため）
+        matchedNodes.forEach(node => node.selectify());
+        matchedEdges.forEach(edge => edge.selectify());
+
         // 条件に合致した要素を選択
         matchedNodes.forEach(node => node.select());
         matchedEdges.forEach(edge => edge.select());

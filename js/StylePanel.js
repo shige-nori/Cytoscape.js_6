@@ -1173,15 +1173,20 @@ export class StylePanel {
 
         // エッジ属性を収集（内部用属性は除外）
         const edgeAttrs = new Set();
+        const excludeEdgeKeys = ['_hoverOriginalLineColor', '_originalLineColor', '_originalWidth'];
         appContext.networkManager.cy.edges().forEach(edge => {
             Object.keys(edge.data()).forEach(key => {
-                if (!['id', 'source', 'target'].includes(key) && !excludeKeys.includes(key)) edgeAttrs.add(key);
+                if (!['id', 'source', 'target'].includes(key) && !excludeKeys.includes(key) && !excludeEdgeKeys.includes(key)) {
+                    edgeAttrs.add(key);
+                }
             });
         });
         // エッジ属性が空の場合はテーブルの列定義をフォールバックとして使用
         if (edgeAttrs.size === 0 && appContext.tablePanel && Array.isArray(appContext.tablePanel.edgeColumns)) {
             appContext.tablePanel.edgeColumns.forEach(key => {
-                if (!['id', 'source', 'target'].includes(key) && !excludeKeys.includes(key)) edgeAttrs.add(key);
+                if (!['id', 'source', 'target'].includes(key) && !excludeKeys.includes(key) && !excludeEdgeKeys.includes(key)) {
+                    edgeAttrs.add(key);
+                }
             });
         }
         this.edgeAttributes = Array.from(edgeAttrs).sort();
@@ -1555,13 +1560,21 @@ export class StylePanel {
 
         // プロパティに応じた範囲マッピング
         if (property === 'size') {
-            const minSize = styleConfig.mapping?.min || parseInt(document.getElementById('node-size-min')?.value) || 20;
-            const maxSize = styleConfig.mapping?.max || parseInt(document.getElementById('node-size-max')?.value) || 60;
-            return minSize + normalized * (maxSize - minSize);
+            const minSizeRaw = styleConfig.mapping?.min ?? document.getElementById('node-size-min')?.value ?? 20;
+            const maxSizeRaw = styleConfig.mapping?.max ?? document.getElementById('node-size-max')?.value ?? 60;
+            const minSize = Number(minSizeRaw);
+            const maxSize = Number(maxSizeRaw);
+            const safeMin = isNaN(minSize) ? 20 : minSize;
+            const safeMax = isNaN(maxSize) ? 60 : maxSize;
+            return safeMin + normalized * (safeMax - safeMin);
         } else if (property === 'width') {
-            const minWidth = styleConfig.mapping?.min || parseFloat(document.getElementById('edge-width-min')?.value) || 0.5;
-            const maxWidth = styleConfig.mapping?.max || parseFloat(document.getElementById('edge-width-max')?.value) || 5;
-            return minWidth + normalized * (maxWidth - minWidth);
+            const minWidthRaw = styleConfig.mapping?.min ?? document.getElementById('edge-width-min')?.value ?? 0.5;
+            const maxWidthRaw = styleConfig.mapping?.max ?? document.getElementById('edge-width-max')?.value ?? 5;
+            const minWidth = Number(minWidthRaw);
+            const maxWidth = Number(maxWidthRaw);
+            const safeMin = isNaN(minWidth) ? 0.5 : minWidth;
+            const safeMax = isNaN(maxWidth) ? 5 : maxWidth;
+            return safeMin + normalized * (safeMax - safeMin);
         } else if (property === 'opacity') {
             // Opacity: 20-100% (パーセント表示)
             return 20 + normalized * 80;

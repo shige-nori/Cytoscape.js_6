@@ -122,6 +122,12 @@ export class PathTracePanel {
      */
     togglePathTrace(enabled) {
         this.isEnabled = enabled;
+
+        // UIトグルを状態に同期
+        const toggleSwitch = document.getElementById('path-trace-toggle');
+        if (toggleSwitch && toggleSwitch.checked !== enabled) {
+            toggleSwitch.checked = enabled;
+        }
         
         if (appContext.networkManager) {
             // ONにする場合、既存の選択をすべて解除
