@@ -14,60 +14,103 @@ export class FileHandler {
     }
 
     /**
-     * Excelファイルを読み込む
+     * CSVファイルを読み込む
      * @param {File} file - ファイルオブジェクト
      * @returns {Promise<Object>} パースされたデータ
      */
-    async readExcelFile(file) {
+    async readCsvFile(file) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
-            
+
             reader.onload = (e) => {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    
-                    // 最初のシートを取得
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    
-                    // JSONに変換
-                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { 
-                        header: 1,
-                        raw: false,
-                        defval: ''
-                    });
-                    
-                    if (jsonData.length < 2) {
+                    const text = String(e.target.result || '');
+                    const rows = this.parseCsv(text);
+
+                    if (rows.length < 2) {
                         reject(new Error('File must contain at least header row and one data row'));
                         return;
                     }
-                    
-                    // ヘッダーとデータを分離
-                    const headers = jsonData[0].map(h => String(h).trim());
-                    const rows = jsonData.slice(1).map(row => {
+
+                    const headers = rows[0].map(h => String(h).trim());
+                    const data = rows.slice(1).map(row => {
                         const obj = {};
                         headers.forEach((header, index) => {
-                            obj[header] = row[index] !== undefined ? row[index] : '';
+                            obj[header] = row[index] !== undefined ? String(row[index]) : '';
                         });
                         return obj;
                     });
-                    
+
                     resolve({
                         columns: headers,
-                        data: rows
+                        data
                     });
                 } catch (error) {
-                    reject(new Error('Failed to parse Excel file: ' + error.message));
+                    reject(new Error('Failed to parse CSV file: ' + error.message));
                 }
             };
-            
+
             reader.onerror = () => {
                 reject(new Error('Failed to read file'));
             };
-            
-            reader.readAsArrayBuffer(file);
+
+            reader.readAsText(file);
         });
+    }
+
+    /**
+     * CSVテキストを2次元配列に変換
+     * @param {string} text
+     * @returns {Array<Array<string>>}
+     */
+    parseCsv(text) {
+        const rows = [];
+        let currentRow = [];
+        let currentValue = '';
+        let inQuotes = false;
+
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            const nextChar = text[i + 1];
+
+            if (char === '"') {
+                if (inQuotes && nextChar === '"') {
+                    currentValue += '"';
+                    i++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+                continue;
+            }
+
+            if (char === ',' && !inQuotes) {
+                currentRow.push(currentValue);
+                currentValue = '';
+                continue;
+            }
+
+            if ((char === '\n' || char === '\r') && !inQuotes) {
+                if (char === '\r' && nextChar === '\n') {
+                    i++;
+                }
+                currentRow.push(currentValue);
+                if (currentRow.some(value => value !== '')) {
+                    rows.push(currentRow);
+                }
+                currentRow = [];
+                currentValue = '';
+                continue;
+            }
+
+            currentValue += char;
+        }
+
+        currentRow.push(currentValue);
+        if (currentRow.some(value => value !== '')) {
+            rows.push(currentRow);
+        }
+
+        return rows;
     }
 
     /**
@@ -84,7 +127,7 @@ export class FileHandler {
                 appContext.networkManager.closeNetwork();
             }
 
-            const result = await this.readExcelFile(file);
+            const result = await this.readCsvFile(file);
             this.currentData = result.data;
             this.currentColumns = result.columns;
             
@@ -110,7 +153,7 @@ export class FileHandler {
         progressOverlay.show('Reading file...');
         
         try {
-            const result = await this.readExcelFile(file);
+            const result = await this.readCsvFile(file);
             this.currentData = result.data;
             this.currentColumns = result.columns;
             
