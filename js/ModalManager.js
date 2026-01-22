@@ -181,7 +181,10 @@ export class ModalManager {
         
         // UIをブロックしないよう非同期処理
         setTimeout(() => {
-            appContext.fileHandler.executeImport(this.currentMappings);
+            appContext.fileHandler.executeImport(this.currentMappings).catch(error => {
+                progressOverlay.hide();
+                alert('Import error: ' + error.message);
+            });
         }, 50);
     }
 

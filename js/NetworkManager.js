@@ -396,7 +396,7 @@ export class NetworkManager {
      * @param {Array} data - 行データの配列
      * @param {Object} mappings - カラムマッピング設定
      */
-    createNetwork(data, mappings) {
+    async createNetwork(data, mappings, onProgress = null) {
         // StylePanelをリセット
         if (appContext.stylePanel) {
             appContext.stylePanel.resetStyles();
@@ -418,9 +418,13 @@ export class NetworkManager {
             throw new Error('Source column is required');
         }
 
-        data.forEach((row, index) => {
+        const totalRows = data.length;
+        const chunkSize = 5000;
+
+        for (let index = 0; index < data.length; index++) {
+            const row = data[index];
             const sourceId = String(row[sourceColumn] || '').trim();
-            if (!sourceId) return;
+            if (!sourceId) continue;
 
             // Sourceノードを追加
             if (!nodes.has(sourceId)) {
@@ -459,11 +463,22 @@ export class NetworkManager {
                     edges.push({ data: edgeData });
                 }
             }
-        });
+
+            if (index > 0 && index % chunkSize === 0) {
+                if (onProgress) {
+                    onProgress(index / totalRows);
+                }
+                await this.yieldToBrowser();
+            }
+        }
 
         // グラフをクリアして要素を追加
         this.cy.elements().remove();
-        this.cy.add([...nodes.values(), ...edges]);
+        await this.addElementsInBatches(
+            [...nodes.values(), ...edges],
+            2000,
+            onProgress
+        );
 
         // Style Panelのスタイルを適用
         if (appContext.stylePanel) {
@@ -520,7 +535,7 @@ export class NetworkManager {
      * @param {Array} data - 行データの配列
      * @param {Object} mappings - カラムマッピング設定
      */
-    addTableData(data, mappings) {
+    async addTableData(data, mappings, onProgress = null) {
         const sourceColumn = Object.keys(mappings).find(col => mappings[col].role === 'Source');
         
         if (!sourceColumn) {
@@ -528,8 +543,11 @@ export class NetworkManager {
         }
 
         let matchedCount = 0;
+        const totalRows = data.length;
+        const chunkSize = 5000;
 
-        data.forEach(row => {
+        for (let index = 0; index < data.length; index++) {
+            const row = data[index];
             const nodeId = String(row[sourceColumn] || '').trim();
             const node = this.cy.getElementById(nodeId);
 
@@ -543,7 +561,14 @@ export class NetworkManager {
                     }
                 });
             }
-        });
+
+            if (index > 0 && index % chunkSize === 0) {
+                if (onProgress) {
+                    onProgress(index / totalRows);
+                }
+                await this.yieldToBrowser();
+            }
+        }
 
         // Style Panelのスタイルを再適用
         if (appContext.stylePanel) {
@@ -554,6 +579,35 @@ export class NetworkManager {
             matchedCount,
             totalRows: data.length
         };
+    }
+
+    /**
+     * 要素を分割して追加（応答性維持）
+     * @param {Array} elements
+     * @param {number} batchSize
+     * @param {(progress: number) => void} onProgress
+     */
+    async addElementsInBatches(elements, batchSize = 2000, onProgress = null) {
+        const total = elements.length || 1;
+        for (let i = 0; i < elements.length; i += batchSize) {
+            const batch = elements.slice(i, i + batchSize);
+            this.cy.batch(() => {
+                this.cy.add(batch);
+            });
+
+            if (onProgress) {
+                onProgress(Math.min(1, (i + batch.length) / total));
+            }
+
+            await this.yieldToBrowser();
+        }
+    }
+
+    /**
+     * ブラウザに制御を返してUIの応答性を保つ
+     */
+    async yieldToBrowser() {
+        await new Promise(resolve => setTimeout(resolve, 0));
     }
 
     /**

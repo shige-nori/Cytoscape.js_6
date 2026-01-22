@@ -12,6 +12,12 @@ export const progressOverlay = {
         this.element.classList.add('active');
     },
 
+    update(message = 'Loading...') {
+        if (this.textElement) {
+            this.textElement.textContent = message;
+        }
+    },
+
     hide() {
         this.element.classList.remove('active');
     }

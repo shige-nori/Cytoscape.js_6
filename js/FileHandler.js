@@ -19,55 +19,49 @@ export class FileHandler {
      * @returns {Promise<Object>} パースされたデータ
      */
     async readCsvFile(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
+        try {
+            const text = await file.text();
+            const rows = await this.parseCsvAsync(text, (progress) => {
+                const percent = Math.min(99, Math.max(1, Math.round(progress * 100)));
+                progressOverlay.update(`Parsing CSV... ${percent}%`);
+            });
 
-            reader.onload = (e) => {
-                try {
-                    const text = String(e.target.result || '');
-                    const rows = this.parseCsv(text);
+            if (rows.length < 2) {
+                throw new Error('File must contain at least header row and one data row');
+            }
 
-                    if (rows.length < 2) {
-                        reject(new Error('File must contain at least header row and one data row'));
-                        return;
-                    }
+            const headers = rows[0].map(h => String(h).trim());
+            const data = rows.slice(1).map(row => {
+                const obj = {};
+                headers.forEach((header, index) => {
+                    obj[header] = row[index] !== undefined ? String(row[index]) : '';
+                });
+                return obj;
+            });
 
-                    const headers = rows[0].map(h => String(h).trim());
-                    const data = rows.slice(1).map(row => {
-                        const obj = {};
-                        headers.forEach((header, index) => {
-                            obj[header] = row[index] !== undefined ? String(row[index]) : '';
-                        });
-                        return obj;
-                    });
-
-                    resolve({
-                        columns: headers,
-                        data
-                    });
-                } catch (error) {
-                    reject(new Error('Failed to parse CSV file: ' + error.message));
-                }
+            return {
+                columns: headers,
+                data
             };
-
-            reader.onerror = () => {
-                reject(new Error('Failed to read file'));
-            };
-
-            reader.readAsText(file);
-        });
+        } catch (error) {
+            throw new Error('Failed to parse CSV file: ' + error.message);
+        }
     }
 
     /**
-     * CSVテキストを2次元配列に変換
+     * CSVテキストを2次元配列に変換（非同期・チャンク処理）
      * @param {string} text
+     * @param {(progress: number) => void} onProgress
      * @returns {Array<Array<string>>}
      */
-    parseCsv(text) {
+    async parseCsvAsync(text, onProgress = null) {
         const rows = [];
         let currentRow = [];
         let currentValue = '';
         let inQuotes = false;
+        const totalLength = text.length;
+        const chunkSize = 100000;
+        let nextProgressUpdate = chunkSize;
 
         for (let i = 0; i < text.length; i++) {
             const char = text[i];
@@ -103,6 +97,14 @@ export class FileHandler {
             }
 
             currentValue += char;
+
+            if (i >= nextProgressUpdate) {
+                if (onProgress) {
+                    onProgress(i / totalLength);
+                }
+                await this.yieldToBrowser();
+                nextProgressUpdate += chunkSize;
+            }
         }
 
         currentRow.push(currentValue);
@@ -111,6 +113,13 @@ export class FileHandler {
         }
 
         return rows;
+    }
+
+    /**
+     * ブラウザに制御を返してUIの応答性を保つ
+     */
+    async yieldToBrowser() {
+        await new Promise(resolve => setTimeout(resolve, 0));
     }
 
     /**
@@ -169,10 +178,15 @@ export class FileHandler {
      * マッピング設定でインポートを実行
      * @param {Object} mappings - カラムマッピング設定
      */
-    executeImport(mappings) {
+    async executeImport(mappings) {
         try {
             if (this.importMode === 'network') {
-                const result = appContext.networkManager.createNetwork(this.currentData, mappings);
+                progressOverlay.show('Building network...');
+                const result = await appContext.networkManager.createNetwork(this.currentData, mappings, (progress) => {
+                    const percent = Math.min(99, Math.max(1, Math.round(progress * 100)));
+                    progressOverlay.update(`Building network... ${percent}%`);
+                });
+                progressOverlay.show('Applying layout...');
                 appContext.layoutManager.applyDagreLayout();
                 progressOverlay.hide();
                 
@@ -186,7 +200,11 @@ export class FileHandler {
                     appContext.tablePanel.resetToShowAllColumns();
                 }
             } else {
-                const result = appContext.networkManager.addTableData(this.currentData, mappings);
+                progressOverlay.show('Applying table data...');
+                const result = await appContext.networkManager.addTableData(this.currentData, mappings, (progress) => {
+                    const percent = Math.min(99, Math.max(1, Math.round(progress * 100)));
+                    progressOverlay.update(`Applying table data... ${percent}%`);
+                });
                 progressOverlay.hide();
                 
                 // Table Panelの全カラムを表示
@@ -287,8 +305,15 @@ export class FileHandler {
                 }))
             };
             
-            // ネットワークを作成
-            appContext.networkManager.cy.add(elements);
+            // ネットワークを作成（分割追加で応答性を維持）
+            await appContext.networkManager.addElementsInBatches(
+                [...elements.nodes, ...elements.edges],
+                2000,
+                (progress) => {
+                    const percent = Math.min(99, Math.max(1, Math.round(progress * 100)));
+                    progressOverlay.update(`Opening CX2 file... ${percent}%`);
+                }
+            );
             
             // レイアウトを復元（保存されている場合）
             if (cx2Data.layout) {
