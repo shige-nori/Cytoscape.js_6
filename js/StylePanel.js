@@ -1566,8 +1566,6 @@ class StylePanel {
 
     // スタイル設定をデフォルトにリセット
     resetToDefault() {
-        console.log('Resetting styles to default');
-        
         // ノードスタイルをデフォルトにリセット
         this.nodeStyles = {
             fillColor: { type: 'default', value: '#2563eb', mapping: null, attribute: null },
@@ -1595,7 +1593,6 @@ class StylePanel {
 
     // 外部からスタイルを適用（ネットワーク読み込み時など）
     reapplyStyles() {
-        console.log('reapplyStyles called with nodeStyles:', this.nodeStyles, 'edgeStyles:', this.edgeStyles);
         this.refreshAttributes();
         this.updateUIFromStyles(); // UIコントロールを更新
         this.applyStyles();
@@ -1618,26 +1615,19 @@ class StylePanel {
     updateUIControl(elementType, property, config) {
         const { type, value, attribute, mapping } = config;
         
-        console.log(`updateUIControl: ${elementType}-${property}, type=${type}, value=${value}, attribute=${attribute}, mapping=`, mapping);
-        
         // マッピングタイプのセレクトボックスを更新
         const mappingSelect = document.querySelector(`.style-mapping-type[data-property="${property}"][data-element="${elementType}"]`);
         if (mappingSelect) {
             if (mappingSelect.value !== type) {
-                console.log(`  Updating mapping type from ${mappingSelect.value} to ${type}`);
                 mappingSelect.value = type;
             }
-        } else {
-            console.log(`  Mapping select not found for ${elementType}-${property}`);
         }
 
         // プロパティに応じた入力フィールドを更新
         if (property === 'fillColor' || property === 'labelColor' || property === 'borderColor' || property === 'lineColor') {
             // カラー入力
             const colorInput = document.getElementById(`${elementType}-${property}`);
-            console.log(`  Color input found: ${!!colorInput}, current value: ${colorInput?.value}, new value: ${value}`);
             if (colorInput && colorInput.value !== value) {
-                console.log(`  Updating color from ${colorInput.value} to ${value}`);
                 colorInput.value = value;
             }
             
@@ -1646,11 +1636,9 @@ class StylePanel {
                 const minInput = document.getElementById(`${elementType}-${property}-min`);
                 const maxInput = document.getElementById(`${elementType}-${property}-max`);
                 if (minInput && mapping.min !== undefined) {
-                    console.log(`  Updating min color to ${mapping.min}`);
                     minInput.value = mapping.min;
                 }
                 if (maxInput && mapping.max !== undefined) {
-                    console.log(`  Updating max color to ${mapping.max}`);
                     maxInput.value = mapping.max;
                 }
             }
@@ -1667,11 +1655,9 @@ class StylePanel {
                 const minInput = document.getElementById(`${elementType}-${property}-min`);
                 const maxInput = document.getElementById(`${elementType}-${property}-max`);
                 if (minInput && mapping.min !== undefined) {
-                    console.log(`  Updating min value to ${mapping.min}`);
                     minInput.value = mapping.min;
                 }
                 if (maxInput && mapping.max !== undefined) {
-                    console.log(`  Updating max value to ${mapping.max}`);
                     maxInput.value = mapping.max;
                 }
             }
@@ -1687,7 +1673,6 @@ class StylePanel {
         // 属性セレクトを更新
         const attrSelect = document.getElementById(`${elementType}-${property}-attr`);
         if (attrSelect && attribute) {
-            console.log(`  Updating attribute select to ${attribute}`);
             attrSelect.value = attribute;
         }
 
@@ -1708,7 +1693,6 @@ class StylePanel {
                 if (colorInput) colorInput.classList.add('hidden');
                 if (attrSelectElement) attrSelectElement.classList.remove('hidden');
                 if (discreteDiv && attribute) {
-                    console.log(`  Building discrete mapping table for ${attribute}`);
                     this.buildDiscreteMappingTable(discreteDiv, property, elementType, attribute);
                     discreteDiv.classList.remove('hidden');
                 }
@@ -1723,7 +1707,6 @@ class StylePanel {
                 if (attrSelectElement) attrSelectElement.classList.remove('hidden');
                 if (discreteDiv) discreteDiv.classList.add('hidden');
                 if (rangeDiv) rangeDiv.classList.remove('hidden');
-                console.log(`  Continuous mapping UI updated, range div visible`);
             }
         }
     }

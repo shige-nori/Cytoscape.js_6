@@ -15,7 +15,6 @@ class EdgeBends {
             console.error('EdgeBends: panel element not found');
             return;
         }
-        console.log('EdgeBends: initialized successfully');
         this.setupEventListeners();
         this.setupPanelDrag();
         // グローバルに公開
@@ -27,12 +26,9 @@ class EdgeBends {
         const bendStrengthSlider = document.getElementById('bend-strength-slider') || document.getElementById('edge-bends-slider');
         const bendValueEl = document.getElementById('bend-strength-value') || document.getElementById('edge-bends-value-input');
 
-        console.log('EdgeBends: slider found:', !!bendStrengthSlider, 'value element found:', !!bendValueEl);
-
         if (bendStrengthSlider) {
             bendStrengthSlider.addEventListener('input', (e) => {
                 this.currentBendStrength = parseFloat(e.target.value);
-                console.log('EdgeBends: slider changed to', this.currentBendStrength);
                 if (bendValueEl) {
                     if ('value' in bendValueEl) bendValueEl.value = this.currentBendStrength;
                     else bendValueEl.textContent = this.currentBendStrength;
@@ -45,7 +41,6 @@ class EdgeBends {
         if (bendValueEl && 'value' in bendValueEl) {
             bendValueEl.addEventListener('input', (e) => {
                 const value = parseFloat(e.target.value);
-                console.log('EdgeBends: input changed to', value);
                 if (!isNaN(value) && value >= 0 && value <= 80) {
                     this.currentBendStrength = value;
                     if (bendStrengthSlider) bendStrengthSlider.value = value;
@@ -111,7 +106,6 @@ class EdgeBends {
     }
 
     resetToDefault() {
-        console.log('EdgeBends: Resetting to default');
         this.currentBendStrength = 40;
         
         // UIを更新
@@ -135,16 +129,12 @@ class EdgeBends {
 
     applyEdgeBends() {
         if (typeof networkManager === 'undefined' || !networkManager || !networkManager.cy) {
-            console.log('EdgeBends: networkManager or cy not available');
             return;
         }
         const edges = networkManager.cy.edges();
         if (edges.length === 0) {
-            console.log('EdgeBends: no edges found');
             return;
         }
-        
-        console.log(`EdgeBends: applying bend strength ${this.currentBendStrength} to ${edges.length} edges`);
         
         // 同じノード間の複数エッジを検出
         const edgeGroups = {};
@@ -181,7 +171,6 @@ class EdgeBends {
             }
         });
         
-        console.log('EdgeBends: styles applied successfully');
     }
 }
 
