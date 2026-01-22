@@ -21,7 +21,7 @@ export class FileHandler {
     async readCsvFile(file) {
         try {
             const text = await file.text();
-            const rows = await this.parseCsvAsync(text, (progress) => {
+            const rows = await this.parseCsvWithWorker(text, (progress) => {
                 const percent = Math.min(99, Math.max(1, Math.round(progress * 100)));
                 progressOverlay.update(`Parsing CSV... ${percent}%`);
             });
@@ -46,6 +46,70 @@ export class FileHandler {
         } catch (error) {
             throw new Error('Failed to parse CSV file: ' + error.message);
         }
+    }
+
+    /**
+     * Web WorkerでCSVを解析（対応環境のみ）
+     * @param {string} text
+     * @param {(progress: number) => void} onProgress
+     * @returns {Promise<Array<Array<string>>>}
+     */
+    async parseCsvWithWorker(text, onProgress = null) {
+        if (typeof Worker === 'undefined') {
+            return this.parseCsvAsync(text, onProgress);
+        }
+
+        try {
+            return await this.parseCsvInWorker(text, onProgress);
+        } catch (error) {
+            return this.parseCsvAsync(text, onProgress);
+        }
+    }
+
+    /**
+     * CSVをWorkerで解析
+     * @param {string} text
+     * @param {(progress: number) => void} onProgress
+     * @returns {Promise<Array<Array<string>>>}
+     */
+    parseCsvInWorker(text, onProgress = null) {
+        return new Promise((resolve, reject) => {
+            const worker = new Worker(new URL('./CsvParserWorker.js', import.meta.url), { type: 'module' });
+
+            const cleanup = () => {
+                worker.removeEventListener('message', onMessage);
+                worker.removeEventListener('error', onError);
+                worker.terminate();
+            };
+
+            const onMessage = (event) => {
+                const { type, value, rows, message } = event.data || {};
+                if (type === 'progress' && onProgress) {
+                    onProgress(value);
+                    return;
+                }
+
+                if (type === 'result') {
+                    cleanup();
+                    resolve(rows || []);
+                    return;
+                }
+
+                if (type === 'error') {
+                    cleanup();
+                    reject(new Error(message || 'CSV parse error'));
+                }
+            };
+
+            const onError = (error) => {
+                cleanup();
+                reject(error);
+            };
+
+            worker.addEventListener('message', onMessage);
+            worker.addEventListener('error', onError);
+            worker.postMessage({ text });
+        });
     }
 
     /**
@@ -123,12 +187,19 @@ export class FileHandler {
     }
 
     /**
+     * 次の描画フレームまで待機
+     */
+    async waitForNextFrame() {
+        await new Promise(resolve => requestAnimationFrame(() => resolve()));
+    }
+
+    /**
      * Network Fileのインポート処理を開始
      * @param {File} file 
      */
     async startNetworkImport(file) {
         this.importMode = 'network';
-        progressOverlay.show('Reading file...');
+        progressOverlay.show('Parsing CSV...');
         
         try {
             // 既存ネットワークがあればクローズしてから読み込む
@@ -159,7 +230,7 @@ export class FileHandler {
         }
 
         this.importMode = 'table';
-        progressOverlay.show('Reading file...');
+        progressOverlay.show('Parsing CSV...');
         
         try {
             const result = await this.readCsvFile(file);
@@ -181,13 +252,37 @@ export class FileHandler {
     async executeImport(mappings) {
         try {
             if (this.importMode === 'network') {
-                progressOverlay.show('Building network...');
-                const result = await appContext.networkManager.createNetwork(this.currentData, mappings, (progress) => {
-                    const percent = Math.min(99, Math.max(1, Math.round(progress * 100)));
-                    progressOverlay.update(`Building network... ${percent}%`);
+                progressOverlay.show('Adding elements...');
+                const result = await appContext.networkManager.createNetwork(
+                    this.currentData,
+                    mappings,
+                    (progress) => {
+                        const percent = Math.min(99, Math.max(1, Math.round(progress * 100)));
+                        progressOverlay.update(`Adding elements... ${percent}%`);
+                    },
+                    (phase) => {
+                        if (phase === 'elements') {
+                            progressOverlay.show('Adding elements...');
+                        }
+                    }
+                );
+
+                await this.waitForNextFrame();
+                progressOverlay.show('Layout...');
+
+                const elementCount = appContext.networkManager.cy.elements().length;
+                const animateLayout = elementCount < 2000;
+
+                await appContext.layoutManager.applyDagreLayout({
+                    animate: animateLayout,
+                    fit: true,
+                    animationDuration: animateLayout ? 500 : 0
                 });
-                progressOverlay.show('Applying layout...');
-                appContext.layoutManager.applyDagreLayout();
+
+                await this.waitForNextFrame();
+                progressOverlay.show('Render...');
+                appContext.networkManager.cy.resize();
+                appContext.networkManager.cy.fit();
                 progressOverlay.hide();
                 
                 // メニュー状態を更新
@@ -200,11 +295,24 @@ export class FileHandler {
                     appContext.tablePanel.resetToShowAllColumns();
                 }
             } else {
-                progressOverlay.show('Applying table data...');
-                const result = await appContext.networkManager.addTableData(this.currentData, mappings, (progress) => {
-                    const percent = Math.min(99, Math.max(1, Math.round(progress * 100)));
-                    progressOverlay.update(`Applying table data... ${percent}%`);
-                });
+                progressOverlay.show('Adding elements...');
+                const result = await appContext.networkManager.addTableData(
+                    this.currentData,
+                    mappings,
+                    (progress) => {
+                        const percent = Math.min(99, Math.max(1, Math.round(progress * 100)));
+                        progressOverlay.update(`Adding elements... ${percent}%`);
+                    },
+                    (phase) => {
+                        if (phase === 'elements') {
+                            progressOverlay.show('Adding elements...');
+                        }
+                    }
+                );
+
+                await this.waitForNextFrame();
+                progressOverlay.show('Render...');
+                appContext.networkManager.cy.resize();
                 progressOverlay.hide();
                 
                 // Table Panelの全カラムを表示
@@ -306,14 +414,19 @@ export class FileHandler {
             };
             
             // ネットワークを作成（分割追加で応答性を維持）
+            progressOverlay.show('Adding elements...');
             await appContext.networkManager.addElementsInBatches(
                 [...elements.nodes, ...elements.edges],
                 2000,
                 (progress) => {
                     const percent = Math.min(99, Math.max(1, Math.round(progress * 100)));
-                    progressOverlay.update(`Opening CX2 file... ${percent}%`);
+                    progressOverlay.update(`Adding elements... ${percent}%`);
                 }
             );
+
+            await this.waitForNextFrame();
+            progressOverlay.show('Render...');
+            appContext.networkManager.cy.resize();
             
             // レイアウトを復元（保存されている場合）
             if (cx2Data.layout) {

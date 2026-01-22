@@ -17,9 +17,16 @@ export class LayoutManager {
     /**
      * Dagreレイアウトを適用（デフォルト）
      */
-    applyDagreLayout() {
+    async applyDagreLayout(options = {}) {
         if (!appContext.networkManager || !appContext.networkManager.cy) return;
-        
+
+        const {
+            animate = true,
+            fit = true,
+            padding = 50,
+            animationDuration = 500
+        } = options;
+
         const layout = appContext.networkManager.cy.layout({
             name: 'dagre',
             rankDir: 'TB',          // Top to Bottom
@@ -27,17 +34,20 @@ export class LayoutManager {
             rankSep: 80,            // 階層間の垂直間隔
             edgeSep: 10,            // エッジ間の間隔
             ranker: 'network-simplex',
-            animate: true,
-            animationDuration: 500,
-            fit: true,
-            padding: 50
+            animate,
+            animationDuration,
+            fit,
+            padding
         });
-        
-        layout.run();
-        
+
+        await new Promise(resolve => {
+            layout.one('layoutstop', resolve);
+            layout.run();
+        });
+
         // 現在のレイアウトを記録
         this.currentLayout = 'dagre';
-        
+
         // メニューのチェックマークを更新
         if (appContext.menuManager) {
             appContext.menuManager.updateLayoutCheckmarks();

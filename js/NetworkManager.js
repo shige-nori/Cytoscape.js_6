@@ -396,7 +396,7 @@ export class NetworkManager {
      * @param {Array} data - 行データの配列
      * @param {Object} mappings - カラムマッピング設定
      */
-    async createNetwork(data, mappings, onProgress = null) {
+    async createNetwork(data, mappings, onProgress = null, onPhase = null) {
         // StylePanelをリセット
         if (appContext.stylePanel) {
             appContext.stylePanel.resetStyles();
@@ -474,6 +474,9 @@ export class NetworkManager {
 
         // グラフをクリアして要素を追加
         this.cy.elements().remove();
+        if (onPhase) {
+            onPhase('elements');
+        }
         await this.addElementsInBatches(
             [...nodes.values(), ...edges],
             2000,
@@ -535,7 +538,7 @@ export class NetworkManager {
      * @param {Array} data - 行データの配列
      * @param {Object} mappings - カラムマッピング設定
      */
-    async addTableData(data, mappings, onProgress = null) {
+    async addTableData(data, mappings, onProgress = null, onPhase = null) {
         const sourceColumn = Object.keys(mappings).find(col => mappings[col].role === 'Source');
         
         if (!sourceColumn) {
@@ -568,6 +571,10 @@ export class NetworkManager {
                 }
                 await this.yieldToBrowser();
             }
+        }
+
+        if (onPhase) {
+            onPhase('elements');
         }
 
         // Style Panelのスタイルを再適用
