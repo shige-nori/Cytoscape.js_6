@@ -61,8 +61,8 @@ export class StylePanel {
                 <div class="tools-panel-header style-panel-header-with-btn">
                     <h3>Style</h3>
                     <div class="style-panel-buttons">
-                        <button id="style-cancel-btn" class="style-cancel-btn">Cancel</button>
-                        <button id="style-apply-btn" class="style-apply-btn">Apply</button>
+                        <button id="style-cancel-btn" class="btn btn-secondary style-cancel-btn">Cancel</button>
+                        <button id="style-apply-btn" class="btn btn-primary style-apply-btn">Apply</button>
                     </div>
                 </div>
                 <div class="style-panel-tabs">
