@@ -19,7 +19,7 @@ export class StylePanel {
             labelFontSize: { type: 'default', value: 10, mapping: null, attribute: null },
             labelColor: { type: 'default', value: '#000000', mapping: null, attribute: null },
             labelPosition: { type: 'default', value: 'top', mapping: null, attribute: null },
-            labelWidth: { type: 'default', value: 80, mapping: null, attribute: null },
+            labelWidth: { type: 'default', value: 200, mapping: null, attribute: null },
             borderWidth: { type: 'default', value: 0, mapping: null, attribute: null },
             borderColor: { type: 'default', value: '#000000', mapping: null, attribute: null },
             opacity: { type: 'default', value: 100, mapping: null, attribute: null }
@@ -187,6 +187,19 @@ export class StylePanel {
                 <div class="style-discrete-mapping hidden" id="node-labelFontSize-discrete"></div>
             </div>
 
+            <!-- Label Width (moved below Label Font Size) -->
+            <div class="style-property-group collapsed">
+                <div class="style-property-header collapsed" data-toggle="collapse">
+                    <label>Label Width</label>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="style-property-control">
+                    <!-- Display range 1..100. Internal px = displayValue * 20 -->
+                            <input type="range" class="style-slider" id="node-labelWidth" min="1" max="1000" value="100">
+                            <input type="number" class="style-number-input" id="node-labelWidth-value" min="1" max="1000" value="100">
+                </div>
+            </div>
+
             <!-- Label Color -->
             <div class="style-property-group collapsed">
                 <div class="style-property-header collapsed" data-toggle="collapse">
@@ -230,17 +243,6 @@ export class StylePanel {
                 </div>
             </div>
 
-            <!-- Label Width -->
-            <div class="style-property-group collapsed">
-                <div class="style-property-header collapsed" data-toggle="collapse">
-                    <label>Label Width</label>
-                    <span class="collapse-icon">▼</span>
-                </div>
-                <div class="style-property-control">
-                    <input type="range" class="style-slider" id="node-labelWidth" min="20" max="1000" value="80">
-                    <input type="number" class="style-number-input" id="node-labelWidth-value" min="20" max="1000" value="80">
-                </div>
-            </div>
 
             <!-- Border Width -->
             <div class="style-property-group collapsed">
@@ -660,18 +662,24 @@ export class StylePanel {
             });
         }
 
-        // Label Width
+        // Label Width (display 1..1000). Each tick represents 2px. Stored value is pixels = disp * 2
+        const LABEL_WIDTH_SCALE = 2; // 1 tick = 2px
         const labelWidth = document.getElementById('node-labelWidth');
         const labelWidthValue = document.getElementById('node-labelWidth-value');
         if (labelWidth && labelWidthValue) {
             labelWidth.addEventListener('input', (e) => {
-                this.nodeStyles.labelWidth.value = parseInt(e.target.value);
-                labelWidthValue.value = e.target.value;
+                const disp = parseInt(e.target.value) || 1;
+                this.nodeStyles.labelWidth.value = disp * LABEL_WIDTH_SCALE; // pixels
+                labelWidthValue.value = disp;
                 this.applyNodeStyles();
             });
             labelWidthValue.addEventListener('input', (e) => {
-                this.nodeStyles.labelWidth.value = parseInt(e.target.value);
-                labelWidth.value = e.target.value;
+                let disp = parseInt(e.target.value);
+                if (isNaN(disp) || disp < 1) disp = 1;
+                if (disp > 1000) disp = 1000;
+                this.nodeStyles.labelWidth.value = disp * LABEL_WIDTH_SCALE; // pixels
+                labelWidth.value = disp;
+                labelWidthValue.value = disp;
                 this.applyNodeStyles();
             });
         }
@@ -1131,7 +1139,7 @@ export class StylePanel {
         const limits = {
             size: { min: 10, max: 500, step: 1 },
             labelFontSize: { min: 6, max: 50, step: 1 },
-            labelWidth: { min: 20, max: 1000, step: 1 },
+            labelWidth: { min: 1, max: 1000, step: 1 },
             borderWidth: { min: 0, max: 50, step: 1 },
             width: { min: 0.1, max: 10, step: 0.1 },
             opacity: { min: 0, max: 100, step: 1 }
@@ -1291,7 +1299,7 @@ export class StylePanel {
             labelFontSize: { type: 'default', value: 10, mapping: null, attribute: null },
             labelColor: { type: 'default', value: '#000000', mapping: null, attribute: null },
             labelPosition: { type: 'default', value: 'top', mapping: null, attribute: null },
-            labelWidth: { type: 'default', value: 80, mapping: null, attribute: null },
+            labelWidth: { type: 'default', value: 200, mapping: null, attribute: null },
             borderWidth: { type: 'default', value: 0, mapping: null, attribute: null },
             borderColor: { type: 'default', value: '#000000', mapping: null, attribute: null },
             opacity: { type: 'default', value: 100, mapping: null, attribute: null }
@@ -1342,8 +1350,8 @@ export class StylePanel {
         
         const nodeLabelWidth = document.getElementById('node-labelWidth');
         const nodeLabelWidthValue = document.getElementById('node-labelWidth-value');
-        if (nodeLabelWidth) nodeLabelWidth.value = '80';
-        if (nodeLabelWidthValue) nodeLabelWidthValue.value = '80';
+        if (nodeLabelWidth) nodeLabelWidth.value = '100';
+        if (nodeLabelWidthValue) nodeLabelWidthValue.value = '100';
         
         const nodeBorderWidth = document.getElementById('node-borderWidth');
         const nodeBorderWidthValue = document.getElementById('node-borderWidth-value');
@@ -1695,7 +1703,7 @@ export class StylePanel {
             labelFontSize: { type: 'default', value: 10, mapping: null, attribute: null },
             labelColor: { type: 'default', value: '#000000', mapping: null, attribute: null },
             labelPosition: { type: 'default', value: 'top', mapping: null, attribute: null },
-            labelWidth: { type: 'default', value: 80, mapping: null, attribute: null },
+            labelWidth: { type: 'default', value: 200, mapping: null, attribute: null },
             borderWidth: { type: 'default', value: 0, mapping: null, attribute: null },
             borderColor: { type: 'default', value: '#000000', mapping: null, attribute: null },
             opacity: { type: 'default', value: 100, mapping: null, attribute: null }
@@ -1766,9 +1774,18 @@ export class StylePanel {
         } else if (property === 'size' || property === 'labelFontSize' || property === 'labelWidth' || 
                    property === 'borderWidth' || property === 'opacity' || property === 'width') {
             // 数値入力
-            const numberInput = document.getElementById(`${elementType}-${property}`);
-            if (numberInput && numberInput.value != value) {
-                numberInput.value = value;
+            if (property === 'labelWidth') {
+                const rangeInput = document.getElementById(`${elementType}-${property}`);
+                const valueInput = document.getElementById(`${elementType}-${property}-value`);
+                const LABEL_WIDTH_SCALE = 2;
+                const disp = value !== undefined && value !== null ? Math.round(Number(value) / LABEL_WIDTH_SCALE) : '';
+                if (rangeInput && rangeInput.value != disp) rangeInput.value = disp;
+                if (valueInput && valueInput.value != disp) valueInput.value = disp;
+            } else {
+                const numberInput = document.getElementById(`${elementType}-${property}`);
+                if (numberInput && numberInput.value != value) {
+                    numberInput.value = value;
+                }
             }
             
             // Continuousマッピングの場合、min/max値を更新
