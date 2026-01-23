@@ -398,18 +398,13 @@ export class FileHandler {
                 appContext.edgeBends.resetToDefault();
             }
             
-            // Cytoscapeデータに変換
+            // Cytoscapeデータに変換（読み込み時もDate型が混入している可能性があるためサニタイズ）
             const elements = {
                 nodes: cx2Data.nodes.map(node => ({
-                    data: { id: node.id, ...node.v }
+                    data: Object.assign({ id: node.id }, this.sanitizeAttributes(node.v || {}))
                 })),
                 edges: cx2Data.edges.map(edge => ({
-                    data: { 
-                        id: edge.id, 
-                        source: edge.s, 
-                        target: edge.t,
-                        ...edge.v 
-                    }
+                    data: Object.assign({ id: edge.id, source: edge.s, target: edge.t }, this.sanitizeAttributes(edge.v || {}))
                 }))
             };
             
@@ -523,7 +518,7 @@ export class FileHandler {
                 const { id, ...attributes } = data;
                 return {
                     id: id,
-                    v: attributes
+                    v: this.sanitizeAttributes(attributes)
                 };
             });
             
@@ -534,7 +529,7 @@ export class FileHandler {
                     id: id,
                     s: source,
                     t: target,
-                    v: attributes
+                    v: this.sanitizeAttributes(attributes)
                 };
             });
             
@@ -658,5 +653,42 @@ export class FileHandler {
         const cy = appContext.networkManager.cy;
         cy.style().update();
         cy.resize();
+    }
+
+    /**
+     * 属性オブジェクトを再帰的にサニタイズしてDate型を文字列に変換する
+     * CX2フォーマットにDateオブジェクトが混入しないようにする
+     */
+    sanitizeAttributes(obj) {
+        if (obj === null || obj === undefined) return obj;
+
+        // 配列は要素ごとにサニタイズ
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.sanitizeAttributes(item));
+        }
+
+        // プリミティブはそのまま返す（ただしDateは文字列化）
+        if (typeof obj !== 'object') return obj;
+
+        // DateオブジェクトはISO文字列に変換して返す
+        if (obj instanceof Date) {
+            return obj.toISOString();
+        }
+
+        // オブジェクトはキーごとに再帰処理
+        const result = {};
+        Object.keys(obj).forEach(key => {
+            const v = obj[key];
+            if (v instanceof Date) {
+                result[key] = v.toISOString();
+            } else if (Array.isArray(v)) {
+                result[key] = v.map(item => this.sanitizeAttributes(item));
+            } else if (v !== null && typeof v === 'object') {
+                result[key] = this.sanitizeAttributes(v);
+            } else {
+                result[key] = v;
+            }
+        });
+        return result;
     }
 }

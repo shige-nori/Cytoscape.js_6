@@ -520,14 +520,10 @@ export class NetworkManager {
                 return Number(value) || 0;
             case 'Boolean':
                 return Boolean(value) && value !== 'false' && value !== '0';
-            case 'Date':
-                return new Date(value).toISOString();
             case 'String Array':
                 return String(value).split(delimiter).map(s => s.trim());
             case 'Number Array':
                 return String(value).split(delimiter).map(s => Number(s.trim()) || 0);
-            case 'Date Array':
-                return String(value).split(delimiter).map(s => new Date(s.trim()).toISOString());
             default:
                 return String(value);
         }

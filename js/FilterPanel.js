@@ -362,14 +362,7 @@ export class FilterPanel {
         
         if (typeof value === 'number') return 'number';
         
-        // 日付形式の検出（簡易）
-        if (typeof value === 'string') {
-            // ISO 8601形式やタイムスタンプなど
-            if (/^\d{4}-\d{2}-\d{2}/.test(value) || /^\d{13}$/.test(value)) {
-                return 'date';
-            }
-        }
-        
+        // 日付の自動判定は行わない（CSVの読み込みは文字列として扱う）
         return 'string';
     }
 
@@ -589,10 +582,28 @@ export class FilterPanel {
                 default: return false;
             }
         } else {
-            // 文字列比較（辞書順）
-            const strValue = String(value).toLowerCase();
-            const strTarget = String(targetValue).toLowerCase();
-            
+            // yyyy-mm-dd 形式（厳密）なら日付比較（文字列順と同等）を行う
+            const ymdRegex = /^\d{4}-\d{2}-\d{2}$/;
+            const rawValue = String(value);
+            const rawTarget = String(targetValue);
+
+            if (ymdRegex.test(rawValue) && ymdRegex.test(rawTarget)) {
+                // YYYY-MM-DD は辞書順で日時比較が可能
+                switch (operator) {
+                    case '=': return rawValue === rawTarget;
+                    case '>=': return rawValue >= rawTarget;
+                    case '>': return rawValue > rawTarget;
+                    case '<': return rawValue < rawTarget;
+                    case '<=': return rawValue <= rawTarget;
+                    case '<>': return rawValue !== rawTarget;
+                    default: return false;
+                }
+            }
+
+            // それ以外は通常の文字列比較（大文字小文字を無視）
+            const strValue = rawValue.toLowerCase();
+            const strTarget = rawTarget.toLowerCase();
+
             switch (operator) {
                 case '=': return strValue === strTarget;
                 case '>=': return strValue >= strTarget;
