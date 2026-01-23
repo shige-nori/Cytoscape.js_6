@@ -84,6 +84,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="fillColor" data-element="node">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="passthrough">Passthrough</option>
                         <option value="continuous">Continuous</option>
@@ -111,6 +112,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="shape" data-element="node">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="passthrough">Passthrough</option>
                     </select>
@@ -144,6 +146,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="size" data-element="node">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="continuous">Continuous</option>
                     </select>
@@ -171,6 +174,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="labelFontSize" data-element="node">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="continuous">Continuous</option>
                     </select>
@@ -192,6 +196,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="labelColor" data-element="node">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="passthrough">Passthrough</option>
                         <option value="continuous">Continuous</option>
@@ -246,6 +251,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="borderWidth" data-element="node">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="continuous">Continuous</option>
                     </select>
@@ -267,6 +273,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="borderColor" data-element="node">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="passthrough">Passthrough</option>
                         <option value="continuous">Continuous</option>
@@ -294,6 +301,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="opacity" data-element="node">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="continuous">Continuous</option>
                     </select>
@@ -319,6 +327,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="lineColor" data-element="edge">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="passthrough">Passthrough</option>
                         <option value="continuous">Continuous</option>
@@ -346,6 +355,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="width" data-element="edge">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="continuous">Continuous</option>
                     </select>
@@ -373,6 +383,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="style" data-element="edge">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="passthrough">Passthrough</option>
                     </select>
@@ -397,6 +408,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="targetArrow" data-element="edge">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="passthrough">Passthrough</option>
                     </select>
@@ -430,6 +442,7 @@ export class StylePanel {
                 <div class="style-property-control">
                     <select class="style-mapping-type" data-property="opacity" data-element="edge">
                         <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
                         <option value="continuous">Continuous</option>
                     </select>
@@ -869,10 +882,13 @@ export class StylePanel {
         const discreteDiv = propertyGroup.querySelector('.style-discrete-mapping');
 
         // スタイル設定を更新
-        if (element === 'node') {
-            this.nodeStyles[property].type = mappingType;
-        } else {
-            this.edgeStyles[property].type = mappingType;
+        const styleConfig = element === 'node' ? this.nodeStyles[property] : this.edgeStyles[property];
+        const previousType = styleConfig.type;
+        styleConfig.type = mappingType;
+
+        // Bypassから他モードに切り替えた場合は上書きをクリア
+        if (previousType === 'bypass' && mappingType !== 'bypass') {
+            this.clearBypassOverrides(element, property);
         }
 
         // すべて非表示にしてからモードに応じて表示
@@ -881,7 +897,7 @@ export class StylePanel {
         if (rangeDiv) rangeDiv.classList.add('hidden');
         if (discreteDiv) discreteDiv.classList.add('hidden');
 
-        if (mappingType === 'default') {
+        if (mappingType === 'default' || mappingType === 'bypass') {
             // Defaultモード: 直接入力のみ表示
             directInputs.forEach(input => input.classList.remove('hidden'));
         } else if (mappingType === 'discrete') {
@@ -893,7 +909,6 @@ export class StylePanel {
             }
             // 既に属性が選択済みの場合はマッピング表を即時表示
             if (discreteDiv) {
-                const styleConfig = element === 'node' ? this.nodeStyles[property] : this.edgeStyles[property];
                 const selectedAttr = attrSelect && attrSelect.value ? attrSelect.value : styleConfig.attribute;
                 if (selectedAttr) {
                     styleConfig.attribute = selectedAttr;
@@ -916,7 +931,6 @@ export class StylePanel {
             if (rangeDiv) rangeDiv.classList.remove('hidden');
 
             // 既に属性が選択済みなら、現在のMin/Maxをmappingに反映
-            const styleConfig = element === 'node' ? this.nodeStyles[property] : this.edgeStyles[property];
             const selectedAttr = attrSelect && attrSelect.value ? attrSelect.value : styleConfig.attribute;
             if (selectedAttr) {
                 styleConfig.attribute = selectedAttr;
@@ -1407,49 +1421,71 @@ export class StylePanel {
         if (nodes.length === 0) return;
 
         nodes.forEach(node => {
+            const isSelected = node.selected();
             const style = {};
 
             // Fill Color
-            style['background-color'] = this.getStyleValue(node, 'fillColor', this.nodeStyles.fillColor);
+            this.applyBypassStyle(style, isSelected, 'background-color', node, 'fillColor', this.nodeStyles.fillColor);
             
             // Shape
-            style['shape'] = this.getStyleValue(node, 'shape', this.nodeStyles.shape);
+            this.applyBypassStyle(style, isSelected, 'shape', node, 'shape', this.nodeStyles.shape);
             
             // Size
-            const size = this.getStyleValue(node, 'size', this.nodeStyles.size);
-            style['width'] = size;
-            style['height'] = size;
+            const sizeResult = this.getBypassValue(node, 'size', this.nodeStyles.size, isSelected);
+            if (sizeResult.apply) {
+                style['width'] = sizeResult.value;
+                style['height'] = sizeResult.value;
+            }
             
             // Label Font Size
-            style['font-size'] = this.getStyleValue(node, 'labelFontSize', this.nodeStyles.labelFontSize) + 'px';
+            const fontSizeResult = this.getBypassValue(node, 'labelFontSize', this.nodeStyles.labelFontSize, isSelected);
+            if (fontSizeResult.apply) {
+                style['font-size'] = fontSizeResult.value + 'px';
+            }
             
             // Label Color
-            style['color'] = this.getStyleValue(node, 'labelColor', this.nodeStyles.labelColor);
+            this.applyBypassStyle(style, isSelected, 'color', node, 'labelColor', this.nodeStyles.labelColor);
             
             // Label Position
-            const labelPos = this.nodeStyles.labelPosition.value;
-            style['text-valign'] = labelPos;
-            if (labelPos === 'center') {
-                style['text-margin-y'] = 0;
-            } else if (labelPos === 'top') {
-                style['text-margin-y'] = -5;
-            } else {
-                style['text-margin-y'] = 5;
+            const labelPosResult = this.getBypassValue(node, 'labelPosition', this.nodeStyles.labelPosition, isSelected);
+            if (labelPosResult.apply) {
+                const labelPos = labelPosResult.value;
+                style['text-valign'] = labelPos;
+                if (labelPos === 'center') {
+                    style['text-margin-y'] = 0;
+                } else if (labelPos === 'top') {
+                    style['text-margin-y'] = -5;
+                } else {
+                    style['text-margin-y'] = 5;
+                }
             }
             
             // Label Width
-            style['text-max-width'] = this.nodeStyles.labelWidth.value + 'px';
+            const labelWidthResult = this.getBypassValue(node, 'labelWidth', this.nodeStyles.labelWidth, isSelected);
+            if (labelWidthResult.apply) {
+                style['text-max-width'] = labelWidthResult.value + 'px';
+            }
             
             // Border Width
-            style['border-width'] = this.getStyleValue(node, 'borderWidth', this.nodeStyles.borderWidth);
+            this.applyBypassStyle(style, isSelected, 'border-width', node, 'borderWidth', this.nodeStyles.borderWidth);
             
             // Border Color
-            style['border-color'] = this.getStyleValue(node, 'borderColor', this.nodeStyles.borderColor);
+            this.applyBypassStyle(style, isSelected, 'border-color', node, 'borderColor', this.nodeStyles.borderColor);
             
             // Opacity
-            style['opacity'] = this.getStyleValue(node, 'opacity', this.nodeStyles.opacity) / 100;
+            const opacityResult = this.getBypassValue(node, 'opacity', this.nodeStyles.opacity, isSelected);
+            if (opacityResult.apply) {
+                style['opacity'] = opacityResult.value / 100;
+            }
 
             node.style(style);
+
+            // 選択中にスタイルが変わった場合は「元の値」を更新
+            if (isSelected) {
+                if (style['background-color'] !== undefined) {
+                    node.data('_originalBg', style['background-color']);
+                }
+            }
         });
         
         // 選択スタイルを再適用
@@ -1464,6 +1500,7 @@ export class StylePanel {
         if (edges.length === 0) return;
 
         edges.forEach(edge => {
+            const isSelected = edge.selected();
             const style = {};
             
             // Edge Bendsが設定されているかチェック
@@ -1471,20 +1508,26 @@ export class StylePanel {
                                      edge.style('control-point-distances') !== 'undefined';
 
             // Line Color
-            style['line-color'] = this.getStyleValue(edge, 'lineColor', this.edgeStyles.lineColor);
-            style['target-arrow-color'] = style['line-color'];
+            const lineColorResult = this.getBypassValue(edge, 'lineColor', this.edgeStyles.lineColor, isSelected);
+            if (lineColorResult.apply) {
+                style['line-color'] = lineColorResult.value;
+                style['target-arrow-color'] = lineColorResult.value;
+            }
             
             // Width
-            style['width'] = this.getStyleValue(edge, 'width', this.edgeStyles.width);
+            this.applyBypassStyle(style, isSelected, 'width', edge, 'width', this.edgeStyles.width);
             
             // Style (line-style)
-            style['line-style'] = this.getStyleValue(edge, 'style', this.edgeStyles.style);
+            this.applyBypassStyle(style, isSelected, 'line-style', edge, 'style', this.edgeStyles.style);
             
             // Target Arrow
-            style['target-arrow-shape'] = this.getStyleValue(edge, 'targetArrow', this.edgeStyles.targetArrow);
+            this.applyBypassStyle(style, isSelected, 'target-arrow-shape', edge, 'targetArrow', this.edgeStyles.targetArrow);
             
             // Opacity
-            style['opacity'] = this.getStyleValue(edge, 'opacity', this.edgeStyles.opacity) / 100;
+            const opacityResult = this.getBypassValue(edge, 'opacity', this.edgeStyles.opacity, isSelected);
+            if (opacityResult.apply) {
+                style['opacity'] = opacityResult.value / 100;
+            }
             
             // Curve Style: Bendsが設定されている場合は上書きしない
             if (!hasControlPoints) {
@@ -1492,6 +1535,16 @@ export class StylePanel {
             }
 
             edge.style(style);
+
+            // 選択中にスタイルが変わった場合は「元の値」を更新
+            if (isSelected) {
+                if (style['line-color'] !== undefined) {
+                    edge.data('_originalLineColor', style['line-color']);
+                }
+                if (style['width'] !== undefined) {
+                    edge.data('_originalWidth', style['width']);
+                }
+            }
         });
         
         // 複数エッジの配置を再計算して再描画
@@ -1752,7 +1805,7 @@ export class StylePanel {
             const discreteDiv = propertyGroup.querySelector('.style-discrete-mapping');
             const rangeDiv = propertyGroup.querySelector('.style-continuous-range, .style-color-range');
 
-            if (type === 'default') {
+            if (type === 'default' || type === 'bypass') {
                 if (colorInput) colorInput.classList.remove('hidden');
                 if (attrSelectElement) attrSelectElement.classList.add('hidden');
                 if (discreteDiv) discreteDiv.classList.add('hidden');
@@ -1776,6 +1829,43 @@ export class StylePanel {
                 if (discreteDiv) discreteDiv.classList.add('hidden');
                 if (rangeDiv) rangeDiv.classList.remove('hidden');
             }
+        }
+    }
+
+    getBypassValue(element, property, styleConfig, isSelected) {
+        if (styleConfig.type === 'bypass') {
+            const overrideKey = this.getBypassDataKey(property);
+            if (isSelected) {
+                element.data(overrideKey, styleConfig.value);
+                return { apply: true, value: styleConfig.value };
+            }
+            const storedValue = element.data(overrideKey);
+            if (storedValue !== undefined && storedValue !== null) {
+                return { apply: true, value: storedValue };
+            }
+            return { apply: false, value: null };
+        }
+
+        return { apply: true, value: this.getStyleValue(element, property, styleConfig) };
+    }
+
+    getBypassDataKey(property) {
+        return `_bypass_${property}`;
+    }
+
+    clearBypassOverrides(elementType, property) {
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
+        const elements = elementType === 'node'
+            ? appContext.networkManager.cy.nodes()
+            : appContext.networkManager.cy.edges();
+        const key = this.getBypassDataKey(property);
+        elements.forEach(el => el.removeData(key));
+    }
+
+    applyBypassStyle(style, isSelected, styleKey, element, property, styleConfig) {
+        const result = this.getBypassValue(element, property, styleConfig, isSelected);
+        if (result.apply) {
+            style[styleKey] = result.value;
         }
     }
 }
