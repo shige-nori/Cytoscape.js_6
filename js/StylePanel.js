@@ -41,6 +41,11 @@ export class StylePanel {
         // 利用可能なノード属性とエッジ属性
         this.nodeAttributes = [];
         this.edgeAttributes = [];
+
+        // コミット済みスタイル（Apply 押下で更新される）
+        this.committedNodeStyles = JSON.parse(JSON.stringify(this.nodeStyles));
+        this.committedEdgeStyles = JSON.parse(JSON.stringify(this.edgeStyles));
+        this.committedNetworkStyles = JSON.parse(JSON.stringify(this.networkStyles));
     }
 
     initialize() {
@@ -53,8 +58,12 @@ export class StylePanel {
         // パネルHTML作成
         const panelHTML = `
             <div class="style-panel" id="style-panel">
-                <div class="tools-panel-header">
+                <div class="tools-panel-header style-panel-header-with-btn">
                     <h3>Style</h3>
+                    <div class="style-panel-buttons">
+                        <button id="style-cancel-btn" class="style-cancel-btn">Cancel</button>
+                        <button id="style-apply-btn" class="style-apply-btn">Apply</button>
+                    </div>
                 </div>
                 <div class="style-panel-tabs">
                     <button class="style-tab active" data-tab="node">Node</button>
@@ -509,15 +518,51 @@ export class StylePanel {
             });
         });
 
-        // プロパティグループの折りたたみ
+        // プロパティグループの折りたたみ（初回展開時にのみコントロールを初期化）
         document.querySelectorAll('.style-property-header[data-toggle="collapse"]').forEach(header => {
             header.addEventListener('click', (e) => {
                 if (e.target.classList.contains('style-mapping-type')) {
                     return;
                 }
                 const propertyGroup = header.closest('.style-property-group');
+                const wasCollapsed = propertyGroup.classList.contains('collapsed');
+                // トグル
                 propertyGroup.classList.toggle('collapsed');
                 header.classList.toggle('collapsed');
+
+                // 展開された直後に一度だけUIを初期化する
+                const isNowOpen = !propertyGroup.classList.contains('collapsed');
+                if (isNowOpen && propertyGroup.dataset.initialized !== 'true') {
+                    // property と element をマッピングタイプセレクトから取得
+                    const mappingSelect = propertyGroup.querySelector('.style-mapping-type');
+                    let prop = null;
+                    let elem = null;
+                    if (mappingSelect) {
+                        prop = mappingSelect.dataset.property;
+                        elem = mappingSelect.dataset.element;
+                    } else {
+                        // mappingSelect がない場合は内部の input/select の id から推測する
+                        const anyControl = propertyGroup.querySelector('input[id], select[id]');
+                        if (anyControl && anyControl.id) {
+                            const parts = anyControl.id.split('-');
+                            if (parts.length >= 2) {
+                                elem = parts[0];
+                                prop = parts.slice(1).join('-');
+                            }
+                        }
+                    }
+
+                    if (prop && elem) {
+                        if (elem === 'node') {
+                            this.updateUIControl('node', prop, this.nodeStyles[prop]);
+                        } else if (elem === 'edge') {
+                            this.updateUIControl('edge', prop, this.edgeStyles[prop]);
+                        } else if (elem === 'network') {
+                            this.updateUIControl('network', prop, this.networkStyles[prop]);
+                        }
+                        propertyGroup.dataset.initialized = 'true';
+                    }
+                }
             });
         });
 
@@ -529,6 +574,18 @@ export class StylePanel {
 
         // Network スタイル入力
         this.setupNetworkStyleListeners();
+
+        // Applyボタン
+        const applyBtn = document.getElementById('style-apply-btn');
+        if (applyBtn) {
+            applyBtn.addEventListener('click', () => this.commitStyles());
+        }
+
+        // Cancelボタン
+        const cancelBtn = document.getElementById('style-cancel-btn');
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => this.cancelStyles());
+        }
 
         // マッピングタイプ変更
         document.querySelectorAll('.style-mapping-type').forEach(select => {
@@ -929,6 +986,22 @@ export class StylePanel {
         // スタイル設定を更新
         const styleConfig = element === 'node' ? this.nodeStyles[property] : this.edgeStyles[property];
         const previousType = styleConfig.type;
+
+        // Bypassに切り替える場合、現在のスタイルをベースとして保持
+        if (mappingType === 'bypass' && previousType !== 'bypass') {
+            styleConfig.base = {
+                type: previousType,
+                value: styleConfig.value,
+                attribute: styleConfig.attribute,
+                mapping: styleConfig.mapping ? JSON.parse(JSON.stringify(styleConfig.mapping)) : null
+            };
+        }
+
+        // Bypassから他モードに切り替える場合はベースを破棄
+        if (previousType === 'bypass' && mappingType !== 'bypass') {
+            styleConfig.base = null;
+        }
+
         styleConfig.type = mappingType;
 
         // Bypassから他モードに切り替えた場合は上書きをクリア
@@ -1322,9 +1395,19 @@ export class StylePanel {
         
         // 属性リストを更新
         this.refreshAttributes();
+
+        // パネルを開いたときは全てのアコーディオンを閉じ、初期化フラグをクリアして遅延初期化に備える
+        document.querySelectorAll('.style-property-group').forEach(pg => {
+            pg.classList.add('collapsed');
+            const header = pg.querySelector('.style-property-header');
+            if (header) header.classList.add('collapsed');
+            pg.dataset.initialized = 'false';
+        });
     }
 
     closePanel() {
+        // パネルを閉じる前に Apply されていない変更を破棄
+        this.cancelStyles();
         if (this.panel) this.panel.classList.remove('active');
     }
 
@@ -1779,26 +1862,41 @@ export class StylePanel {
 
     // 外部からスタイルを適用（ネットワーク読み込み時など）
     reapplyStyles() {
+        // 読み込んだスタイルをコミット済みとして保持し、working styles を同期する
+        this.committedNodeStyles = JSON.parse(JSON.stringify(this.nodeStyles));
+        this.committedEdgeStyles = JSON.parse(JSON.stringify(this.edgeStyles));
+        this.committedNetworkStyles = JSON.parse(JSON.stringify(this.networkStyles));
+
+        // working styles をコミットと同期
+        this.nodeStyles = JSON.parse(JSON.stringify(this.committedNodeStyles));
+        this.edgeStyles = JSON.parse(JSON.stringify(this.committedEdgeStyles));
+        this.networkStyles = JSON.parse(JSON.stringify(this.committedNetworkStyles));
+
+        // 属性リストを更新
         this.refreshAttributes();
-        this.updateUIFromStyles(); // UIコントロールを更新
+
+        // UI はアコーディオンを開いたときに初期化する（遅延表示）。まず全グループを閉じ、未初期化フラグを付与
+        document.querySelectorAll('.style-property-group').forEach(pg => {
+            pg.classList.add('collapsed');
+            const header = pg.querySelector('.style-property-header');
+            if (header) header.classList.add('collapsed');
+            pg.dataset.initialized = 'false';
+        });
+
+        // スタイルをネットワークへ適用（working styles が使用される）
         this.applyStyles();
     }
 
     // スタイル設定からUIコントロールを更新
     updateUIFromStyles() {
-        // Node Stylesを更新
-        Object.entries(this.nodeStyles).forEach(([property, config]) => {
-            this.updateUIControl('node', property, config);
-        });
-
-        // Edge Stylesを更新
-        Object.entries(this.edgeStyles).forEach(([property, config]) => {
-            this.updateUIControl('edge', property, config);
-        });
-
-        // Network Stylesを更新
-        Object.entries(this.networkStyles).forEach(([property, config]) => {
-            this.updateUIControl('network', property, config);
+        // UI の即時更新は行わず、各プロパティグループは未初期化状態にして
+        // ユーザーがアコーディオンを開いたときに初回だけ初期化して表示する。
+        document.querySelectorAll('.style-property-group').forEach(pg => {
+            pg.dataset.initialized = 'false';
+            // すべて閉じておく
+            if (!pg.classList.contains('collapsed')) pg.classList.add('collapsed');
+            const header = pg.querySelector('.style-property-header');
+            if (header && !header.classList.contains('collapsed')) header.classList.add('collapsed');
         });
     }
 
@@ -1927,6 +2025,10 @@ export class StylePanel {
             if (storedValue !== undefined && storedValue !== null) {
                 return { apply: true, value: storedValue };
             }
+            // ベース設定があればそれを適用（例: continuousの結果）
+            if (styleConfig.base) {
+                return { apply: true, value: this.getStyleValue(element, property, styleConfig.base) };
+            }
             return { apply: false, value: null };
         }
 
@@ -1951,5 +2053,40 @@ export class StylePanel {
         if (result.apply) {
             style[styleKey] = result.value;
         }
+    }
+
+    // Apply ボタンで確定する（committed にコピー）
+    commitStyles() {
+        this.committedNodeStyles = JSON.parse(JSON.stringify(this.nodeStyles));
+        this.committedEdgeStyles = JSON.parse(JSON.stringify(this.edgeStyles));
+        this.committedNetworkStyles = JSON.parse(JSON.stringify(this.networkStyles));
+        // ここで必要ならイベントを発火させる（例: 保存ボタンを有効化など）
+        // ネットワーク上のスタイルは既に live preview されているため、再適用は不要
+        console.info('StylePanel: styles committed');
+    }
+
+    // Cancel ボタンで前回確定された値に戻す
+    cancelStyles() {
+        // committed styles を working styles にコピー
+        this.nodeStyles = JSON.parse(JSON.stringify(this.committedNodeStyles));
+        this.edgeStyles = JSON.parse(JSON.stringify(this.committedEdgeStyles));
+        this.networkStyles = JSON.parse(JSON.stringify(this.committedNetworkStyles));
+        
+        // 全てのアコーディオンを閉じて未初期化状態にする
+        document.querySelectorAll('.style-property-group').forEach(pg => {
+            pg.classList.add('collapsed');
+            const header = pg.querySelector('.style-property-header');
+            if (header) header.classList.add('collapsed');
+            pg.dataset.initialized = 'false';
+        });
+        
+        // 変更されたスタイルをネットワークに反映
+        this.applyStyles();
+        console.info('StylePanel: styles cancelled, reverted to committed state');
+    }
+
+    // ヘルパー: 深いコピー
+    deepCopy(obj) {
+        return JSON.parse(JSON.stringify(obj));
     }
 }

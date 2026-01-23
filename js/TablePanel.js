@@ -666,6 +666,8 @@ export class TablePanel {
         elements.forEach(ele => {
             const data = ele.data();
             Object.keys(data).forEach(key => {
+                // `_bypass_` で始まるカラムはテーブルに表示しない
+                if (key && String(key).startsWith('_bypass_')) return;
                 allColumns.add(key);
             });
         });

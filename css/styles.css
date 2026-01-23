@@ -446,6 +446,58 @@ body {
     color: white;
 }
 
+/* Style panel header with Apply button */
+.style-panel-header-with-btn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.style-panel-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.style-cancel-btn {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    background-color: var(--secondary-color);
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.style-cancel-btn:hover {
+    background-color: #475569;
+}
+
+.style-cancel-btn:active {
+    background-color: #334155;
+}
+
+.style-apply-btn {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    background-color: var(--primary-color);
+    color: white;
+    transition: background-color 0.2s;
+}
+
+.style-apply-btn:hover {
+    background-color: #1d4ed8;
+}
+
+.style-apply-btn:active {
+    background-color: #1e40af;
+}
+
 .tools-panel-body {
     padding: 16px;
 }

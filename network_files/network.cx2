@@ -789,7 +789,9 @@
           "2022/10/29"
         ],
         "NodeWeight": 264,
-        "NodeClass": "研究目的"
+        "NodeClass": "研究目的",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -1877,7 +1879,9 @@
           "2023/04/02"
         ],
         "NodeWeight": 211,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -2790,7 +2794,9 @@
           "2023/12/28"
         ],
         "NodeWeight": 308,
-        "NodeClass": "評価方法"
+        "NodeClass": "評価方法",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -3824,7 +3830,9 @@
           "2022/02/23"
         ],
         "NodeWeight": 238,
-        "NodeClass": "評価方法"
+        "NodeClass": "評価方法",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -4455,7 +4463,9 @@
           "2020/09/28"
         ],
         "NodeWeight": 208,
-        "NodeClass": "研究目的"
+        "NodeClass": "研究目的",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -5355,7 +5365,9 @@
           "2023/05/07"
         ],
         "NodeWeight": 104,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -5651,7 +5663,9 @@
           "2023/05/07"
         ],
         "NodeWeight": 94,
-        "NodeClass": "対象材料"
+        "NodeClass": "対象材料",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -6060,7 +6074,9 @@
           "2020/09/28"
         ],
         "NodeWeight": 132,
-        "NodeClass": "評価方法"
+        "NodeClass": "評価方法",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -7450,7 +7466,9 @@
           "2022/12/22"
         ],
         "NodeWeight": 293,
-        "NodeClass": "対象材料"
+        "NodeClass": "対象材料",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -8320,7 +8338,9 @@
           "2020/06/03"
         ],
         "NodeWeight": 239,
-        "NodeClass": "対象材料"
+        "NodeClass": "対象材料",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -9342,7 +9362,9 @@
           "2021/01/05"
         ],
         "NodeWeight": 163,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -9875,7 +9897,9 @@
           "2022/10/29"
         ],
         "NodeWeight": 31,
-        "NodeClass": "対象材料"
+        "NodeClass": "対象材料",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -11021,7 +11045,9 @@
           "2022/12/22"
         ],
         "NodeWeight": 210,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -11391,7 +11417,9 @@
           "2022/02/23"
         ],
         "NodeWeight": 119,
-        "NodeClass": "対象材料"
+        "NodeClass": "対象材料",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -11826,7 +11854,9 @@
           "2023/05/07"
         ],
         "NodeWeight": 142,
-        "NodeClass": "評価方法"
+        "NodeClass": "評価方法",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -12348,7 +12378,9 @@
           "2020/02/04"
         ],
         "NodeWeight": 82,
-        "NodeClass": "評価方法"
+        "NodeClass": "評価方法",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -12751,7 +12783,9 @@
           "2020/02/04"
         ],
         "NodeWeight": 130,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -13525,7 +13559,9 @@
           "2022/10/29"
         ],
         "NodeWeight": 41,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -14524,7 +14560,9 @@
           "2023/05/07"
         ],
         "NodeWeight": 50,
-        "NodeClass": "研究目的"
+        "NodeClass": "研究目的",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -14894,7 +14932,9 @@
           "2020/06/03"
         ],
         "NodeWeight": 119,
-        "NodeClass": "研究目的"
+        "NodeClass": "研究目的",
+        "_originalBg": "#e87211",
+        "_bypass_fillColor": "#e87211"
       }
     },
     {
@@ -16145,7 +16185,8 @@
           "2023/11/16"
         ],
         "NodeWeight": 59,
-        "NodeClass": "適用手法"
+        "NodeClass": "適用手法",
+        "_originalBg": "rgb(206,170,199)"
       }
     },
     {
@@ -16878,7 +16919,8 @@
           "2025/12/09"
         ],
         "NodeWeight": 43,
-        "NodeClass": "評価方法"
+        "NodeClass": "評価方法",
+        "_originalBg": "rgb(202,181,211)"
       }
     },
     {
@@ -31870,7 +31912,11 @@
         "論文タイトル": "Inversion of supramolecular chirality by photo-enhanced secondary nucleation",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2022/10/19"
+        "発行日": "2022/10/19",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -31882,7 +31928,11 @@
         "論文タイトル": "Inversion of supramolecular chirality by photo-enhanced secondary nucleation",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2022/10/19"
+        "発行日": "2022/10/19",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -31894,7 +31944,11 @@
         "論文タイトル": "Inversion of supramolecular chirality by photo-enhanced secondary nucleation",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2022/10/19"
+        "発行日": "2022/10/19",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -33154,7 +33208,9 @@
         "論文タイトル": "Towards FAIR nanosafety data",
         "所属1": null,
         "所属2": null,
-        "発行日": "2021/12/13"
+        "発行日": "2021/12/13",
+        "_originalLineColor": "rgb(239,68,68)",
+        "_originalWidth": "3px"
       }
     },
     {
@@ -40654,7 +40710,11 @@
         "論文タイトル": "Deterministic switching of perpendicular magnetization by out-of-plane anti-damping magnon torques",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2022/02/07"
+        "発行日": "2022/02/07",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -40666,7 +40726,11 @@
         "論文タイトル": "Deterministic switching of perpendicular magnetization by out-of-plane anti-damping magnon torques",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2022/02/07"
+        "発行日": "2022/02/07",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -40678,7 +40742,11 @@
         "論文タイトル": "Deterministic switching of perpendicular magnetization by out-of-plane anti-damping magnon torques",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2022/02/07"
+        "発行日": "2022/02/07",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -43678,7 +43746,11 @@
         "論文タイトル": "Carbon nanotube recognition by human Siglec-14 provokes inflammation",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2020/08/16"
+        "発行日": "2020/08/16",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -43690,7 +43762,11 @@
         "論文タイトル": "Carbon nanotube recognition by human Siglec-14 provokes inflammation",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2020/08/16"
+        "発行日": "2020/08/16",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -43702,7 +43778,11 @@
         "論文タイトル": "Carbon nanotube recognition by human Siglec-14 provokes inflammation",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2020/08/16"
+        "発行日": "2020/08/16",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -63730,7 +63810,11 @@
         "論文タイトル": "Publisher Correction: Time-domain observation of ballistic orbital-angular-momentum currents with giant relaxation length in tungsten",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2022/10/06"
+        "発行日": "2022/10/06",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -63742,7 +63826,11 @@
         "論文タイトル": "Publisher Correction: Time-domain observation of ballistic orbital-angular-momentum currents with giant relaxation length in tungsten",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2022/10/06"
+        "発行日": "2022/10/06",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -63754,7 +63842,11 @@
         "論文タイトル": "Publisher Correction: Time-domain observation of ballistic orbital-angular-momentum currents with giant relaxation length in tungsten",
         "所属1": null,
         "所属2": "東北大",
-        "発行日": "2022/10/06"
+        "発行日": "2022/10/06",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65602,7 +65694,11 @@
         "論文タイトル": "Time-domain observation of ballistic orbital-angular-momentum currents with giant relaxation length in tungsten",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2020/06/03"
+        "発行日": "2020/06/03",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65614,7 +65710,11 @@
         "論文タイトル": "Time-domain observation of ballistic orbital-angular-momentum currents with giant relaxation length in tungsten",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2020/06/03"
+        "発行日": "2020/06/03",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65626,7 +65726,11 @@
         "論文タイトル": "Time-domain observation of ballistic orbital-angular-momentum currents with giant relaxation length in tungsten",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2020/06/03"
+        "発行日": "2020/06/03",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65818,7 +65922,11 @@
         "論文タイトル": "Large non-reciprocal charge transport mediated by quantum anomalous Hall edge states",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2021/01/05"
+        "発行日": "2021/01/05",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65830,7 +65938,11 @@
         "論文タイトル": "Large non-reciprocal charge transport mediated by quantum anomalous Hall edge states",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2021/01/05"
+        "発行日": "2021/01/05",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65842,7 +65954,11 @@
         "論文タイトル": "Large non-reciprocal charge transport mediated by quantum anomalous Hall edge states",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2021/01/05"
+        "発行日": "2021/01/05",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65854,7 +65970,11 @@
         "論文タイトル": "Nanoscale C–H/C–D mapping of organic materials using electron spectroscopy",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2020/09/28"
+        "発行日": "2020/09/28",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65866,7 +65986,11 @@
         "論文タイトル": "Nanoscale C–H/C–D mapping of organic materials using electron spectroscopy",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2020/09/28"
+        "発行日": "2020/09/28",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65878,7 +66002,11 @@
         "論文タイトル": "Nanoscale C–H/C–D mapping of organic materials using electron spectroscopy",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2020/09/28"
+        "発行日": "2020/09/28",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65962,7 +66090,11 @@
         "論文タイトル": "High-resolution three-dimensional imaging of topological textures in nanoscale single-diamond networks",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2023/05/07"
+        "発行日": "2023/05/07",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65974,7 +66106,11 @@
         "論文タイトル": "High-resolution three-dimensional imaging of topological textures in nanoscale single-diamond networks",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2023/05/07"
+        "発行日": "2023/05/07",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -65986,7 +66122,11 @@
         "論文タイトル": "High-resolution three-dimensional imaging of topological textures in nanoscale single-diamond networks",
         "所属1": "東大",
         "所属2": "東北大",
-        "発行日": "2023/05/07"
+        "発行日": "2023/05/07",
+        "_originalLineColor": "#f95353",
+        "_originalWidth": 6.7,
+        "_bypass_width": 6.7,
+        "_bypass_lineColor": "#f95353"
       }
     },
     {
@@ -90816,13 +90956,22 @@
   "styleSettings": {
     "nodeStyles": {
       "fillColor": {
-        "type": "continuous",
-        "value": "#2563eb",
+        "type": "bypass",
+        "value": "#e87211",
         "mapping": {
-          "min": "#cadafc",
-          "max": "#000cb8"
+          "min": "#d8e1f3",
+          "max": "#00087a"
         },
-        "attribute": "NodeWeight"
+        "attribute": "NodeWeight",
+        "base": {
+          "type": "continuous",
+          "value": "#e87211",
+          "attribute": "NodeWeight",
+          "mapping": {
+            "min": "#d8e1f3",
+            "max": "#00087a"
+          }
+        }
       },
       "shape": {
         "type": "default",
@@ -90884,16 +91033,22 @@
     },
     "edgeStyles": {
       "lineColor": {
-        "type": "default",
-        "value": "#bdbdbd",
+        "type": "bypass",
+        "value": "#f95353",
         "mapping": null,
         "attribute": null
       },
       "width": {
-        "type": "default",
-        "value": 0.5,
+        "type": "bypass",
+        "value": 6.7,
         "mapping": null,
-        "attribute": null
+        "attribute": null,
+        "base": {
+          "type": "default",
+          "value": 0.7,
+          "attribute": null,
+          "mapping": null
+        }
       },
       "style": {
         "type": "default",

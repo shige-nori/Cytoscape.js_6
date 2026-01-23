@@ -312,6 +312,8 @@ export class FilterPanel {
             nodes.forEach(node => {
                 const nodeData = node.data();
                 Object.keys(nodeData).forEach(key => {
+                    // `_bypass_` で始まるカラムはフィルターの選択肢に含めない
+                    if (key && String(key).startsWith('_bypass_')) return;
                     if (excludedColumns.includes(key)) return;
                     if (!nodeColumnMap.has(key)) {
                         nodeColumnMap.set(key, this.detectDataType(nodeData[key]));
@@ -327,6 +329,8 @@ export class FilterPanel {
             edges.forEach(edge => {
                 const edgeData = edge.data();
                 Object.keys(edgeData).forEach(key => {
+                    // `_bypass_` で始まるカラムはフィルターの選択肢に含めない
+                    if (key && String(key).startsWith('_bypass_')) return;
                     if (excludedColumns.includes(key)) return;
                     if (!edgeColumnMap.has(key)) {
                         edgeColumnMap.set(key, this.detectDataType(edgeData[key]));
