@@ -109,7 +109,7 @@ export class ModalManager {
         typeSelect.dataset.column = column;
         typeSelect.dataset.field = 'dataType';
         
-        const dataTypes = ['String', 'Number', 'Boolean', 'Date', 'String Array', 'Number Array', 'Date Array'];
+        const dataTypes = ['String', 'Number', 'Boolean', 'String Array', 'Number Array'];
         dataTypes.forEach(type => {
             const option = document.createElement('option');
             option.value = type;
