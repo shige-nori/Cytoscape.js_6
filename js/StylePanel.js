@@ -34,6 +34,10 @@ export class StylePanel {
             curveStyle: { type: 'default', value: 'bezier', mapping: null, attribute: null }
         };
 
+        this.networkStyles = {
+            backgroundPaint: { value: '#ffffff' }
+        };
+
         // 利用可能なノード属性とエッジ属性
         this.nodeAttributes = [];
         this.edgeAttributes = [];
@@ -55,6 +59,7 @@ export class StylePanel {
                 <div class="style-panel-tabs">
                     <button class="style-tab active" data-tab="node">Node</button>
                     <button class="style-tab" data-tab="edge">Edge</button>
+                    <button class="style-tab" data-tab="network">Network</button>
                 </div>
                 <div class="tools-panel-body style-panel-body">
                     <!-- Node Tab Content -->
@@ -64,6 +69,10 @@ export class StylePanel {
                     <!-- Edge Tab Content -->
                     <div class="style-tab-content" id="style-edge-content">
                         ${this.createEdgeStyleControls()}
+                    </div>
+                    <!-- Network Tab Content -->
+                    <div class="style-tab-content" id="style-network-content">
+                        ${this.createNetworkStyleControls()}
                     </div>
                 </div>
             </div>
@@ -477,6 +486,21 @@ export class StylePanel {
         `;
     }
 
+    createNetworkStyleControls() {
+        return `
+            <!-- Background Paint -->
+            <div class="style-property-group collapsed">
+                <div class="style-property-header collapsed" data-toggle="collapse">
+                    <label>Background Paint</label>
+                    <span class="collapse-icon">▼</span>
+                </div>
+                <div class="style-property-control">
+                    <input type="color" class="style-color-input" id="network-backgroundPaint" value="#ffffff">
+                </div>
+            </div>
+        `;
+    }
+
     setupEventListeners() {
         // タブ切り替え
         document.querySelectorAll('.style-tab').forEach(tab => {
@@ -502,6 +526,9 @@ export class StylePanel {
         
         // Edge スタイル入力
         this.setupEdgeStyleListeners();
+
+        // Network スタイル入力
+        this.setupNetworkStyleListeners();
 
         // マッピングタイプ変更
         document.querySelectorAll('.style-mapping-type').forEach(select => {
@@ -858,6 +885,16 @@ export class StylePanel {
             curveStyle.addEventListener('change', (e) => {
                 this.edgeStyles.curveStyle.value = e.target.value;
                 this.applyEdgeStyles();
+            });
+        }
+    }
+
+    setupNetworkStyleListeners() {
+        const backgroundPaint = document.getElementById('network-backgroundPaint');
+        if (backgroundPaint) {
+            backgroundPaint.addEventListener('input', (e) => {
+                this.networkStyles.backgroundPaint.value = e.target.value;
+                this.applyNetworkStyles();
             });
         }
     }
@@ -1236,6 +1273,7 @@ export class StylePanel {
         // タブコンテンツの表示を更新
         document.getElementById('style-node-content').classList.toggle('active', tab === 'node');
         document.getElementById('style-edge-content').classList.toggle('active', tab === 'edge');
+        document.getElementById('style-network-content').classList.toggle('active', tab === 'network');
     }
 
     setupPanelDrag() {
@@ -1314,6 +1352,10 @@ export class StylePanel {
             opacity: { type: 'default', value: 100, mapping: null, attribute: null },
             curveStyle: { type: 'default', value: 'bezier', mapping: null, attribute: null }
         };
+
+        this.networkStyles = {
+            backgroundPaint: { value: '#ffffff' }
+        };
         
         // UIをリセット
         this.resetUIControls();
@@ -1365,6 +1407,9 @@ export class StylePanel {
         const nodeOpacityValue = document.getElementById('node-opacity-value');
         if (nodeOpacity) nodeOpacity.value = '100';
         if (nodeOpacityValue) nodeOpacityValue.value = '100';
+
+        const networkBackground = document.getElementById('network-backgroundPaint');
+        if (networkBackground) networkBackground.value = '#ffffff';
         
         // Edge Tab - デフォルト値に戻す
         const edgeLineColor = document.getElementById('edge-lineColor');
@@ -1421,6 +1466,14 @@ export class StylePanel {
     applyStyles() {
         this.applyNodeStyles();
         this.applyEdgeStyles();
+        this.applyNetworkStyles();
+    }
+
+    applyNetworkStyles() {
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
+        const container = appContext.networkManager.cy.container();
+        if (!container) return;
+        container.style.backgroundColor = this.networkStyles.backgroundPaint.value;
     }
 
     applyNodeStyles() {
@@ -1718,6 +1771,10 @@ export class StylePanel {
             opacity: { type: 'default', value: 100, mapping: null, attribute: null },
             curveStyle: { type: 'default', value: 'bezier', mapping: null, attribute: null }
         };
+
+        this.networkStyles = {
+            backgroundPaint: { value: '#ffffff' }
+        };
     }
 
     // 外部からスタイルを適用（ネットワーク読み込み時など）
@@ -1738,6 +1795,11 @@ export class StylePanel {
         Object.entries(this.edgeStyles).forEach(([property, config]) => {
             this.updateUIControl('edge', property, config);
         });
+
+        // Network Stylesを更新
+        Object.entries(this.networkStyles).forEach(([property, config]) => {
+            this.updateUIControl('network', property, config);
+        });
     }
 
     // 個別のUIコントロールを更新
@@ -1753,7 +1815,12 @@ export class StylePanel {
         }
 
         // プロパティに応じた入力フィールドを更新
-        if (property === 'fillColor' || property === 'labelColor' || property === 'borderColor' || property === 'lineColor') {
+        if (elementType === 'network' && property === 'backgroundPaint') {
+            const bgInput = document.getElementById('network-backgroundPaint');
+            if (bgInput && bgInput.value !== value) {
+                bgInput.value = value;
+            }
+        } else if (property === 'fillColor' || property === 'labelColor' || property === 'borderColor' || property === 'lineColor') {
             // カラー入力
             const colorInput = document.getElementById(`${elementType}-${property}`);
             if (colorInput && colorInput.value !== value) {

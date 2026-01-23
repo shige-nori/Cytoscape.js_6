@@ -470,6 +470,9 @@ export class FileHandler {
             if (cx2Data.styleSettings && appContext.stylePanel) {
                 appContext.stylePanel.nodeStyles = cx2Data.styleSettings.nodeStyles || appContext.stylePanel.nodeStyles;
                 appContext.stylePanel.edgeStyles = cx2Data.styleSettings.edgeStyles || appContext.stylePanel.edgeStyles;
+                if (cx2Data.styleSettings.networkStyles) {
+                    appContext.stylePanel.networkStyles = cx2Data.styleSettings.networkStyles;
+                }
                 appContext.stylePanel.reapplyStyles();
             } else if (appContext.stylePanel) {
                 // スタイル設定がない場合、デフォルトスタイルをUIに反映
@@ -550,7 +553,8 @@ export class FileHandler {
             // スタイル設定を保存
             const styleSettings = appContext.stylePanel ? {
                 nodeStyles: appContext.stylePanel.nodeStyles,
-                edgeStyles: appContext.stylePanel.edgeStyles
+                edgeStyles: appContext.stylePanel.edgeStyles,
+                networkStyles: appContext.stylePanel.networkStyles
             } : null;
             
             
