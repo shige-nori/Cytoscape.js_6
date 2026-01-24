@@ -36,6 +36,12 @@ export class NetworkManager {
     getDefaultStyle() {
         return [
             {
+                selector: 'core',
+                style: {
+                    'background-color': 'transparent'
+                }
+            },
+            {
                 selector: 'node',
                 style: {
                     'background-color': '#2563eb',

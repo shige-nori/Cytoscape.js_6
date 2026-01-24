@@ -25,6 +25,8 @@
                 <div class="submenu-item disabled" id="save-network">Save</div>
                 <div class="submenu-item" id="save-as-network">Save As</div>
                 <div class="submenu-separator"></div>
+                <div class="submenu-item" id="export-image">Export Image...</div>
+                <div class="submenu-separator"></div>
                 <div class="submenu-item" id="close-network">Close</div>
             </div>
         </div>
@@ -50,6 +52,12 @@
                 <div class="submenu-item" id="open-style-panel">Style Panel...</div>
             </div>
         </div>
+        <div class="menu-item" data-menu="annotation">
+            <span class="menu-title">Annotation</span>
+            <div class="submenu">
+                <div class="submenu-item" id="open-annotation-panel">Annotation Panel...</div>
+            </div>
+        </div>
         <div class="menu-item" data-menu="view">
             <span class="menu-title">View</span>
             <div class="submenu">
@@ -72,7 +80,13 @@
 
     <!-- グラフ表示領域 -->
     <div id="cy-container">
+        <!-- ネットワーク背景レイヤー -->
+        <div id="network-background"></div>
+        <!-- 背景用オーバーレイコンテナ -->
+        <div id="overlay-container-back"></div>
         <div id="cy"></div>
+        <!-- オーバーレイコンテナ（図形・画像用） -->
+        <div id="overlay-container"></div>
     </div>
 
     <!-- カラムマッピングモーダル -->
@@ -323,6 +337,7 @@
     <input type="file" id="file-input-network" accept=".csv" style="display: none;">
     <input type="file" id="file-input-table" accept=".csv" style="display: none;">
     <input type="file" id="file-input-cx2" accept=".cx2" style="display: none;">
+    <input type="file" id="file-input-image" accept="image/*" style="display: none;">
 
     <!-- 外部ライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>

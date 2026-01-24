@@ -15,6 +15,8 @@ import { FilterPanel } from './FilterPanel.js';
 import { PathTracePanel } from './PathTracePanel.js';
 import { ModalManager } from './ModalManager.js';
 import { MenuManager } from './MenuManager.js';
+import { LayerManager } from './LayerManager.js';
+import { AnnotationPanel } from './AnnotationPanel.js';
 
 // アプリケーション初期化
 document.addEventListener('DOMContentLoaded', () => {
@@ -42,6 +44,13 @@ document.addEventListener('DOMContentLoaded', () => {
     appContext.filterPanel.initialize();
     appContext.pathTracePanel = new PathTracePanel();
     appContext.pathTracePanel.initialize();
+    
+    // Annotation機能関連
+    appContext.layerManager = new LayerManager();
+    appContext.layerManager.initialize();
+    appContext.annotationPanel = new AnnotationPanel();
+    appContext.annotationPanel.initialize();
+    
     appContext.modalManager = new ModalManager();
     appContext.menuManager = new MenuManager();
     

@@ -74,6 +74,41 @@ export class MenuManager {
             this.closeAllMenus();
         });
 
+        // Export Image
+        document.getElementById('export-image')?.addEventListener('click', async () => {
+            if (appContext.networkManager.hasNetwork()) {
+                try {
+                    progressOverlay.show('Exporting image...');
+                    
+                    let pngDataUrl;
+                    if (appContext.layerManager && appContext.layerManager.layers.length > 0) {
+                        // オーバーレイがある場合は合成
+                        pngDataUrl = await appContext.layerManager.exportAsPng();
+                    } else {
+                        // オーバーレイがない場合はCytoscapeのみ
+                        pngDataUrl = appContext.networkManager.cy.png({ full: true, scale: 2 });
+                    }
+                    
+                    if (pngDataUrl) {
+                        // ダウンロード
+                        const link = document.createElement('a');
+                        link.download = 'network.png';
+                        link.href = pngDataUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }
+                    
+                    progressOverlay.hide();
+                } catch (err) {
+                    progressOverlay.hide();
+                    console.error('Export failed:', err);
+                    alert('画像のエクスポートに失敗しました。');
+                }
+            }
+            this.closeAllMenus();
+        });
+
         // Import Network File
         document.getElementById('import-network').addEventListener('click', () => {
             document.getElementById('file-input-network').click();
@@ -202,6 +237,20 @@ export class MenuManager {
             this.closeAllMenus();
         });
 
+        // ============================================
+        // Annotation メニュー
+        // ============================================
+        
+        // Open Annotation Panel
+        document.getElementById('open-annotation-panel')?.addEventListener('click', () => {
+            if (appContext.networkManager.hasNetwork()) {
+                appContext.annotationPanel?.togglePanel();
+            }
+            this.closeAllMenus();
+        });
+
+        // Layers Panel（削除 - 統合済み）
+
         // メニュー外クリックで閉じる
         document.addEventListener('click', (e) => {
             if (!e.target.closest('.menubar')) {
@@ -243,6 +292,21 @@ export class MenuManager {
             const file = e.target.files[0];
             if (file) {
                 await appContext.fileHandler.startTableImport(file);
+            }
+            e.target.value = ''; // リセット
+        });
+
+        // Image File入力（Annotation用）
+        document.getElementById('file-input-image')?.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (file && appContext.layerManager) {
+                try {
+                    await appContext.layerManager.addImageFromFile(file);
+                    appContext.annotationPanel?.openPanel();
+                } catch (err) {
+                    console.error('Failed to load image:', err);
+                    alert('画像の読み込みに失敗しました。');
+                }
             }
             e.target.value = ''; // リセット
         });

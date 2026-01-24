@@ -1560,9 +1560,9 @@ export class StylePanel {
 
     applyNetworkStyles() {
         if (!appContext.networkManager || !appContext.networkManager.cy) return;
-        const container = appContext.networkManager.cy.container();
-        if (!container) return;
-        container.style.backgroundColor = this.networkStyles.backgroundPaint.value;
+        const background = document.getElementById('network-background');
+        if (!background) return;
+        background.style.backgroundColor = this.networkStyles.backgroundPaint.value;
     }
 
     applyNodeStyles() {

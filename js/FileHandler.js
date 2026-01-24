@@ -479,6 +479,15 @@ export class FileHandler {
                 appContext.stylePanel.reapplyStyles();
             }
             
+            // オーバーレイレイヤーを復元
+            if (appContext.layerManager) {
+                if (cx2Data.overlayLayers && Array.isArray(cx2Data.overlayLayers)) {
+                    appContext.layerManager.importLayers(cx2Data.overlayLayers);
+                } else {
+                    appContext.layerManager.clearAll();
+                }
+            }
+            
             // ファイトを適用
             appContext.networkManager.cy.fit();
             
@@ -557,13 +566,18 @@ export class FileHandler {
                 networkStyles: appContext.stylePanel.networkStyles
             } : null;
             
+            // オーバーレイレイヤーを保存
+            const overlayLayers = appContext.layerManager ? 
+                appContext.layerManager.exportLayers() : null;
+            
             
             const cx2Data = {
                 nodes: nodes,
                 edges: edges,
                 layout: layout,
                 edgeBendsSettings: edgeBendsSettings,
-                styleSettings: styleSettings
+                styleSettings: styleSettings,
+                overlayLayers: overlayLayers
             };
             
             const jsonString = JSON.stringify(cx2Data, null, 2);
