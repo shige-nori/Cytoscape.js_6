@@ -1292,12 +1292,15 @@ export class StylePanel {
         const excludeKeys = ['_hoverOriginalBg', '_hoverOriginalOpacity', '_originalBg'];
         appContext.networkManager.cy.nodes().forEach(node => {
             Object.keys(node.data()).forEach(key => {
+                // `_bypass_` で始まる属性は表示しない
+                if (key && String(key).startsWith('_bypass_')) return;
                 if (key !== 'id' && !excludeKeys.includes(key)) nodeAttrs.add(key);
             });
         });
         // ノード属性が空の場合はテーブルの列定義をフォールバックとして使用
         if (nodeAttrs.size === 0 && appContext.tablePanel && Array.isArray(appContext.tablePanel.nodeColumns)) {
             appContext.tablePanel.nodeColumns.forEach(key => {
+                if (key && String(key).startsWith('_bypass_')) return;
                 if (key !== 'id' && !excludeKeys.includes(key)) nodeAttrs.add(key);
             });
         }
@@ -1308,6 +1311,8 @@ export class StylePanel {
         const excludeEdgeKeys = ['_hoverOriginalLineColor', '_originalLineColor', '_originalWidth'];
         appContext.networkManager.cy.edges().forEach(edge => {
             Object.keys(edge.data()).forEach(key => {
+                // `_bypass_` で始まる属性は表示しない
+                if (key && String(key).startsWith('_bypass_')) return;
                 if (!['id', 'source', 'target'].includes(key) && !excludeKeys.includes(key) && !excludeEdgeKeys.includes(key)) {
                     edgeAttrs.add(key);
                 }
@@ -1316,6 +1321,7 @@ export class StylePanel {
         // エッジ属性が空の場合はテーブルの列定義をフォールバックとして使用
         if (edgeAttrs.size === 0 && appContext.tablePanel && Array.isArray(appContext.tablePanel.edgeColumns)) {
             appContext.tablePanel.edgeColumns.forEach(key => {
+                if (key && String(key).startsWith('_bypass_')) return;
                 if (!['id', 'source', 'target'].includes(key) && !excludeKeys.includes(key) && !excludeEdgeKeys.includes(key)) {
                     edgeAttrs.add(key);
                 }
