@@ -30,6 +30,7 @@ export class LayerManager {
         this.resizeStartWidth = 0;
         this.resizeStartHeight = 0;
         this.tableResizeInfo = null;
+        this.copiedLayer = null;
     }
 
     /**
@@ -981,15 +982,88 @@ export class LayerManager {
      */
     onKeyDown(e) {
         if (!this.selectedLayer) return;
+
+        const activeElement = document.activeElement;
+        if (activeElement && (activeElement.isContentEditable || ['INPUT', 'TEXTAREA'].includes(activeElement.tagName))) {
+            return;
+        }
+
+        // Ctrl/Cmd + C で複製
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+            this.copyObject(this.selectedLayer);
+            e.preventDefault();
+            return;
+        }
+
+        // Ctrl/Cmd + V で貼り付け
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+            this.pasteObject();
+            e.preventDefault();
+            return;
+        }
         
         // Delete/Backspaceで削除
         if (e.key === 'Delete' || e.key === 'Backspace') {
-            // テキスト編集中は除外
-            if (document.activeElement.contentEditable === 'true') return;
-            
             this.removeObject(this.selectedLayer.id);
             e.preventDefault();
         }
+    }
+
+    /**
+     * オブジェクトをコピー
+     */
+    copyObject(obj) {
+        if (!obj) return;
+        const cloned = {
+            ...obj,
+            table: obj.table ? JSON.parse(JSON.stringify(obj.table)) : null
+        };
+        if (cloned.table) {
+            cloned.table.selectedCell = null;
+        }
+        this.copiedLayer = cloned;
+    }
+
+    /**
+     * コピーしたオブジェクトを貼り付け
+     */
+    pasteObject() {
+        if (!this.copiedLayer) return;
+        this.duplicateObject(this.copiedLayer);
+    }
+
+    /**
+     * オブジェクトを複製
+     */
+    duplicateObject(obj) {
+        if (!obj) return;
+
+        const offset = 20;
+        const newId = `overlay-${this.nextId++}`;
+        const copy = {
+            ...obj,
+            id: newId,
+            x: obj.x + offset,
+            y: obj.y + offset,
+            name: obj.name ? `${obj.name} Copy` : `Copy ${this.nextId - 1}`
+        };
+
+        if (obj.type === 'line' || obj.type === 'arrow') {
+            copy.x2 = obj.x2 + offset;
+            copy.y2 = obj.y2 + offset;
+        }
+
+        if (obj.type === 'table' && obj.table) {
+            copy.table = JSON.parse(JSON.stringify(obj.table));
+            if (copy.table) {
+                copy.table.selectedCell = null;
+            }
+        }
+
+        this.layers.push(copy);
+        this.renderObject(copy);
+        this.selectObject(copy);
+        this.updateZIndices();
     }
 
     /**
