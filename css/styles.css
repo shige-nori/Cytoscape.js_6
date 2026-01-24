@@ -1725,6 +1725,54 @@ body {
     pointer-events: auto;
 }
 
+.overlay-table {
+    background: transparent;
+}
+
+.overlay-table-grid {
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.overlay-table-cell {
+    padding: 4px;
+    vertical-align: top;
+    overflow: hidden;
+    word-break: break-word;
+    outline: none;
+}
+
+.overlay-table-cell.selected-cell {
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+.table-line-handle {
+    position: absolute;
+    background-color: rgba(59, 130, 246, 0.6);
+    z-index: 12;
+}
+
+.table-line-vertical {
+    top: 0;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+}
+
+.table-line-horizontal {
+    left: 0;
+    height: 6px;
+    width: 100%;
+    cursor: row-resize;
+}
+
+.overlay-object:not(.selected) .table-line-handle {
+    display: none;
+}
+
 .overlay-object.selected {
     outline: 2px solid var(--primary-color);
     outline-offset: 2px;
@@ -1872,6 +1920,23 @@ body {
     margin-bottom: 12px;
 }
 
+.annotation-table-insert {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    background-color: #f8fafc;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--secondary-color);
+}
+
+.annotation-table-insert .property-input {
+    width: 60px;
+}
+
 .annotation-insert-btn {
     width: 32px;
     height: 32px;
@@ -2010,6 +2075,28 @@ body {
     background-color: var(--primary-color);
     color: white;
     border-color: var(--primary-color);
+}
+
+.annotation-panel .property-table-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.annotation-panel .property-table-btn {
+    height: 26px;
+    padding: 0 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: #f8fafc;
+    color: var(--secondary-color);
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.annotation-panel .property-table-btn:hover {
+    background-color: #e2e8f0;
+    color: var(--text-color);
 }
 
 .annotation-panel .property-slider {

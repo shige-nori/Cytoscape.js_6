@@ -33,9 +33,51 @@ export class AnnotationPanel {
                 const shape = button.dataset.shape;
                 if (!shape) return;
 
-                appContext.layerManager.addObject(shape);
+                if (shape === 'text') {
+                    appContext.layerManager.addObject('text', {
+                        text: 'Text',
+                        fillColor: '#ffffff',
+                        strokeColor: '#94a3b8',
+                        strokeWidth: 1,
+                        fontSize: 14
+                    });
+                } else if (shape === 'table') {
+                    const rowsInput = document.getElementById('table-insert-rows');
+                    const colsInput = document.getElementById('table-insert-cols');
+                    const rows = parseInt(rowsInput?.value || '3', 10);
+                    const cols = parseInt(colsInput?.value || '3', 10);
+                    if (!rows || !cols || rows < 1 || cols < 1) return;
+                    appContext.layerManager.addObject('table', {
+                        rows,
+                        cols,
+                        fillColor: '#ffffff',
+                        strokeColor: '#94a3b8',
+                        strokeWidth: 1,
+                        fontSize: 12
+                    });
+                } else {
+                    appContext.layerManager.addObject(shape);
+                }
                 this.openPanel();
             });
+        });
+
+        document.getElementById('table-insert-apply')?.addEventListener('click', () => {
+            if (!appContext.networkManager.hasNetwork() || !appContext.layerManager) return;
+            const rowsInput = document.getElementById('table-insert-rows');
+            const colsInput = document.getElementById('table-insert-cols');
+            const rows = parseInt(rowsInput?.value || '3', 10);
+            const cols = parseInt(colsInput?.value || '3', 10);
+            if (!rows || !cols || rows < 1 || cols < 1) return;
+            appContext.layerManager.addObject('table', {
+                rows,
+                cols,
+                fillColor: '#ffffff',
+                strokeColor: '#94a3b8',
+                strokeWidth: 1,
+                fontSize: 12
+            });
+            this.openPanel();
         });
     }
 
@@ -70,15 +112,33 @@ export class AnnotationPanel {
                                     <ellipse cx="9" cy="9" rx="6" ry="4" />
                                 </svg>
                             </button>
-                            <button class="annotation-insert-btn" type="button" data-shape="line" title="Diagram" aria-label="Diagram">
-                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 13L8 8l3 3 4-4" />
-                                    <circle cx="3" cy="13" r="1.5" fill="currentColor" />
-                                    <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-                                    <circle cx="11" cy="11" r="1.5" fill="currentColor" />
-                                    <circle cx="15" cy="7" r="1.5" fill="currentColor" />
+                            <button class="annotation-insert-btn" type="button" data-shape="line" title="Line" aria-label="Line">
+                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+                                    <line x1="3" y1="9" x2="15" y2="9" />
                                 </svg>
                             </button>
+                            <button class="annotation-insert-btn" type="button" data-shape="text" title="Text" aria-label="Text">
+                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 5h10" />
+                                    <path d="M9 5v8" />
+                                    <path d="M6 13h6" />
+                                </svg>
+                            </button>
+                            <button class="annotation-insert-btn" type="button" data-shape="table" title="Table" aria-label="Table">
+                                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="4" width="12" height="10" />
+                                    <path d="M3 8h12" />
+                                    <path d="M3 12h12" />
+                                    <path d="M7 4v10" />
+                                    <path d="M11 4v10" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="annotation-table-insert" role="group" aria-label="Insert table">
+                            <label>Table:</label>
+                            <input type="number" id="table-insert-rows" class="property-input" min="1" value="3">
+                            <input type="number" id="table-insert-cols" class="property-input" min="1" value="3">
+                            <button type="button" id="table-insert-apply" class="property-table-btn">Apply</button>
                         </div>
                         <div class="insert-no-selection">
                             <p>Select an object to edit its properties</p>
@@ -121,6 +181,7 @@ export class AnnotationPanel {
                                 <div class="property-row">
                                     <label>Stroke:</label>
                                     <input type="color" id="prop-stroke-color" class="property-color">
+                                    <button type="button" id="prop-stroke-transparent" class="property-transparent-btn" title="No Stroke">No Stroke</button>
                                 </div>
                                 <div class="property-row">
                                     <label>Stroke Width:</label>
@@ -141,10 +202,6 @@ export class AnnotationPanel {
                             <div class="property-group text-group" style="display: none;">
                                 <h4>Text</h4>
                                 <div class="property-row">
-                                    <label>Content:</label>
-                                    <textarea id="prop-text" class="property-textarea" rows="3"></textarea>
-                                </div>
-                                <div class="property-row">
                                     <label>Font Size:</label>
                                     <input type="number" id="prop-font-size" class="property-input" min="8" max="72">
                                 </div>
@@ -152,6 +209,33 @@ export class AnnotationPanel {
                                     <label>Color:</label>
                                     <input type="color" id="prop-text-color" class="property-color">
                                 </div>
+                            </div>
+
+                            <div class="property-group table-group" style="display: none;">
+                                <h4>Table</h4>
+                                <div class="property-row">
+                                    <label>Font Size:</label>
+                                    <input type="number" id="prop-table-font-size" class="property-input" min="8" max="72">
+                                </div>
+                                <div class="property-row">
+                                    <label>Row H:</label>
+                                    <input type="number" id="prop-table-row-height" class="property-input" min="10">
+                                    <button type="button" id="table-apply-row-height" class="property-table-btn">Apply</button>
+                                </div>
+                                <div class="property-row">
+                                    <label>Col W:</label>
+                                    <input type="number" id="prop-table-col-width" class="property-input" min="10">
+                                    <button type="button" id="table-apply-col-width" class="property-table-btn">Apply</button>
+                                </div>
+                                <div class="property-row">
+                                    <label>Merge:</label>
+                                    <div class="property-table-actions">
+                                        <button type="button" id="table-merge-right" class="property-table-btn">Right</button>
+                                        <button type="button" id="table-merge-down" class="property-table-btn">Down</button>
+                                        <button type="button" id="table-unmerge" class="property-table-btn">Unmerge</button>
+                                    </div>
+                                </div>
+                            </div>
                             </div>
                             
                             <!-- Name -->
@@ -243,9 +327,9 @@ export class AnnotationPanel {
             'prop-stroke-width': 'strokeWidth',
             'prop-opacity': 'opacity',
             'prop-rotation': 'rotation',
-            'prop-text': 'text',
             'prop-font-size': 'fontSize',
             'prop-text-color': 'textColor',
+            'prop-table-font-size': 'fontSize',
             'prop-name': 'name'
         };
 
@@ -267,10 +351,16 @@ export class AnnotationPanel {
                     document.getElementById('prop-opacity-value').textContent = value.toFixed(1);
                 }
                 
+                if (input.id === 'prop-table-font-size' && this.currentObject.type !== 'table') {
+                    return;
+                }
                 appContext.layerManager?.updateObjectProperty(this.currentObject.id, property, value);
 
                 if (property === 'fillColor') {
                     this.setTransparentState(false);
+                }
+                if (property === 'strokeColor') {
+                    this.setStrokeTransparentState(false);
                 }
                 
                 if (property === 'name') {
@@ -284,6 +374,47 @@ export class AnnotationPanel {
             if (!this.currentObject) return;
             appContext.layerManager?.updateObjectProperty(this.currentObject.id, 'fillColor', 'transparent');
             this.setTransparentState(true);
+        });
+
+        const strokeTransparentBtn = document.getElementById('prop-stroke-transparent');
+        strokeTransparentBtn?.addEventListener('click', () => {
+            if (!this.currentObject) return;
+            appContext.layerManager?.updateObjectProperty(this.currentObject.id, 'strokeColor', 'transparent');
+            this.setStrokeTransparentState(true);
+        });
+
+        document.getElementById('table-merge-right')?.addEventListener('click', () => {
+            if (this.currentObject?.type !== 'table') return;
+            appContext.layerManager?.mergeTableCell(this.currentObject.id, 'right');
+            this.refreshLayers();
+        });
+
+        document.getElementById('table-merge-down')?.addEventListener('click', () => {
+            if (this.currentObject?.type !== 'table') return;
+            appContext.layerManager?.mergeTableCell(this.currentObject.id, 'down');
+            this.refreshLayers();
+        });
+
+        document.getElementById('table-unmerge')?.addEventListener('click', () => {
+            if (this.currentObject?.type !== 'table') return;
+            appContext.layerManager?.unmergeTableCell(this.currentObject.id);
+            this.refreshLayers();
+        });
+
+        document.getElementById('table-apply-row-height')?.addEventListener('click', () => {
+            if (this.currentObject?.type !== 'table') return;
+            const input = document.getElementById('prop-table-row-height');
+            const value = parseFloat(input?.value);
+            if (!value || value <= 0) return;
+            appContext.layerManager?.setTableRowHeight(this.currentObject.id, value);
+        });
+
+        document.getElementById('table-apply-col-width')?.addEventListener('click', () => {
+            if (this.currentObject?.type !== 'table') return;
+            const input = document.getElementById('prop-table-col-width');
+            const value = parseFloat(input?.value);
+            if (!value || value <= 0) return;
+            appContext.layerManager?.setTableColWidth(this.currentObject.id, value);
         });
     }
 
@@ -463,13 +594,16 @@ export class AnnotationPanel {
         this.setInputValue('prop-width', Math.round(obj.width));
         this.setInputValue('prop-height', Math.round(obj.height));
         const isTransparent = obj.fillColor === 'transparent';
+        const isStrokeTransparent = obj.strokeColor === 'transparent';
         this.setInputValue('prop-fill-color', isTransparent ? '#ffffff' : obj.fillColor);
+        this.setInputValue('prop-stroke-color', isStrokeTransparent ? '#000000' : obj.strokeColor);
         this.setTransparentState(isTransparent);
-        this.setInputValue('prop-stroke-color', obj.strokeColor);
+        this.setStrokeTransparentState(isStrokeTransparent);
         this.setInputValue('prop-stroke-width', obj.strokeWidth);
         this.setInputValue('prop-opacity', obj.opacity);
         this.setInputValue('prop-rotation', obj.rotation);
         this.setInputValue('prop-name', obj.name);
+        this.setInputValue('prop-table-font-size', obj.fontSize || 12);
         
         const opacityValue = document.getElementById('prop-opacity-value');
         if (opacityValue) opacityValue.textContent = obj.opacity.toFixed(1);
@@ -478,6 +612,7 @@ export class AnnotationPanel {
         const sizeGroup = this.panel?.querySelector('.size-group');
         const appearanceGroup = this.panel?.querySelector('.appearance-group');
         const textGroup = this.panel?.querySelector('.text-group');
+        const tableGroup = this.panel?.querySelector('.table-group');
         
         if (sizeGroup) {
             sizeGroup.style.display = (obj.type === 'line' || obj.type === 'arrow') ? 'none' : 'block';
@@ -486,11 +621,20 @@ export class AnnotationPanel {
         if (textGroup) {
             if (obj.type === 'text') {
                 textGroup.style.display = 'block';
-                this.setInputValue('prop-text', obj.text);
                 this.setInputValue('prop-font-size', obj.fontSize);
                 this.setInputValue('prop-text-color', obj.textColor);
             } else {
                 textGroup.style.display = 'none';
+            }
+        }
+
+        if (tableGroup) {
+            tableGroup.style.display = obj.type === 'table' ? 'block' : 'none';
+            if (obj.type === 'table') {
+                const rowHeight = appContext.layerManager?.getTableSelectedRowHeight(obj.id) ?? '';
+                const colWidth = appContext.layerManager?.getTableSelectedColWidth(obj.id) ?? '';
+                this.setInputValue('prop-table-row-height', rowHeight);
+                this.setInputValue('prop-table-col-width', colWidth);
             }
         }
         
@@ -507,6 +651,15 @@ export class AnnotationPanel {
      */
     setTransparentState(isTransparent) {
         const btn = document.getElementById('prop-fill-transparent');
+        if (!btn) return;
+        btn.classList.toggle('active', isTransparent);
+    }
+
+    /**
+     * 線色透明ボタンの状態を更新
+     */
+    setStrokeTransparentState(isTransparent) {
+        const btn = document.getElementById('prop-stroke-transparent');
         if (!btn) return;
         btn.classList.toggle('active', isTransparent);
     }
@@ -631,7 +784,8 @@ export class AnnotationPanel {
             line: '─',
             arrow: '→',
             text: 'T',
-            image: '🖼'
+            image: '🖼',
+            table: '▦'
         };
         return icons[type] || '?';
     }

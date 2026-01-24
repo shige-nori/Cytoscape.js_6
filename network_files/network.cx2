@@ -91080,5 +91080,34 @@
         "value": "#edf8f1"
       }
     }
-  }
+  },
+  "overlayLayers": [
+    {
+      "id": "overlay-6",
+      "type": "text",
+      "x": -774.6977842626051,
+      "y": -436.4103540925457,
+      "width": 1005.5917711041521,
+      "height": 107.69020879679316,
+      "rotation": 0,
+      "visible": true,
+      "locked": false,
+      "zIndex": 0,
+      "plane": "foreground",
+      "fillColor": "transparent",
+      "strokeColor": "#94a3b8",
+      "strokeWidth": 1,
+      "opacity": 1,
+      "text": "あいうえおかきくけこ",
+      "fontSize": 69,
+      "fontFamily": "Arial",
+      "textColor": "#d40808",
+      "imageData": null,
+      "x2": 539.3691190454257,
+      "y2": 614.1647096435363,
+      "arrowHead": false,
+      "table": null,
+      "name": "Text 6"
+    }
+  ]
 }

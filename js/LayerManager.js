@@ -29,6 +29,7 @@ export class LayerManager {
         this.resizeStartY = 0;
         this.resizeStartWidth = 0;
         this.resizeStartHeight = 0;
+        this.tableResizeInfo = null;
     }
 
     /**
@@ -85,6 +86,208 @@ export class LayerManager {
      */
     getContainerForLayer(layer) {
         return (layer.plane === 'background') ? this.backContainer : this.frontContainer;
+    }
+
+    /**
+     * テーブルデータを作成
+     */
+    createTableData(rows, cols) {
+        const cells = [];
+        for (let r = 0; r < rows; r++) {
+            const row = [];
+            for (let c = 0; c < cols; c++) {
+                row.push({
+                    text: '',
+                    rowspan: 1,
+                    colspan: 1,
+                    hidden: false
+                });
+            }
+            cells.push(row);
+        }
+        const rowHeights = Array.from({ length: rows }, () => 40);
+        const colWidths = Array.from({ length: cols }, () => 80);
+        return { rows, cols, cells, rowHeights, colWidths, selectedCell: { row: 0, col: 0 } };
+    }
+
+    /**
+     * 選択行の高さ取得
+     */
+    getTableSelectedRowHeight(id) {
+        const obj = this.layers.find(l => l.id === id);
+        if (!obj || obj.type !== 'table' || !obj.table) return '';
+        const row = obj.table.selectedCell?.row ?? 0;
+        return obj.table.rowHeights?.[row] ?? '';
+    }
+
+    /**
+     * 選択列の幅取得
+     */
+    getTableSelectedColWidth(id) {
+        const obj = this.layers.find(l => l.id === id);
+        if (!obj || obj.type !== 'table' || !obj.table) return '';
+        const col = obj.table.selectedCell?.col ?? 0;
+        return obj.table.colWidths?.[col] ?? '';
+    }
+
+    /**
+     * 選択行の高さ設定
+     */
+    setTableRowHeight(id, height) {
+        const obj = this.layers.find(l => l.id === id);
+        if (!obj || obj.type !== 'table' || !obj.table) return;
+        const row = obj.table.selectedCell?.row ?? 0;
+        if (!obj.table.rowHeights) obj.table.rowHeights = [];
+        obj.table.rowHeights[row] = height;
+        this.updateTableDimensions(obj);
+        this.renderObject(obj);
+        this.selectObject(obj);
+    }
+
+    /**
+     * 選択列の幅設定
+     */
+    setTableColWidth(id, width) {
+        const obj = this.layers.find(l => l.id === id);
+        if (!obj || obj.type !== 'table' || !obj.table) return;
+        const col = obj.table.selectedCell?.col ?? 0;
+        if (!obj.table.colWidths) obj.table.colWidths = [];
+        obj.table.colWidths[col] = width;
+        this.updateTableDimensions(obj);
+        this.renderObject(obj);
+        this.selectObject(obj);
+    }
+
+    /**
+     * テーブルの外形サイズを更新
+     */
+    updateTableDimensions(obj) {
+        if (!obj.table) return;
+        const totalWidth = (obj.table.colWidths || []).reduce((a, b) => a + (b || 0), 0);
+        const totalHeight = (obj.table.rowHeights || []).reduce((a, b) => a + (b || 0), 0);
+        if (totalWidth > 0) obj.width = totalWidth;
+        if (totalHeight > 0) obj.height = totalHeight;
+    }
+
+    /**
+     * テーブルサイズを全体の比率でスケール
+     */
+    scaleTableSizes(obj, newWidth, newHeight, oldWidth, oldHeight) {
+        if (!obj.table) return;
+        const colWidths = obj.table.colWidths || [];
+        const rowHeights = obj.table.rowHeights || [];
+        const widthScale = oldWidth ? (newWidth / oldWidth) : 1;
+        const heightScale = oldHeight ? (newHeight / oldHeight) : 1;
+
+        obj.table.colWidths = colWidths.map(w => Math.max(10, w * widthScale));
+        obj.table.rowHeights = rowHeights.map(h => Math.max(10, h * heightScale));
+    }
+
+    /**
+     * テーブル内部サイズの合計を外枠に合わせる
+     */
+    normalizeTableSizes(obj) {
+        if (!obj.table) return;
+        const minSize = 20;
+        const colTotal = (obj.table.colWidths || []).reduce((a, b) => a + (b || 0), 0);
+        const rowTotal = (obj.table.rowHeights || []).reduce((a, b) => a + (b || 0), 0);
+        if (colTotal > 0) {
+            const scale = obj.width / colTotal;
+            obj.table.colWidths = obj.table.colWidths.map(w => Math.max(minSize, w * scale));
+        }
+        if (rowTotal > 0) {
+            const scale = obj.height / rowTotal;
+            obj.table.rowHeights = obj.table.rowHeights.map(h => Math.max(minSize, h * scale));
+        }
+    }
+
+    /**
+     * テーブル内部の線をドラッグしてサイズ調整
+     */
+    handleTableLineResize(dx, dy) {
+        const obj = this.dragTarget;
+        if (!obj || obj.type !== 'table' || !obj.table || !this.tableResizeInfo) return;
+
+        const minSize = 20;
+        const { orientation, index, colWidths, rowHeights } = this.tableResizeInfo;
+
+        if (orientation === 'vertical') {
+            const leftWidth = colWidths[index];
+            const rightWidth = colWidths[index + 1];
+            const delta = Math.max(-leftWidth + minSize, Math.min(dx, rightWidth - minSize));
+
+            obj.table.colWidths[index] = leftWidth + delta;
+            obj.table.colWidths[index + 1] = rightWidth - delta;
+        } else if (orientation === 'horizontal') {
+            const topHeight = rowHeights[index];
+            const bottomHeight = rowHeights[index + 1];
+            const delta = Math.max(-topHeight + minSize, Math.min(dy, bottomHeight - minSize));
+
+            obj.table.rowHeights[index] = topHeight + delta;
+            obj.table.rowHeights[index + 1] = bottomHeight - delta;
+        }
+
+        this.normalizeTableSizes(obj);
+
+        this.renderObject(obj);
+        this.selectObject(obj);
+    }
+
+    /**
+     * テーブルのセル結合
+     */
+    mergeTableCell(id, direction) {
+        const obj = this.layers.find(l => l.id === id);
+        if (!obj || obj.type !== 'table' || !obj.table) return;
+
+        const { row, col } = obj.table.selectedCell || { row: 0, col: 0 };
+        const cells = obj.table.cells;
+        const base = cells[row]?.[col];
+        if (!base || base.hidden) return;
+
+        if (direction === 'right') {
+            const target = cells[row]?.[col + base.colspan];
+            if (!target || target.hidden) return;
+            base.colspan += target.colspan;
+            for (let c = col + 1; c < col + base.colspan; c++) {
+                if (cells[row][c]) cells[row][c].hidden = true;
+            }
+        } else if (direction === 'down') {
+            const target = cells[row + base.rowspan]?.[col];
+            if (!target || target.hidden) return;
+            base.rowspan += target.rowspan;
+            for (let r = row + 1; r < row + base.rowspan; r++) {
+                if (cells[r] && cells[r][col]) cells[r][col].hidden = true;
+            }
+        }
+
+        this.renderObject(obj);
+        this.selectObject(obj);
+    }
+
+    /**
+     * テーブルのセル結合を解除
+     */
+    unmergeTableCell(id) {
+        const obj = this.layers.find(l => l.id === id);
+        if (!obj || obj.type !== 'table' || !obj.table) return;
+
+        const { row, col } = obj.table.selectedCell || { row: 0, col: 0 };
+        const cells = obj.table.cells;
+        const base = cells[row]?.[col];
+        if (!base) return;
+
+        for (let r = row; r < row + base.rowspan; r++) {
+            for (let c = col; c < col + base.colspan; c++) {
+                if (cells[r] && cells[r][c]) cells[r][c].hidden = false;
+            }
+        }
+
+        base.rowspan = 1;
+        base.colspan = 1;
+
+        this.renderObject(obj);
+        this.selectObject(obj);
     }
 
     /**
@@ -145,8 +348,8 @@ export class LayerManager {
             type,
             x: options.x ?? defaultX,
             y: options.y ?? defaultY,
-            width: options.width ?? 100,
-            height: options.height ?? 80,
+            width: options.width ?? (type === 'table' ? (options.cols || 3) * 80 : 100),
+            height: options.height ?? (type === 'table' ? (options.rows || 3) * 40 : 80),
             rotation: options.rotation ?? 0,
             visible: options.visible ?? true,
             locked: options.locked ?? false,
@@ -173,6 +376,11 @@ export class LayerManager {
             y2: options.y2 ?? (options.y ?? defaultY),
             arrowHead: options.arrowHead ?? (type === 'arrow'),
             
+            // テーブル用
+            table: type === 'table'
+                ? (options.table ?? this.createTableData(options.rows ?? 3, options.cols ?? 3))
+                : null,
+
             // 名前（レイヤーパネル表示用）
             name: options.name ?? `${type.charAt(0).toUpperCase() + type.slice(1)} ${this.nextId - 1}`
         };
@@ -214,6 +422,9 @@ export class LayerManager {
                 break;
             case 'text':
                 element = this.createText(obj);
+                break;
+            case 'table':
+                element = this.createTable(obj);
                 break;
             case 'image':
                 element = this.createImage(obj);
@@ -363,13 +574,13 @@ export class LayerManager {
     createText(obj) {
         const div = document.createElement('div');
         div.className = 'overlay-shape overlay-text';
-        div.contentEditable = 'true';
+        div.contentEditable = 'false';
         div.style.cssText = `
             position: absolute;
             left: ${obj.x}px;
             top: ${obj.y}px;
-            min-width: 50px;
-            min-height: 20px;
+            width: ${obj.width}px;
+            height: ${obj.height}px;
             padding: 5px;
             font-size: ${obj.fontSize}px;
             font-family: ${obj.fontFamily};
@@ -385,11 +596,20 @@ export class LayerManager {
         `;
         div.textContent = obj.text || 'Text';
         
-        // テキスト変更時に保存
-        div.addEventListener('input', () => {
-            obj.text = div.textContent;
+        div.addEventListener('dblclick', (e) => {
+            div.contentEditable = 'true';
+            div.focus();
+            e.stopPropagation();
+        });
+
+        div.addEventListener('blur', () => {
+            if (div.contentEditable === 'true') {
+                div.contentEditable = 'false';
+                obj.text = div.textContent;
+            }
         });
         
+        this.addResizeHandles(div, obj);
         return div;
     }
 
@@ -420,6 +640,132 @@ export class LayerManager {
     }
 
     /**
+     * テーブルを作成
+     */
+    createTable(obj) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'overlay-shape overlay-table';
+        wrapper.style.cssText = `
+            position: absolute;
+            left: ${obj.x}px;
+            top: ${obj.y}px;
+            width: ${obj.width}px;
+            height: ${obj.height}px;
+            background-color: ${obj.fillColor === 'transparent' ? 'transparent' : obj.fillColor};
+            border: ${obj.strokeWidth}px solid ${obj.strokeColor === 'transparent' ? 'transparent' : obj.strokeColor};
+            opacity: ${obj.opacity};
+            box-sizing: border-box;
+            cursor: move;
+            overflow: hidden;
+        `;
+
+        if (!obj.table) {
+            obj.table = this.createTableData(3, 3);
+        }
+
+        if (!obj.table.colWidths || obj.table.colWidths.length !== obj.table.cols) {
+            obj.table.colWidths = Array.from({ length: obj.table.cols }, () => obj.width / obj.table.cols);
+        }
+        if (!obj.table.rowHeights || obj.table.rowHeights.length !== obj.table.rows) {
+            obj.table.rowHeights = Array.from({ length: obj.table.rows }, () => obj.height / obj.table.rows);
+        }
+
+        this.normalizeTableSizes(obj);
+
+        const table = document.createElement('table');
+        table.className = 'overlay-table-grid';
+        table.style.width = '100%';
+        table.style.height = '100%';
+        table.style.fontSize = `${obj.fontSize || 12}px`;
+        table.style.color = obj.textColor || '#000000';
+
+        const colgroup = document.createElement('colgroup');
+        for (let c = 0; c < obj.table.cols; c++) {
+            const col = document.createElement('col');
+            const width = obj.table.colWidths?.[c] ?? 80;
+            col.style.width = `${width}px`;
+            colgroup.appendChild(col);
+        }
+        table.appendChild(colgroup);
+
+        for (let r = 0; r < obj.table.rows; r++) {
+            const tr = document.createElement('tr');
+            const height = obj.table.rowHeights?.[r] ?? 40;
+            tr.style.height = `${height}px`;
+            for (let c = 0; c < obj.table.cols; c++) {
+                const cell = obj.table.cells[r]?.[c];
+                if (!cell || cell.hidden) continue;
+
+                const td = document.createElement('td');
+                td.className = 'overlay-table-cell';
+                td.dataset.row = r;
+                td.dataset.col = c;
+                td.rowSpan = cell.rowspan || 1;
+                td.colSpan = cell.colspan || 1;
+                td.textContent = cell.text || '';
+                td.style.border = `${obj.strokeWidth}px solid ${obj.strokeColor === 'transparent' ? 'transparent' : obj.strokeColor}`;
+                td.style.backgroundColor = obj.fillColor === 'transparent' ? 'transparent' : obj.fillColor;
+
+                if (obj.table.selectedCell && obj.table.selectedCell.row === r && obj.table.selectedCell.col === c) {
+                    td.classList.add('selected-cell');
+                }
+
+                td.addEventListener('click', (e) => {
+                    obj.table.selectedCell = { row: r, col: c };
+                    this.renderObject(obj);
+                    this.selectObject(obj);
+                    e.stopPropagation();
+                });
+
+                td.addEventListener('dblclick', (e) => {
+                    td.contentEditable = 'true';
+                    td.focus();
+                    e.stopPropagation();
+                });
+
+                td.addEventListener('blur', () => {
+                    if (td.contentEditable === 'true') {
+                        td.contentEditable = 'false';
+                        cell.text = td.textContent;
+                    }
+                });
+
+                tr.appendChild(td);
+            }
+            table.appendChild(tr);
+        }
+
+        wrapper.appendChild(table);
+
+        // 内部線のドラッグハンドル（縦）
+        let offsetX = 0;
+        for (let c = 0; c < obj.table.cols - 1; c++) {
+            offsetX += obj.table.colWidths[c];
+            const vHandle = document.createElement('div');
+            vHandle.className = 'table-line-handle table-line-vertical';
+            vHandle.dataset.orientation = 'vertical';
+            vHandle.dataset.index = c;
+            vHandle.style.left = `${offsetX - 3}px`;
+            wrapper.appendChild(vHandle);
+        }
+
+        // 内部線のドラッグハンドル（横）
+        let offsetY = 0;
+        for (let r = 0; r < obj.table.rows - 1; r++) {
+            offsetY += obj.table.rowHeights[r];
+            const hHandle = document.createElement('div');
+            hHandle.className = 'table-line-handle table-line-horizontal';
+            hHandle.dataset.orientation = 'horizontal';
+            hHandle.dataset.index = r;
+            hHandle.style.top = `${offsetY - 3}px`;
+            wrapper.appendChild(hHandle);
+        }
+
+        this.addResizeHandles(wrapper, obj);
+        return wrapper;
+    }
+
+    /**
      * リサイズハンドルを追加
      */
     addResizeHandles(element, obj) {
@@ -445,6 +791,25 @@ export class LayerManager {
         const objId = target.dataset.objectId;
         const obj = this.layers.find(l => l.id === objId);
         if (!obj || obj.locked) return;
+
+        if (e.target.classList.contains('table-line-handle')) {
+            this.isResizing = true;
+            this.dragTarget = obj;
+            this.resizeStartX = e.clientX;
+            this.resizeStartY = e.clientY;
+            this.tableResizeInfo = {
+                orientation: e.target.dataset.orientation,
+                index: parseInt(e.target.dataset.index, 10),
+                startX: e.clientX,
+                startY: e.clientY,
+                colWidths: [...(obj.table?.colWidths || [])],
+                rowHeights: [...(obj.table?.rowHeights || [])]
+            };
+            this.selectObject(obj);
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+        }
         
         // リサイズハンドルをクリックした場合
         if (e.target.classList.contains('resize-handle')) {
@@ -467,8 +832,8 @@ export class LayerManager {
         // オブジェクトをクリック → 選択 + ドラッグ開始
         this.selectObject(obj);
         
-        // テキストの場合は編集モードなのでドラッグしない
-        if (obj.type === 'text' && e.target.contentEditable === 'true') {
+        // 編集中はドラッグしない
+        if (e.target.isContentEditable) {
             return;
         }
         
@@ -505,7 +870,9 @@ export class LayerManager {
         const dx = (e.clientX - (this.isResizing ? this.resizeStartX : this.dragStartX)) / zoom;
         const dy = (e.clientY - (this.isResizing ? this.resizeStartY : this.dragStartY)) / zoom;
         
-        if (this.isResizing) {
+        if (this.isResizing && this.tableResizeInfo) {
+            this.handleTableLineResize(dx, dy);
+        } else if (this.isResizing) {
             this.handleResize(dx, dy);
         } else if (this.isDragging) {
             this.handleDrag(dx, dy);
@@ -589,6 +956,10 @@ export class LayerManager {
         obj.height = newHeight;
         obj.x = newX;
         obj.y = newY;
+
+        if (obj.type === 'table' && obj.table) {
+            this.scaleTableSizes(obj, newWidth, newHeight, this.resizeStartWidth, this.resizeStartHeight);
+        }
         
         this.renderObject(obj);
         this.selectObject(obj);
@@ -602,6 +973,7 @@ export class LayerManager {
         this.isResizing = false;
         this.dragTarget = null;
         this.resizeHandle = null;
+        this.tableResizeInfo = null;
     }
 
     /**
@@ -644,6 +1016,10 @@ export class LayerManager {
             container.querySelectorAll('.overlay-object.selected')
                 .forEach(el => el.classList.remove('selected'));
         });
+        if (this.selectedLayer?.type === 'table' && this.selectedLayer.table) {
+            this.selectedLayer.table.selectedCell = null;
+            this.renderObject(this.selectedLayer);
+        }
         this.selectedLayer = null;
         this.notifySelectionChanged();
     }
