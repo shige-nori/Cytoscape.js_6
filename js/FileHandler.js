@@ -207,6 +207,12 @@ export class FileHandler {
                 appContext.networkManager.closeNetwork();
             }
 
+            // 旧オーバーレイ（図形）が残っている可能性があるため、インポート開始時に必ずクリア
+            if (appContext.layerManager) {
+                console.debug('FileHandler.startNetworkImport: calling layerManager.clearAll()');
+                appContext.layerManager.clearAll();
+            }
+
             const result = await this.readCsvFile(file);
             this.currentData = result.data;
             this.currentColumns = result.columns;

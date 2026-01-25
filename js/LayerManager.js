@@ -1233,6 +1233,16 @@ export class LayerManager {
      * すべてのレイヤーをクリア
      */
     clearAll() {
+        // Debug: log when layers are cleared to help trace unexpected persistence
+        try {
+            console.debug('LayerManager.clearAll called. Clearing', this.layers?.length || 0, 'layers');
+            // include stack for call origin tracing
+            // eslint-disable-next-line no-console
+            console.debug(new Error().stack);
+        } catch (e) {
+            // ignore logging errors
+        }
+
         this.layers = [];
         this.selectedLayer = null;
         this.nextId = 1;

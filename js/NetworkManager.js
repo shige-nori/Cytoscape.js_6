@@ -413,6 +413,12 @@ export class NetworkManager {
             appContext.fileHandler.currentFilePath = null;
         }
         
+        // オーバーレイ（図形）が残っている場合に備え、ネットワーク作成開始時にレイヤーをクリア
+        if (appContext.layerManager) {
+            console.debug('NetworkManager.createNetwork: calling layerManager.clearAll()');
+            appContext.layerManager.clearAll();
+        }
+        
         const nodes = new Map();
         const edges = [];
 
@@ -656,6 +662,11 @@ export class NetworkManager {
         if (appContext.fileHandler) {
             appContext.fileHandler.currentFilePath = null;
             appContext.fileHandler.currentFileHandle = null;
+        }
+
+        // オーバーレイレイヤーをクリア
+        if (appContext.layerManager) {
+            appContext.layerManager.clearAll();
         }
         
         // Edge Bendsパネルをクリア
