@@ -228,6 +228,10 @@ export class LayoutTools {
         this.updateDisplay('scale', scale.toFixed(2));
         this.currentScale = scale;
         this.scheduleTransform();
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureSoon('scale');
+        }
     }
 
     handleRotateChange(angle) {
@@ -249,6 +253,10 @@ export class LayoutTools {
         this.updateDisplay('rotate', Math.round(angle).toString());
         this.currentRotation = angle;
         this.scheduleTransform();
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureSoon('rotate');
+        }
     }
 
     scheduleTransform() {
@@ -486,6 +494,10 @@ export class LayoutTools {
         if (appContext.layerManager && appContext.layerManager.selectedLayer) {
             appContext.layerManager.selectObject(appContext.layerManager.selectedLayer);
         }
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('align');
+        }
     }
 
     /**
@@ -540,6 +552,10 @@ export class LayoutTools {
         
         if (appContext.layerManager && appContext.layerManager.selectedLayer) {
             appContext.layerManager.selectObject(appContext.layerManager.selectedLayer);
+        }
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('distribute');
         }
     }
 
@@ -599,6 +615,10 @@ export class LayoutTools {
         
         if (appContext.layerManager && appContext.layerManager.selectedLayer) {
             appContext.layerManager.selectObject(appContext.layerManager.selectedLayer);
+        }
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('stack');
         }
     }
 }

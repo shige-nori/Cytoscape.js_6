@@ -10,5 +10,6 @@ export const appContext = {
     filterPanel: null,
     pathTracePanel: null,
     modalManager: null,
-    menuManager: null
+    menuManager: null,
+    historyManager: null
 };

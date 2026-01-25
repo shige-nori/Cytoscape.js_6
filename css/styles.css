@@ -38,6 +38,43 @@ body {
     z-index: 1000;
 }
 
+.menu-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    margin-right: 4px;
+}
+
+.menu-icon-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: transparent;
+    border-radius: 4px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s, opacity 0.2s;
+}
+
+.menu-icon-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.menu-icon-btn:hover {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.menu-icon-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
 .menu-item {
     position: relative;
     color: #fff;

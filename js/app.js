@@ -17,6 +17,7 @@ import { ModalManager } from './ModalManager.js';
 import { MenuManager } from './MenuManager.js';
 import { LayerManager } from './LayerManager.js';
 import { AnnotationPanel } from './AnnotationPanel.js';
+import { HistoryManager } from './HistoryManager.js';
 
 // アプリケーション初期化
 document.addEventListener('DOMContentLoaded', () => {
@@ -50,6 +51,9 @@ document.addEventListener('DOMContentLoaded', () => {
     appContext.layerManager.initialize();
     appContext.annotationPanel = new AnnotationPanel();
     appContext.annotationPanel.initialize();
+
+    appContext.historyManager = new HistoryManager(10);
+    appContext.historyManager.captureState('init');
     
     appContext.modalManager = new ModalManager();
     appContext.menuManager = new MenuManager();

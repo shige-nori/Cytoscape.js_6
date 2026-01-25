@@ -201,6 +201,13 @@ export class NetworkManager {
             this.clearHighlight();
         });
 
+        // ドラッグ完了時に履歴を保存
+        this.cy.on('dragfree', 'node', () => {
+            if (appContext.historyManager) {
+                appContext.historyManager.captureSoon('node-drag');
+            }
+        });
+
         // キーボード操作（矢印キーで移動）
         document.addEventListener('keydown', (e) => this.onKeyDown(e));
     }
@@ -246,6 +253,9 @@ export class NetworkManager {
         }
 
         if (moved) {
+            if (appContext.historyManager) {
+                appContext.historyManager.captureSoon('move-arrow');
+            }
             e.preventDefault();
         }
     }
@@ -738,6 +748,10 @@ export class NetworkManager {
             if (appContext.menuManager) {
                 appContext.menuManager.updateLayoutCheckmarks();
             }
+        }
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('close-network');
         }
     }
 

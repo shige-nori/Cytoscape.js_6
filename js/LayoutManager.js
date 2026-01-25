@@ -52,6 +52,10 @@ export class LayoutManager {
         if (appContext.menuManager) {
             appContext.menuManager.updateLayoutCheckmarks();
         }
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('layout-dagre');
+        }
     }
 
     /**
@@ -145,6 +149,10 @@ export class LayoutManager {
         if (appContext.menuManager) {
             appContext.menuManager.updateLayoutCheckmarks();
         }
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('layout-equal');
+        }
     }
 
     /**
@@ -219,6 +227,10 @@ export class LayoutManager {
         if (appContext.layoutTools) {
             appContext.layoutTools.resetOriginalPositions();
         }
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('sort-az');
+        }
     }
 
     /**
@@ -280,6 +292,10 @@ export class LayoutManager {
         // Layout Toolsの基準位置をリセット（並び替えを維持するため）
         if (appContext.layoutTools) {
             appContext.layoutTools.resetOriginalPositions();
+        }
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('sort-column');
         }
     }
 }

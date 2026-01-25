@@ -21,6 +21,21 @@ export class MenuManager {
      * メニューイベントを設定
      */
     setupMenuEvents() {
+        // Undo/Redo buttons
+        document.getElementById('history-undo')?.addEventListener('click', () => {
+            if (appContext.historyManager) {
+                appContext.historyManager.undo();
+            }
+            this.closeAllMenus();
+        });
+
+        document.getElementById('history-redo')?.addEventListener('click', () => {
+            if (appContext.historyManager) {
+                appContext.historyManager.redo();
+            }
+            this.closeAllMenus();
+        });
+
         // Open Network
         document.getElementById('open-network').addEventListener('click', async () => {
             this.closeAllMenus();
@@ -367,6 +382,21 @@ export class MenuManager {
                 importTableItem.classList.add('disabled');
             }
         }
+
+        this.updateHistoryButtons();
+    }
+
+    /**
+     * Undo/Redoボタンの有効/無効状態を更新
+     */
+    updateHistoryButtons() {
+        const undoBtn = document.getElementById('history-undo');
+        const redoBtn = document.getElementById('history-redo');
+        const canUndo = appContext.historyManager ? appContext.historyManager.canUndo() : false;
+        const canRedo = appContext.historyManager ? appContext.historyManager.canRedo() : false;
+
+        if (undoBtn) undoBtn.disabled = !canUndo;
+        if (redoBtn) redoBtn.disabled = !canRedo;
     }
 
     /**

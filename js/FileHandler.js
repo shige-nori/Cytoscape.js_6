@@ -300,6 +300,10 @@ export class FileHandler {
                 if (appContext.tablePanel) {
                     appContext.tablePanel.resetToShowAllColumns();
                 }
+
+                if (appContext.historyManager) {
+                    appContext.historyManager.captureState('import-network');
+                }
             } else {
                 progressOverlay.show('Adding elements...');
                 const result = await appContext.networkManager.addTableData(
@@ -324,6 +328,10 @@ export class FileHandler {
                 // Table Panelの全カラムを表示
                 if (appContext.tablePanel) {
                     appContext.tablePanel.resetToShowAllColumns();
+                }
+
+                if (appContext.historyManager) {
+                    appContext.historyManager.captureState('import-table');
                 }
             }
             
@@ -509,6 +517,10 @@ export class FileHandler {
             // Saveメニューを有効化
             if (appContext.menuManager) {
                 appContext.menuManager.updateMenuStates();
+            }
+
+            if (appContext.historyManager) {
+                appContext.historyManager.captureState('open-cx2');
             }
             
             progressOverlay.hide();

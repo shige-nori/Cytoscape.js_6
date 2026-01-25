@@ -393,6 +393,10 @@ export class LayerManager {
         
         // レイヤーパネルを更新
         this.notifyLayersChanged();
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('overlay-add');
+        }
         
         return obj;
     }
@@ -984,6 +988,10 @@ export class LayerManager {
         this.dragTarget = null;
         this.resizeHandle = null;
         this.tableResizeInfo = null;
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureSoon('overlay-move');
+        }
     }
 
     /**
@@ -1166,6 +1174,10 @@ export class LayerManager {
         });
         
         this.notifyLayersChanged();
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('overlay-remove');
+        }
     }
 
     /**
@@ -1383,6 +1395,10 @@ export class LayerManager {
             if (element) element.classList.add('selected');
         });
 
+        if (appContext.historyManager) {
+            appContext.historyManager.captureSoon('overlay-move');
+        }
+
         return true;
     }
 
@@ -1398,6 +1414,10 @@ export class LayerManager {
         
         if (this.selectedLayer?.id === id) {
             this.selectObject(obj);
+        }
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('overlay-update');
         }
     }
 
