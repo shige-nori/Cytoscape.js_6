@@ -459,6 +459,45 @@ body {
     color: white;
 }
 
+/* Tabs for Layout Tools */
+.tools-panel-tabs {
+    display: flex;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tools-tab {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #64748b;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+}
+
+.tools-tab:hover {
+    background-color: #e2e8f0;
+    color: #334155;
+}
+
+.tools-tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    background-color: white;
+}
+
+.tools-tab-content {
+    display: none;
+}
+
+.tools-tab-content.active {
+    display: block;
+}
+
 /* Style panel header with Apply button */
 .style-panel-header-with-btn {
     display: flex;
@@ -533,6 +572,61 @@ body {
     font-size: 14px;
     font-weight: 600;
     color: var(--text-color);
+}
+
+/* Icon Button Grid for Align/Distribute */
+.icon-button-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.icon-btn {
+    width: 100%;
+    aspect-ratio: 1;
+    padding: 2px;
+    border: 1px solid #cbd5e1;
+    border-radius: 2px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn:hover {
+    background-color: #f1f5f9;
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.icon-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.icon-btn svg {
+    width: 24px;
+    height: 24px;
+    color: #475569;
+}
+
+.icon-btn:hover svg {
+    color: var(--primary-color);
+}
+
+/* Distribute buttons occupy 1.5 columns */
+#distribute-h,
+#distribute-v {
+    grid-column: span 1;
+}
+
+/* Stack buttons occupy 1.5 columns */
+#stack-v,
+#stack-h {
+    grid-column: span 1;
 }
 
 .radio-group {

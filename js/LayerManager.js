@@ -8,6 +8,7 @@ export class LayerManager {
     constructor() {
         this.layers = [];           // 全オーバーレイオブジェクト配列
         this.selectedLayer = null;  // 現在選択中のオブジェクト
+        this.selectedLayers = [];   // 複数選択中のオブジェクト
         this.nextId = 1;            // 次のID
         this.frontContainer = null; // overlay-container要素（前景）
         this.backContainer = null;  // overlay-container-back要素（背景）
@@ -830,7 +831,15 @@ export class LayerManager {
             return;
         }
         
-        // オブジェクトをクリック → 選択 + ドラッグ開始
+        // オブジェクトをクリック → 選択（Ctrl/⌘ で複数選択）
+        const isMultiSelect = e.ctrlKey || e.metaKey;
+        if (isMultiSelect) {
+            this.toggleSelectObject(obj);
+            e.stopPropagation();
+            e.preventDefault();
+            return;
+        }
+
         this.selectObject(obj);
         
         // 編集中はドラッグしない
@@ -1072,6 +1081,10 @@ export class LayerManager {
     selectObject(obj) {
         this.deselectAll();
         this.selectedLayer = obj;
+        if (!this.selectedLayers) this.selectedLayers = [];
+        if (!this.selectedLayers.find(l => l.id === obj.id)) {
+            this.selectedLayers.push(obj);
+        }
         
         const element = document.getElementById(obj.id);
         if (element) {
@@ -1090,11 +1103,41 @@ export class LayerManager {
             container.querySelectorAll('.overlay-object.selected')
                 .forEach(el => el.classList.remove('selected'));
         });
-        if (this.selectedLayer?.type === 'table' && this.selectedLayer.table) {
-            this.selectedLayer.table.selectedCell = null;
-            this.renderObject(this.selectedLayer);
+        if (this.selectedLayers && this.selectedLayers.length > 0) {
+            this.selectedLayers.forEach(layer => {
+                if (layer?.type === 'table' && layer.table) {
+                    layer.table.selectedCell = null;
+                    this.renderObject(layer);
+                }
+            });
         }
         this.selectedLayer = null;
+        this.selectedLayers = [];
+        this.notifySelectionChanged();
+    }
+
+    /**
+     * オブジェクトの選択をトグル
+     */
+    toggleSelectObject(obj) {
+        if (!obj) return;
+        if (!this.selectedLayers) this.selectedLayers = [];
+
+        const index = this.selectedLayers.findIndex(l => l.id === obj.id);
+        const element = document.getElementById(obj.id);
+
+        if (index >= 0) {
+            this.selectedLayers.splice(index, 1);
+            if (element) element.classList.remove('selected');
+            if (this.selectedLayer?.id === obj.id) {
+                this.selectedLayer = this.selectedLayers[this.selectedLayers.length - 1] || null;
+            }
+        } else {
+            this.selectedLayers.push(obj);
+            this.selectedLayer = obj;
+            if (element) element.classList.add('selected');
+        }
+
         this.notifySelectionChanged();
     }
 
@@ -1112,6 +1155,9 @@ export class LayerManager {
         
         if (this.selectedLayer?.id === id) {
             this.selectedLayer = null;
+        }
+        if (this.selectedLayers && this.selectedLayers.length > 0) {
+            this.selectedLayers = this.selectedLayers.filter(l => l.id !== id);
         }
         
         // z-indexを再計算
@@ -1190,8 +1236,13 @@ export class LayerManager {
         this.frontContainer.innerHTML = '';
         this.backContainer.innerHTML = '';
         this.layers.forEach(obj => this.renderObject(obj));
-        
-        if (this.selectedLayer) {
+
+        if (this.selectedLayers && this.selectedLayers.length > 0) {
+            this.selectedLayers.forEach(layer => {
+                const element = document.getElementById(layer.id);
+                if (element) element.classList.add('selected');
+            });
+        } else if (this.selectedLayer) {
             const element = document.getElementById(this.selectedLayer.id);
             if (element) element.classList.add('selected');
         }
@@ -1210,6 +1261,7 @@ export class LayerManager {
     importLayers(layersData) {
         this.layers = [];
         this.selectedLayer = null;
+        this.selectedLayers = [];
         this.nextId = 1;
         
         if (!layersData || !Array.isArray(layersData)) return;
@@ -1245,6 +1297,7 @@ export class LayerManager {
 
         this.layers = [];
         this.selectedLayer = null;
+        this.selectedLayers = [];
         this.nextId = 1;
         if (this.frontContainer) {
             this.frontContainer.innerHTML = '';
@@ -1296,6 +1349,41 @@ export class LayerManager {
         if (appContext.annotationPanel) {
             appContext.annotationPanel.updateSelection(this.selectedLayer);
         }
+    }
+
+    /**
+     * 選択中のオーバーレイ図形を移動
+     * @param {number} dx
+     * @param {number} dy
+     * @returns {boolean} 移動したかどうか
+     */
+    moveSelectedLayers(dx, dy) {
+        const selected = (this.selectedLayers && this.selectedLayers.length > 0)
+            ? this.selectedLayers
+            : (this.selectedLayer ? [this.selectedLayer] : []);
+
+        if (selected.length === 0) return false;
+
+        selected.forEach(layer => {
+            if (!layer || layer.locked) return;
+            if (layer.type === 'line' || layer.type === 'arrow') {
+                layer.x += dx;
+                layer.y += dy;
+                layer.x2 += dx;
+                layer.y2 += dy;
+            } else {
+                layer.x += dx;
+                layer.y += dy;
+            }
+            this.renderObject(layer);
+        });
+
+        selected.forEach(layer => {
+            const element = document.getElementById(layer.id);
+            if (element) element.classList.add('selected');
+        });
+
+        return true;
     }
 
     /**

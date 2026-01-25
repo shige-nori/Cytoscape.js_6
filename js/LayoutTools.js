@@ -28,7 +28,8 @@ export class LayoutTools {
 
         this.setupEventListeners();
         this.setupDraggable();
-
+        this.setupTabs();
+        this.setupAlignDistribute();
     }
 
     setupEventListeners() {
@@ -68,6 +69,11 @@ export class LayoutTools {
                     this.scheduleTransform();
                 }
             });
+        }
+
+        const closeBtn = document.getElementById('layout-tools-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closePanel());
         }
 
         document.querySelectorAll('input[name="scale-axis"]').forEach(radio => {
@@ -201,7 +207,10 @@ export class LayoutTools {
         if (this.currentRotation !== 0) {
             // 現在のスケールと回転を適用して位置を確定
             this.applyTransform();
-            
+            const closeBtn = document.getElementById('layout-tools-close-btn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => this.closePanel());
+            }
             // 確定した位置（スケール+回転済み）を新しいoriginalPositionsとして保存
             this.storeOriginalPositions();
             
@@ -296,6 +305,301 @@ export class LayoutTools {
                 node.position({ x: centerX + dx, y: centerY + dy });
             });
         });
+    }
+
+    /**
+     * タブ切り替えのセットアップ
+     */
+    setupTabs() {
+        const tabs = document.querySelectorAll('.tools-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const targetTab = e.target.dataset.tab;
+                
+                // タブのアクティブ状態を切り替え
+                tabs.forEach(t => t.classList.remove('active'));
+                e.target.classList.add('active');
+                
+                // コンテンツの表示を切り替え
+                document.querySelectorAll('.tools-tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(targetTab + '-tab').classList.add('active');
+            });
+        });
+    }
+
+    /**
+     * Align/Distribute機能のセットアップ
+     */
+    setupAlignDistribute() {
+        // Align buttons
+        document.getElementById('align-left')?.addEventListener('click', () => this.alignElements('left'));
+        document.getElementById('align-center-h')?.addEventListener('click', () => this.alignElements('center-h'));
+        document.getElementById('align-right')?.addEventListener('click', () => this.alignElements('right'));
+        document.getElementById('align-top')?.addEventListener('click', () => this.alignElements('top'));
+        document.getElementById('align-center-v')?.addEventListener('click', () => this.alignElements('center-v'));
+        document.getElementById('align-bottom')?.addEventListener('click', () => this.alignElements('bottom'));
+
+        // Distribute buttons
+        document.getElementById('distribute-h')?.addEventListener('click', () => this.distributeElements('horizontal'));
+        document.getElementById('distribute-v')?.addEventListener('click', () => this.distributeElements('vertical'));
+
+        // Stack buttons
+        document.getElementById('stack-v')?.addEventListener('click', () => this.stackElements('vertical'));
+        document.getElementById('stack-h')?.addEventListener('click', () => this.stackElements('horizontal'));
+    }
+
+    /**
+     * 選択中のノードとオーバーレイ図形を取得
+     */
+    getSelectedElements() {
+        const elements = [];
+        
+        // Cytoscapeノードを取得
+        if (appContext.networkManager && appContext.networkManager.cy) {
+            const selectedNodes = appContext.networkManager.cy.nodes(':selected');
+            selectedNodes.forEach(node => {
+                const pos = node.position();
+                elements.push({
+                    type: 'node',
+                    element: node,
+                    x: pos.x,
+                    y: pos.y,
+                    width: node.width(),
+                    height: node.height()
+                });
+            });
+        }
+        
+        // オーバーレイ図形を取得（複数選択対応）
+        if (appContext.layerManager) {
+            const selectedLayers = appContext.layerManager.selectedLayers?.length
+                ? appContext.layerManager.selectedLayers
+                : (appContext.layerManager.selectedLayer ? [appContext.layerManager.selectedLayer] : []);
+
+            selectedLayers.forEach(layer => {
+                if (!layer) return;
+                // ライン/矢印は除外（位置の概念が異なるため）
+                if (layer.type !== 'line' && layer.type !== 'arrow') {
+                    elements.push({
+                        type: 'overlay',
+                        element: layer,
+                        x: layer.x,
+                        y: layer.y,
+                        width: layer.width || 100,
+                        height: layer.height || 80
+                    });
+                }
+            });
+        }
+        
+        return elements;
+    }
+
+    /**
+     * 要素を整列
+     */
+    alignElements(direction) {
+        const elements = this.getSelectedElements();
+        if (elements.length < 2) {
+            alert('Please select at least 2 nodes or shapes to align.');
+            return;
+        }
+
+        let targetValue;
+        
+        switch (direction) {
+            case 'left':
+                targetValue = Math.min(...elements.map(el => el.x - el.width / 2));
+                elements.forEach(el => {
+                    if (el.type === 'node') {
+                        el.element.position({ x: targetValue + el.width / 2, y: el.element.position().y });
+                    } else {
+                        el.element.x = targetValue;
+                        appContext.layerManager.renderObject(el.element);
+                    }
+                });
+                break;
+                
+            case 'center-h':
+                const avgX = elements.reduce((sum, el) => sum + el.x, 0) / elements.length;
+                elements.forEach(el => {
+                    if (el.type === 'node') {
+                        el.element.position({ x: avgX, y: el.element.position().y });
+                    } else {
+                        el.element.x = avgX;
+                        appContext.layerManager.renderObject(el.element);
+                    }
+                });
+                break;
+                
+            case 'right':
+                targetValue = Math.max(...elements.map(el => el.x + el.width / 2));
+                elements.forEach(el => {
+                    if (el.type === 'node') {
+                        el.element.position({ x: targetValue - el.width / 2, y: el.element.position().y });
+                    } else {
+                        el.element.x = targetValue - el.width;
+                        appContext.layerManager.renderObject(el.element);
+                    }
+                });
+                break;
+                
+            case 'top':
+                targetValue = Math.min(...elements.map(el => el.y - el.height / 2));
+                elements.forEach(el => {
+                    if (el.type === 'node') {
+                        el.element.position({ x: el.element.position().x, y: targetValue + el.height / 2 });
+                    } else {
+                        el.element.y = targetValue;
+                        appContext.layerManager.renderObject(el.element);
+                    }
+                });
+                break;
+                
+            case 'center-v':
+                const avgY = elements.reduce((sum, el) => sum + el.y, 0) / elements.length;
+                elements.forEach(el => {
+                    if (el.type === 'node') {
+                        el.element.position({ x: el.element.position().x, y: avgY });
+                    } else {
+                        el.element.y = avgY;
+                        appContext.layerManager.renderObject(el.element);
+                    }
+                });
+                break;
+                
+            case 'bottom':
+                targetValue = Math.max(...elements.map(el => el.y + el.height / 2));
+                elements.forEach(el => {
+                    if (el.type === 'node') {
+                        el.element.position({ x: el.element.position().x, y: targetValue - el.height / 2 });
+                    } else {
+                        el.element.y = targetValue - el.height;
+                        appContext.layerManager.renderObject(el.element);
+                    }
+                });
+                break;
+        }
+        
+        if (appContext.layerManager && appContext.layerManager.selectedLayer) {
+            appContext.layerManager.selectObject(appContext.layerManager.selectedLayer);
+        }
+    }
+
+    /**
+     * 要素を等間隔に配置
+     */
+    distributeElements(direction) {
+        const elements = this.getSelectedElements();
+        if (elements.length < 3) {
+            alert('Please select at least 3 nodes or shapes to distribute.');
+            return;
+        }
+
+        if (direction === 'horizontal') {
+            // X座標でソート
+            elements.sort((a, b) => a.x - b.x);
+            const first = elements[0];
+            const last = elements[elements.length - 1];
+            const totalSpace = (last.x + last.width / 2) - (first.x - first.width / 2);
+            const spacing = totalSpace / (elements.length - 1);
+            
+            elements.forEach((el, index) => {
+                if (index === 0 || index === elements.length - 1) return; // 両端は固定
+                const targetX = (first.x - first.width / 2) + (spacing * index);
+                
+                if (el.type === 'node') {
+                    el.element.position({ x: targetX, y: el.element.position().y });
+                } else {
+                    el.element.x = targetX;
+                    appContext.layerManager.renderObject(el.element);
+                }
+            });
+        } else {
+            // Y座標でソート
+            elements.sort((a, b) => a.y - b.y);
+            const first = elements[0];
+            const last = elements[elements.length - 1];
+            const totalSpace = (last.y + last.height / 2) - (first.y - first.height / 2);
+            const spacing = totalSpace / (elements.length - 1);
+            
+            elements.forEach((el, index) => {
+                if (index === 0 || index === elements.length - 1) return; // 両端は固定
+                const targetY = (first.y - first.height / 2) + (spacing * index);
+                
+                if (el.type === 'node') {
+                    el.element.position({ x: el.element.position().x, y: targetY });
+                } else {
+                    el.element.y = targetY;
+                    appContext.layerManager.renderObject(el.element);
+                }
+            });
+        }
+        
+        if (appContext.layerManager && appContext.layerManager.selectedLayer) {
+            appContext.layerManager.selectObject(appContext.layerManager.selectedLayer);
+        }
+    }
+
+    /**
+     * 要素を隙間なく並べる
+     */
+    stackElements(direction) {
+        const elements = this.getSelectedElements();
+        if (elements.length < 2) {
+            alert('Please select at least 2 nodes or shapes to stack.');
+            return;
+        }
+
+        const spacing = 5; // 要素間のスペース（ピクセル）
+
+        if (direction === 'vertical') {
+            // Y座標でソート
+            elements.sort((a, b) => a.y - b.y);
+            let currentY = elements[0].y;
+            
+            elements.forEach((el, index) => {
+                if (index === 0) {
+                    currentY = el.y + el.height;
+                    return;
+                }
+                
+                if (el.type === 'node') {
+                    el.element.position({ x: el.element.position().x, y: currentY + el.height / 2 });
+                    currentY += el.height + spacing;
+                } else {
+                    el.element.y = currentY;
+                    appContext.layerManager.renderObject(el.element);
+                    currentY += el.height + spacing;
+                }
+            });
+        } else {
+            // X座標でソート
+            elements.sort((a, b) => a.x - b.x);
+            let currentX = elements[0].x;
+            
+            elements.forEach((el, index) => {
+                if (index === 0) {
+                    currentX = el.x + el.width;
+                    return;
+                }
+                
+                if (el.type === 'node') {
+                    el.element.position({ x: currentX + el.width / 2, y: el.element.position().y });
+                    currentX += el.width + spacing;
+                } else {
+                    el.element.x = currentX;
+                    appContext.layerManager.renderObject(el.element);
+                    currentX += el.width + spacing;
+                }
+            });
+        }
+        
+        if (appContext.layerManager && appContext.layerManager.selectedLayer) {
+            appContext.layerManager.selectObject(appContext.layerManager.selectedLayer);
+        }
     }
 }
 

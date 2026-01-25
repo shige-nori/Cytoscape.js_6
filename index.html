@@ -129,65 +129,127 @@
     <div class="layout-tools-panel" id="layout-tools-panel">
         <div class="tools-panel-header">
             <h3>Layout Tools</h3>
+            <button class="tools-panel-close" id="layout-tools-close-btn">&times;</button>
+        </div>
+        <div class="tools-panel-tabs">
+            <button class="tools-tab active" data-tab="scale-rotate">Scale / Rotate</button>
+            <button class="tools-tab" data-tab="align-distribute">Align / Distribute</button>
         </div>
         <div class="tools-panel-body">
-            <!-- Scale -->
-            <div class="tools-section">
-                <h4>Scale</h4>
-                <div class="radio-group">
-                    <label>
-                        <input type="radio" name="scale-axis" value="width" id="scale-width" checked>
-                        Width
-                    </label>
-                    <label>
-                        <input type="radio" name="scale-axis" value="height" id="scale-height">
-                        Height
-                    </label>
-                </div>
-                <div class="slider-wrapper">
-                    <div class="slider-ticks">
-                        <span class="tick"></span>
-                        <span class="tick"></span>
-                        <span class="tick"></span>
-                        <span class="tick"></span>
-                        <span class="tick"></span>
+            <!-- Scale / Rotate Tab -->
+            <div class="tools-tab-content active" id="scale-rotate-tab">
+                <!-- Scale -->
+                <div class="tools-section">
+                    <h4>Scale</h4>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="scale-axis" value="width" id="scale-width" checked>
+                            Width
+                        </label>
+                        <label>
+                            <input type="radio" name="scale-axis" value="height" id="scale-height">
+                            Height
+                        </label>
                     </div>
-                    <input type="range" id="scale-slider" min="-3" max="3" step="0.1" value="0" class="slider">
+                    <div class="slider-wrapper">
+                        <div class="slider-ticks">
+                            <span class="tick"></span>
+                            <span class="tick"></span>
+                            <span class="tick"></span>
+                            <span class="tick"></span>
+                            <span class="tick"></span>
+                        </div>
+                        <input type="range" id="scale-slider" min="-3" max="3" step="0.1" value="0" class="slider">
+                    </div>
+                    <div class="slider-labels">
+                        <span>1/8x</span>
+                        <span>1/4x</span>
+                        <span>1x</span>
+                        <span>4x</span>
+                        <span>8x</span>
+                    </div>
+                    <div class="value-input-container">
+                        <input type="number" id="scale-value-input" value="1.00" step="0.01" min="0.125" max="8" class="value-input">
+                    </div>
                 </div>
-                <div class="slider-labels">
-                    <span>1/8x</span>
-                    <span>1/4x</span>
-                    <span>1x</span>
-                    <span>4x</span>
-                    <span>8x</span>
-                </div>
-                <div class="value-input-container">
-                    <input type="number" id="scale-value-input" value="1.00" step="0.01" min="0.125" max="8" class="value-input">
+                
+                <!-- Rotate -->
+                <div class="tools-section">
+                    <h4>Rotate</h4>
+                    <div class="slider-wrapper">
+                        <div class="slider-ticks">
+                            <span class="tick"></span>
+                            <span class="tick"></span>
+                            <span class="tick"></span>
+                            <span class="tick"></span>
+                            <span class="tick"></span>
+                        </div>
+                        <input type="range" id="rotate-slider" min="-180" max="180" step="1" value="0" class="slider">
+                    </div>
+                    <div class="slider-labels">
+                        <span>-180°</span>
+                        <span>-90°</span>
+                        <span>0°</span>
+                        <span>90°</span>
+                        <span>180°</span>
+                    </div>
+                    <div class="value-input-container">
+                        <input type="number" id="rotate-value-input" value="0" step="1" min="-180" max="180" class="value-input">
+                    </div>
                 </div>
             </div>
-            
-            <!-- Rotate -->
-            <div class="tools-section">
-                <h4>Rotate</h4>
-                <div class="slider-wrapper">
-                    <div class="slider-ticks">
-                        <span class="tick"></span>
-                        <span class="tick"></span>
-                        <span class="tick"></span>
-                        <span class="tick"></span>
-                        <span class="tick"></span>
+
+            <!-- Align / Distribute Tab -->
+            <div class="tools-tab-content" id="align-distribute-tab">
+                <!-- Align -->
+                <div class="tools-section">
+                    <h4>Align</h4>
+                    <div class="icon-button-grid">
+                        <button class="icon-btn" id="align-left" title="Align Left">
+                            <svg viewBox="0 0 24 24"><line x1="4" y1="4" x2="4" y2="20" stroke="currentColor" stroke-width="2"/><rect x="6" y="6" width="6" height="4" fill="currentColor"/><rect x="6" y="14" width="10" height="4" fill="currentColor"/></svg>
+                        </button>
+                        <button class="icon-btn" id="align-center-h" title="Align Center Horizontal">
+                            <svg viewBox="0 0 24 24"><line x1="12" y1="4" x2="12" y2="20" stroke="currentColor" stroke-width="2"/><rect x="9" y="6" width="6" height="4" fill="currentColor"/><rect x="7" y="14" width="10" height="4" fill="currentColor"/></svg>
+                        </button>
+                        <button class="icon-btn" id="align-right" title="Align Right">
+                            <svg viewBox="0 0 24 24"><line x1="20" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2"/><rect x="12" y="6" width="6" height="4" fill="currentColor"/><rect x="8" y="14" width="10" height="4" fill="currentColor"/></svg>
+                        </button>
+                        <button class="icon-btn" id="align-top" title="Align Top">
+                            <svg viewBox="0 0 24 24"><line x1="4" y1="4" x2="20" y2="4" stroke="currentColor" stroke-width="2"/><rect x="6" y="6" width="4" height="6" fill="currentColor"/><rect x="14" y="6" width="4" height="10" fill="currentColor"/></svg>
+                        </button>
+                        <button class="icon-btn" id="align-center-v" title="Align Center Vertical">
+                            <svg viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12" stroke="currentColor" stroke-width="2"/><rect x="6" y="9" width="4" height="6" fill="currentColor"/><rect x="14" y="7" width="4" height="10" fill="currentColor"/></svg>
+                        </button>
+                        <button class="icon-btn" id="align-bottom" title="Align Bottom">
+                            <svg viewBox="0 0 24 24"><line x1="4" y1="20" x2="20" y2="20" stroke="currentColor" stroke-width="2"/><rect x="6" y="8" width="4" height="10" fill="currentColor"/><rect x="14" y="12" width="4" height="6" fill="currentColor"/></svg>
+                        </button>
                     </div>
-                    <input type="range" id="rotate-slider" min="-180" max="180" step="1" value="0" class="slider">
                 </div>
-                <div class="slider-labels">
-                    <span>-180°</span>
-                    <span>-90°</span>
-                    <span>0°</span>
-                    <span>90°</span>
-                    <span>180°</span>
+
+                <!-- Distribute -->
+                <div class="tools-section">
+                    <h4>Distribute</h4>
+                    <div class="icon-button-grid">
+                        <button class="icon-btn" id="distribute-h" title="Distribute Horizontally">
+                            <svg viewBox="0 0 24 24"><line x1="4" y1="4" x2="4" y2="20" stroke="currentColor" stroke-width="2"/><line x1="20" y1="4" x2="20" y2="20" stroke="currentColor" stroke-width="2"/><rect x="8" y="9" width="3" height="6" fill="currentColor"/><rect x="13" y="9" width="3" height="6" fill="currentColor"/></svg>
+                        </button>
+                        <button class="icon-btn" id="distribute-v" title="Distribute Vertically">
+                            <svg viewBox="0 0 24 24"><line x1="4" y1="4" x2="20" y2="4" stroke="currentColor" stroke-width="2"/><line x1="4" y1="20" x2="20" y2="20" stroke="currentColor" stroke-width="2"/><rect x="9" y="8" width="6" height="3" fill="currentColor"/><rect x="9" y="13" width="6" height="3" fill="currentColor"/></svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="value-input-container">
-                    <input type="number" id="rotate-value-input" value="0" step="1" min="-180" max="180" class="value-input">
+
+                <!-- Stack -->
+                <div class="tools-section">
+                    <h4>Stack</h4>
+                    <div class="icon-button-grid">
+                        <button class="icon-btn" id="stack-v" title="Stack Vertically">
+                            <svg viewBox="0 0 24 24"><rect x="7" y="4" width="10" height="4" fill="currentColor"/><rect x="7" y="10" width="10" height="4" fill="currentColor"/><rect x="7" y="16" width="10" height="4" fill="currentColor"/></svg>
+                        </button>
+                        <button class="icon-btn" id="stack-h" title="Stack Horizontally">
+                            <svg viewBox="0 0 24 24"><rect x="4" y="7" width="4" height="10" fill="currentColor"/><rect x="10" y="7" width="4" height="10" fill="currentColor"/><rect x="16" y="7" width="4" height="10" fill="currentColor"/></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

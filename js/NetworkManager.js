@@ -200,6 +200,54 @@ export class NetworkManager {
             }
             this.clearHighlight();
         });
+
+        // キーボード操作（矢印キーで移動）
+        document.addEventListener('keydown', (e) => this.onKeyDown(e));
+    }
+
+    /**
+     * キーボードイベント
+     */
+    onKeyDown(e) {
+        const activeElement = document.activeElement;
+        if (activeElement && (activeElement.isContentEditable || ['INPUT', 'TEXTAREA'].includes(activeElement.tagName))) {
+            return;
+        }
+
+        const key = e.key;
+        if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) return;
+
+        const step = e.shiftKey ? 10 : 5;
+        let dx = 0;
+        let dy = 0;
+        if (key === 'ArrowUp') dy = -step;
+        if (key === 'ArrowDown') dy = step;
+        if (key === 'ArrowLeft') dx = -step;
+        if (key === 'ArrowRight') dx = step;
+
+        let moved = false;
+
+        if (this.cy) {
+            const selectedNodes = this.cy.nodes(':selected');
+            if (selectedNodes.length > 0) {
+                this.cy.batch(() => {
+                    selectedNodes.forEach(node => {
+                        const pos = node.position();
+                        node.position({ x: pos.x + dx, y: pos.y + dy });
+                    });
+                });
+                moved = true;
+            }
+        }
+
+        if (appContext.layerManager && typeof appContext.layerManager.moveSelectedLayers === 'function') {
+            const layerMoved = appContext.layerManager.moveSelectedLayers(dx, dy);
+            if (layerMoved) moved = true;
+        }
+
+        if (moved) {
+            e.preventDefault();
+        }
     }
 
     /**
