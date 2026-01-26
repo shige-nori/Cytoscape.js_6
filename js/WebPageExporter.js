@@ -586,6 +586,83 @@ export class WebPageExporter {
             syncOverlayWithCy();
             cy.on('pan zoom', syncOverlayWithCy);
 
+            const fitToViewWithOverlays = (paddingPx) => {
+                const pad = (typeof paddingPx === 'number') ? paddingPx : 50;
+                const elements = cy.elements();
+                const cyBounds = elements.length > 0 ? elements.boundingBox() : null;
+
+                let overlayBounds = null;
+                if (layers && Array.isArray(layers) && layers.length > 0) {
+                    layers.forEach(obj => {
+                        if (!obj || obj.visible === false) return;
+                        let x1 = obj.x || 0;
+                        let y1 = obj.y || 0;
+                        let x2 = x1;
+                        let y2 = y1;
+
+                        if (obj.type === 'line' || obj.type === 'arrow') {
+                            const ox2 = (obj.x2 !== undefined) ? obj.x2 : x1;
+                            const oy2 = (obj.y2 !== undefined) ? obj.y2 : y1;
+                            x1 = Math.min(x1, ox2);
+                            y1 = Math.min(y1, oy2);
+                            x2 = Math.max(x2, ox2);
+                            y2 = Math.max(y2, oy2);
+                        } else {
+                            const w = obj.width || 0;
+                            const h = obj.height || 0;
+                            x2 = x1 + w;
+                            y2 = y1 + h;
+                        }
+
+                        if (!overlayBounds) {
+                            overlayBounds = { x1: x1, y1: y1, x2: x2, y2: y2 };
+                        } else {
+                            overlayBounds.x1 = Math.min(overlayBounds.x1, x1);
+                            overlayBounds.y1 = Math.min(overlayBounds.y1, y1);
+                            overlayBounds.x2 = Math.max(overlayBounds.x2, x2);
+                            overlayBounds.y2 = Math.max(overlayBounds.y2, y2);
+                        }
+                    });
+                }
+
+                if (!cyBounds && !overlayBounds) return;
+
+                const bounds = {
+                    x1: cyBounds ? cyBounds.x1 : overlayBounds.x1,
+                    y1: cyBounds ? cyBounds.y1 : overlayBounds.y1,
+                    x2: cyBounds ? cyBounds.x2 : overlayBounds.x2,
+                    y2: cyBounds ? cyBounds.y2 : overlayBounds.y2
+                };
+
+                if (overlayBounds) {
+                    bounds.x1 = Math.min(bounds.x1, overlayBounds.x1);
+                    bounds.y1 = Math.min(bounds.y1, overlayBounds.y1);
+                    bounds.x2 = Math.max(bounds.x2, overlayBounds.x2);
+                    bounds.y2 = Math.max(bounds.y2, overlayBounds.y2);
+                }
+
+                const width = bounds.x2 - bounds.x1;
+                const height = bounds.y2 - bounds.y1;
+                if (width <= 0 || height <= 0) {
+                    cy.fit();
+                    syncOverlayWithCy();
+                    return;
+                }
+
+                const viewportW = cy.width();
+                const viewportH = cy.height();
+                const usableW = Math.max(1, viewportW - pad * 2);
+                const usableH = Math.max(1, viewportH - pad * 2);
+                const zoom = Math.min(usableW / width, usableH / height);
+                cy.zoom(zoom);
+                const pan = {
+                    x: -bounds.x1 * zoom + (viewportW - width * zoom) / 2,
+                    y: -bounds.y1 * zoom + (viewportH - height * zoom) / 2
+                };
+                cy.pan(pan);
+                syncOverlayWithCy();
+            };
+
             // Path Trace toggle
             let pathTraceEnabled = true;
             const pathTraceToggle = document.getElementById('path-trace-toggle');
@@ -720,15 +797,10 @@ export class WebPageExporter {
                 clearHighlight();
             });
 
-            // Fit to view on load
+            // Fit to view on load (including overlays)
             cy.ready(function() {
                 console.log('Cytoscape ready');
-                if (cy.elements().length > 0) {
-                    cy.fit(cy.elements(), 50);
-                    console.log('Fitted to view');
-                } else {
-                    console.warn('No elements to display');
-                }
+                fitToViewWithOverlays(50);
             });
         } catch (error) {
             console.error('Error initializing network:', error);

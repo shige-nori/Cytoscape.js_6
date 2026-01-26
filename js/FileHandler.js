@@ -502,8 +502,8 @@ export class FileHandler {
                 }
             }
             
-            // ファイトを適用
-            appContext.networkManager.cy.fit();
+            // 図形レイヤーも含めてページサイズにフィット
+            this.fitToViewWithOverlays(50);
             
             // Table Panelの全カラムを表示
             if (appContext.tablePanel) {
@@ -679,6 +679,88 @@ export class FileHandler {
             alert('Error saving CX2 file: ' + error.message);
             return false;
         }
+    }
+
+    /**
+     * ネットワークとオーバーレイを含めてビューにフィット
+     * @param {number} paddingPx
+     */
+    fitToViewWithOverlays(paddingPx = 50) {
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
+        const cy = appContext.networkManager.cy;
+
+        const cyBounds = cy.elements().length > 0 ? cy.elements().boundingBox() : null;
+
+        let overlayBounds = null;
+        const layers = appContext.layerManager ? appContext.layerManager.layers : null;
+        if (layers && layers.length > 0) {
+            layers.forEach(layer => {
+                if (!layer.visible) return;
+                let x1 = layer.x ?? 0;
+                let y1 = layer.y ?? 0;
+                let x2 = x1;
+                let y2 = y1;
+
+                if (layer.type === 'line' || layer.type === 'arrow') {
+                    const lx2 = layer.x2 ?? x1;
+                    const ly2 = layer.y2 ?? y1;
+                    x1 = Math.min(x1, lx2);
+                    y1 = Math.min(y1, ly2);
+                    x2 = Math.max(x2, lx2);
+                    y2 = Math.max(y2, ly2);
+                } else {
+                    const width = layer.width ?? 0;
+                    const height = layer.height ?? 0;
+                    x2 = x1 + width;
+                    y2 = y1 + height;
+                }
+
+                if (!overlayBounds) {
+                    overlayBounds = { x1, y1, x2, y2 };
+                } else {
+                    overlayBounds.x1 = Math.min(overlayBounds.x1, x1);
+                    overlayBounds.y1 = Math.min(overlayBounds.y1, y1);
+                    overlayBounds.x2 = Math.max(overlayBounds.x2, x2);
+                    overlayBounds.y2 = Math.max(overlayBounds.y2, y2);
+                }
+            });
+        }
+
+        if (!cyBounds && !overlayBounds) return;
+
+        const bounds = {
+            x1: cyBounds ? cyBounds.x1 : overlayBounds.x1,
+            y1: cyBounds ? cyBounds.y1 : overlayBounds.y1,
+            x2: cyBounds ? cyBounds.x2 : overlayBounds.x2,
+            y2: cyBounds ? cyBounds.y2 : overlayBounds.y2
+        };
+
+        if (overlayBounds) {
+            bounds.x1 = Math.min(bounds.x1, overlayBounds.x1);
+            bounds.y1 = Math.min(bounds.y1, overlayBounds.y1);
+            bounds.x2 = Math.max(bounds.x2, overlayBounds.x2);
+            bounds.y2 = Math.max(bounds.y2, overlayBounds.y2);
+        }
+
+        const width = bounds.x2 - bounds.x1;
+        const height = bounds.y2 - bounds.y1;
+        if (width <= 0 || height <= 0) {
+            cy.fit();
+            return;
+        }
+
+        const viewportW = cy.width();
+        const viewportH = cy.height();
+        const usableW = Math.max(1, viewportW - paddingPx * 2);
+        const usableH = Math.max(1, viewportH - paddingPx * 2);
+
+        const zoom = Math.min(usableW / width, usableH / height);
+        cy.zoom(zoom);
+        const pan = {
+            x: -bounds.x1 * zoom + (viewportW - width * zoom) / 2,
+            y: -bounds.y1 * zoom + (viewportH - height * zoom) / 2
+        };
+        cy.pan(pan);
     }
 
     /**
