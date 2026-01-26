@@ -18,6 +18,7 @@ import { MenuManager } from './MenuManager.js';
 import { LayerManager } from './LayerManager.js';
 import { AnnotationPanel } from './AnnotationPanel.js';
 import { HistoryManager } from './HistoryManager.js';
+import { WebPageExporter } from './WebPageExporter.js';
 
 // アプリケーション初期化
 document.addEventListener('DOMContentLoaded', () => {
@@ -54,6 +55,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     appContext.historyManager = new HistoryManager(10);
     appContext.historyManager.captureState('init');
+    
+    appContext.webPageExporter = new WebPageExporter();
     
     appContext.modalManager = new ModalManager();
     appContext.menuManager = new MenuManager();

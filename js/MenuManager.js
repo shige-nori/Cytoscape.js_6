@@ -89,37 +89,21 @@ export class MenuManager {
             this.closeAllMenus();
         });
 
-        // Export Image
-        document.getElementById('export-image')?.addEventListener('click', async () => {
-            if (appContext.networkManager.hasNetwork()) {
-                try {
-                    progressOverlay.show('Exporting image...');
-                    
-                    let pngDataUrl;
-                    if (appContext.layerManager && appContext.layerManager.layers.length > 0) {
-                        // オーバーレイがある場合は合成
-                        pngDataUrl = await appContext.layerManager.exportAsPng();
-                    } else {
-                        // オーバーレイがない場合はCytoscapeのみ
-                        pngDataUrl = appContext.networkManager.cy.png({ full: true, scale: 2 });
-                    }
-                    
-                    if (pngDataUrl) {
-                        // ダウンロード
-                        const link = document.createElement('a');
-                        link.download = 'network.png';
-                        link.href = pngDataUrl;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    }
-                    
-                    progressOverlay.hide();
-                } catch (err) {
-                    progressOverlay.hide();
-                    console.error('Export failed:', err);
-                    alert('画像のエクスポートに失敗しました。');
-                }
+        // Export submenu - Network to Web Page
+        document.getElementById('export-network-webpage')?.addEventListener('click', async () => {
+            if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) {
+                alert('ネットワークが開かれていません。先にネットワークを開いてください。');
+                this.closeAllMenus();
+                return;
+            }
+            try {
+                progressOverlay.show('Exporting network to web page...');
+                await appContext.webPageExporter.exportNetworkToWebPage();
+                progressOverlay.hide();
+            } catch (err) {
+                progressOverlay.hide();
+                console.error('Export failed:', err);
+                alert('Webページのエクスポートに失敗しました: ' + err.message);
             }
             this.closeAllMenus();
         });
