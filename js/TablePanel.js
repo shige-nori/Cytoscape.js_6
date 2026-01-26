@@ -273,6 +273,84 @@ export class TablePanel {
     }
 
     /**
+     * セルの内容をDOMとして生成（配列や改行文字列は区切り線付き）
+     * @param {*} value
+     * @returns {HTMLElement}
+     */
+    createCellContent(value) {
+        const container = document.createElement('div');
+        container.className = 'cell-content';
+
+        if (value === null || value === undefined) {
+            container.textContent = '';
+            return container;
+        }
+
+        let items = null;
+        if (Array.isArray(value)) {
+            items = value.map(v => String(v));
+        } else if (typeof value === 'string' && value.includes('\n')) {
+            items = value.split('\n').map(v => v.trim()).filter(v => v !== '');
+        }
+
+        if (items && items.length > 0) {
+            container.classList.add('cell-array');
+            const allZeroOrBlank = items.every((item) => {
+                const s = String(item).trim();
+                return s === '' || s === '0';
+            });
+            items.forEach((item) => {
+                const row = document.createElement('div');
+                row.className = 'cell-array-item';
+                const raw = String(item);
+                const trimmed = raw.trim();
+                if (trimmed === '' || (allZeroOrBlank && trimmed === '0')) {
+                    row.textContent = '\u00a0';
+                } else {
+                    row.textContent = trimmed;
+                }
+                container.appendChild(row);
+            });
+            return container;
+        }
+
+        container.textContent = this.formatCellValue(value);
+        return container;
+    }
+
+    /**
+     * 配列/改行文字列を配列に正規化
+     * @param {*} value
+     * @returns {Array<string>|null}
+     */
+    getArrayItems(value) {
+        if (value === null || value === undefined) return null;
+        if (Array.isArray(value)) return value.map(v => String(v));
+        if (typeof value === 'string' && value.includes('\n')) {
+            // 改行区切りは空要素も保持（スペースのみも含める）
+            return value.split('\n').map(v => String(v));
+        }
+        if (typeof value === 'string' && value.includes('|')) {
+            // パイプ区切りも配列として扱う（空要素を保持）
+            return value.split('|').map(v => String(v));
+        }
+        return null;
+    }
+
+    /**
+     * 配列として扱うカラムを抽出
+     * @param {Object} row
+     * @returns {Array<string>}
+     */
+    getArrayColumns(row) {
+        if (!row) return [];
+        return Object.keys(row).filter(key => {
+            if (key === '_element' || key === '_displayOverrides') return false;
+            return Array.isArray(row[key]) || (typeof row[key] === 'string' && row[key].includes('\n'));
+        });
+    }
+
+    /**
      * 全カラムを表示するようにリセット（ファイル読み込み時に使用）
      */
     resetToShowAllColumns() {
@@ -460,7 +538,10 @@ export class TablePanel {
             
             Array.from(this.visibleNodeColumns).forEach(col => {
                 const td = document.createElement('td');
-                td.textContent = this.formatCellValue(rowData[col]);
+                const displayValue = rowData._displayOverrides && rowData._displayOverrides[col] !== undefined
+                    ? rowData._displayOverrides[col]
+                    : rowData[col];
+                td.appendChild(this.createCellContent(displayValue));
                 tr.appendChild(td);
             });
             
@@ -627,7 +708,10 @@ export class TablePanel {
             
             Array.from(this.visibleEdgeColumns).forEach(col => {
                 const td = document.createElement('td');
-                td.textContent = this.formatCellValue(rowData[col]);
+                const displayValue = rowData._displayOverrides && rowData._displayOverrides[col] !== undefined
+                    ? rowData._displayOverrides[col]
+                    : rowData[col];
+                td.appendChild(this.createCellContent(displayValue));
                 tr.appendChild(td);
             });
             
@@ -710,18 +794,61 @@ export class TablePanel {
      * データをフィルタリング
      */
     filterData(data, filters) {
-        return data.filter(row => {
-            // すべてのフィルター条件をANDで適用
-            return Object.keys(filters).every(col => {
+        return data.map(row => {
+            row._displayOverrides = null;
+            return row;
+        }).filter(row => {
+            const arrayColumns = this.getArrayColumns(row);
+            let arrayMatchedIndices = null;
+
+            const pass = Object.keys(filters).every(col => {
                 const filterValue = filters[col];
                 if (!filterValue || filterValue.trim() === '') {
-                    return true; // フィルターが空の場合は全て通過
+                    return true;
                 }
-                
+
+                const items = this.getArrayItems(row[col]);
+                if (items && items.length > 0) {
+                    const lowerFilter = filterValue.toLowerCase();
+                    const matchedIndices = items
+                        .map((item, idx) => ({ item, idx }))
+                        .filter(({ item }) => String(item).toLowerCase().includes(lowerFilter))
+                        .map(({ idx }) => idx);
+
+                    if (matchedIndices.length === 0) {
+                        return false;
+                    }
+
+                    if (arrayMatchedIndices === null) {
+                        arrayMatchedIndices = matchedIndices;
+                    } else {
+                        arrayMatchedIndices = arrayMatchedIndices.filter(i => matchedIndices.includes(i));
+                        if (arrayMatchedIndices.length === 0) {
+                            return false;
+                        }
+                    }
+                    return true;
+                }
+
                 const cellValue = this.formatCellValue(row[col]);
-                // 大文字小文字を区別しない部分一致検索
                 return cellValue.toLowerCase().includes(filterValue.toLowerCase());
             });
+
+            if (!pass) return false;
+
+            if (arrayMatchedIndices !== null && arrayColumns.length > 0) {
+                row._displayOverrides = row._displayOverrides || {};
+                arrayColumns.forEach(colName => {
+                    const items = this.getArrayItems(row[colName]);
+                    if (items && items.length > 0) {
+                        row._displayOverrides[colName] = arrayMatchedIndices
+                            .map(i => items[i])
+                            .filter(v => v !== undefined);
+                    }
+                });
+            }
+
+            return true;
         });
     }
 

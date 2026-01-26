@@ -1397,6 +1397,27 @@ body {
     cursor: text;
 }
 
+.cell-content {
+    display: block;
+    white-space: pre-line;
+}
+
+.cell-array {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.cell-array-item {
+    padding: 2px 0;
+    border-bottom: 1px solid var(--border-color);
+    line-height: 1.4;
+}
+
+.cell-array-item:last-child {
+    border-bottom: none;
+}
+
 .data-table tbody tr {
     cursor: default;
     transition: background-color 0.15s;
