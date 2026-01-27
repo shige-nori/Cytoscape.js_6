@@ -1390,7 +1390,7 @@ body {
     border-bottom: 1px solid var(--border-color);
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: pre-line;
+    white-space: nowrap;
     max-width: 200px;
     vertical-align: top;
     user-select: text;
@@ -1399,7 +1399,9 @@ body {
 
 .cell-content {
     display: block;
-    white-space: pre-line;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .cell-array {
@@ -1412,6 +1414,9 @@ body {
     padding: 2px 0;
     border-bottom: 1px solid var(--border-color);
     line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .cell-array-item:last-child {
