@@ -1,6 +1,7 @@
 import { appContext } from './AppContext.js';
 import { progressOverlay } from './ProgressOverlay.js';
 import { applySelectionToCy, expandSelectionWithConnections } from './FilterSelectionUtils.js';
+import { evaluateCondition } from './FilterEval.js';
 
 /**
  * FilterPanel - フィルターパネル管理クラス
@@ -447,32 +448,36 @@ export class FilterPanel {
         
         // フィルター処理を非同期で実行（UIをブロックしないため）
         setTimeout(() => {
-            // フィルター処理
-            const nodes = appContext.networkManager.cy.nodes();
-            const edges = appContext.networkManager.cy.edges();
-            
-            const matchedNodes = [];
-            const matchedEdges = [];
-            
-            // ノードをフィルタリング
-            nodes.forEach(node => {
-                if (this.evaluateConditions(node, 'node', validConditions)) {
-                    matchedNodes.push(node);
-                }
-            });
-            
-            // エッジをフィルタリング
-            edges.forEach(edge => {
-                if (this.evaluateConditions(edge, 'edge', validConditions)) {
-                    matchedEdges.push(edge);
-                }
-            });
-            
-            // 結果を適用
-            this.applyFilterResults(matchedNodes, matchedEdges, validConditions);
-            
-            // プログレスオーバーレイを非表示
-            progressOverlay.hide();
+            try {
+                // フィルター処理
+                const nodes = appContext.networkManager.cy.nodes();
+                const edges = appContext.network_manager ? appContext.network_manager.cy.edges() : appContext.networkManager.cy.edges();
+
+                const matchedNodes = [];
+                const matchedEdges = [];
+
+                // ノードをフィルタリング
+                nodes.forEach(node => {
+                    if (this.evaluateConditions(node, 'node', validConditions)) {
+                        matchedNodes.push(node);
+                    }
+                });
+
+                // エッジをフィルタリング
+                edges.forEach(edge => {
+                    if (this.evaluateConditions(edge, 'edge', validConditions)) {
+                        matchedEdges.push(edge);
+                    }
+                });
+
+                // 結果を適用
+                this.applyFilterResults(matchedNodes, matchedEdges, validConditions);
+            } catch (err) {
+                console.error('FilterPanel.applyFilter error', err);
+            } finally {
+                // プログレスオーバーレイを必ず非表示
+                progressOverlay.hide();
+            }
         }, 50);
     }
 
@@ -503,66 +508,46 @@ export class FilterPanel {
     /**
      * 条件を評価
      */
+
+    /**
+     * 単一条件を評価
+     */
     evaluateConditions(element, elementType, conditions) {
         // この要素タイプに関連する条件のみを抽出
         const relevantConditions = conditions.filter(c => {
             const [type] = c.column.split('.');
             return type === elementType;
         });
-        
+
         // この要素タイプに関連する条件がない場合はfalseを返す
         if (relevantConditions.length === 0) {
             return false;
         }
-        
+
         let result = true;
-        let lastLogicalOp = 'OR'; // 初期値（最初の条件用、実際には使われない）
-        
+        let lastLogicalOp = 'OR';
+
         for (let i = 0; i < relevantConditions.length; i++) {
             const condition = relevantConditions[i];
-            const [type, columnName] = condition.column.split('.');
-            
+            const [, columnName] = condition.column.split('.');
+
             const value = element.data(columnName);
-            const conditionResult = this.evaluateCondition(value, condition.operator, condition.value);
-            
-            // 最初の条件はそのまま使用
+            const conditionResult = evaluateCondition(value, condition.operator, condition.value);
+
             if (i === 0) {
                 result = conditionResult;
-            } else {
-                // 論理演算子で結合
-                if (lastLogicalOp === 'AND') {
-                    result = result && conditionResult;
-                } else if (lastLogicalOp === 'OR') {
-                    result = result || conditionResult;
-                } else if (lastLogicalOp === 'NOT') {
-                    result = result && !conditionResult;
-                }
+            } else if (lastLogicalOp === 'AND') {
+                result = result && conditionResult;
+            } else if (lastLogicalOp === 'OR') {
+                result = result || conditionResult;
+            } else if (lastLogicalOp === 'NOT') {
+                result = result && !conditionResult;
             }
-            
-            // 次の条件のために論理演算子を保存
+
             lastLogicalOp = condition.logicalOp || 'OR';
         }
-        
-        return result;
-    }
 
-    /**
-     * 単一条件を評価
-     */
-    evaluateCondition(value, operator, targetValue) {
-        // nullやundefinedの処理
-        if (value === null || value === undefined) {
-            value = '';
-        }
-        
-        // 配列の場合は各要素をチェック
-        if (Array.isArray(value)) {
-            // 配列の要素のいずれかが条件に合致すればtrueを返す
-            return value.some(item => this.evaluateSingleValue(item, operator, targetValue));
-        }
-        
-        // 単一値の場合
-        return this.evaluateSingleValue(value, operator, targetValue);
+        return result;
     }
 
     /**

@@ -92,6 +92,9 @@ export class NetworkManager {
     setupEventListeners() {
         // 選択時のスタイル変更
         this.cy.on('select', 'node', (event) => {
+            // テーブル／フィルタ側からのプログラム的な選択変更中は処理をスキップ
+            if (appContext.tablePanel && (appContext.tablePanel.isFilterSelecting || appContext.tablePanel.isClearingSelection)) return;
+
             const node = event.target;
             // ホバー中ならピンク色ではなく、ホバー前の色を保存
             const hoverBg = node.data('_hoverOriginalBg');
@@ -116,6 +119,9 @@ export class NetworkManager {
         });
 
         this.cy.on('unselect', 'node', (event) => {
+            // テーブル／フィルタ側からのプログラム的な選択変更中は処理をスキップ
+            if (appContext.tablePanel && (appContext.tablePanel.isFilterSelecting || appContext.tablePanel.isClearingSelection)) return;
+
             const node = event.target;
             const originalBg = node.data('_originalBg');
             if (typeof originalBg !== 'undefined') {
@@ -131,6 +137,9 @@ export class NetworkManager {
         });
 
         this.cy.on('select', 'edge', (event) => {
+            // テーブル／フィルタ側からのプログラム的な選択変更中は処理をスキップ
+            if (appContext.tablePanel && (appContext.tablePanel.isFilterSelecting || appContext.tablePanel.isClearingSelection)) return;
+
             const edge = event.target;
             const currentColor = edge.style('line-color');
             const currentWidth = edge.style('width');
@@ -160,6 +169,9 @@ export class NetworkManager {
         });
 
         this.cy.on('unselect', 'edge', (event) => {
+            // テーブル／フィルタ側からのプログラム的な選択変更中は処理をスキップ
+            if (appContext.tablePanel && (appContext.tablePanel.isFilterSelecting || appContext.tablePanel.isClearingSelection)) return;
+
             const edge = event.target;
             const originalColor = edge.data('_originalLineColor');
             const originalWidth = edge.data('_originalWidth');
@@ -172,9 +184,33 @@ export class NetworkManager {
             }
         });
 
-        // 背景クリックで選択解除
+        // 背景クリックで選択解除 / パネルのフィルター値クリア
         this.cy.on('tap', (event) => {
             if (event.target === this.cy) {
+                // まずFilterPanelに条件があれば優先的にクリア（FilterPanel.clearFilter がテーブル側も処理する）
+                if (appContext.filterPanel && typeof appContext.filterPanel.hasActiveConditions === 'function' && appContext.filterPanel.hasActiveConditions()) {
+                    appContext.filterPanel.clearFilter();
+                    return;
+                }
+
+                // TablePanelの入力フィルターや外部フィルターが設定されている場合はクリア
+                if (appContext.tablePanel) {
+                    const tp = appContext.tablePanel;
+                    const nodeFiltersActive = Object.values(tp.nodeFilters || {}).some(v => v && String(v).trim() !== '');
+                    const edgeFiltersActive = Object.values(tp.edgeFilters || {}).some(v => v && String(v).trim() !== '');
+                    const externalActive = (tp.externalFilteredNodes && tp.externalFilteredNodes.length > 0) || (tp.externalFilteredEdges && tp.externalFilteredEdges.length > 0);
+
+                    if (nodeFiltersActive || edgeFiltersActive) {
+                        // フィルター値をクリアしてテーブル更新
+                        tp.clearAllFiltersAllTabs();
+                    }
+
+                    if (externalActive) {
+                        tp.clearExternalFilterResults();
+                    }
+                }
+
+                // 最後に選択を解除
                 if (appContext.tablePanel && typeof appContext.tablePanel.clearSelection === 'function') {
                     appContext.tablePanel.clearSelection();
                 } else {
