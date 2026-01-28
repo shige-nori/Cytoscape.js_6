@@ -80,14 +80,7 @@ export class LayoutTools {
             radio.addEventListener('change', (e) => this.handleScaleAxisChange(e.target.value));
         });
 
-        // ネットワーク図の空白クリックでパネルを閉じる
-        if (appContext.networkManager && appContext.networkManager.cy) {
-            appContext.networkManager.cy.on('tap', (e) => {
-                if (e.target === appContext.networkManager.cy && this.panel && this.panel.classList.contains('active')) {
-                    this.closePanel();
-                }
-            });
-        }
+        // 空白クリックで閉じる挙動は無効化
     }
 
     setupDraggable() {

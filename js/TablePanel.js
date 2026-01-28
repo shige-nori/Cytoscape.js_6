@@ -1,4 +1,5 @@
 import { appContext } from './AppContext.js';
+import { applySelectionToCy, expandSelectionWithConnections } from './FilterSelectionUtils.js';
 
 /**
  * TablePanel - テーブルパネル管理クラス
@@ -35,6 +36,12 @@ export class TablePanel {
         this._lastEdgeSelectionIds = '';
         this._lastEdgeFilterString = '';
         this._lastEdgeVisibleColumns = '';
+        this.isFilterSelecting = false;
+        this.isClearingSelection = false;
+        this.externalFilteredNodes = null;
+        this.externalFilteredEdges = null;
+        this.externalFilterConditions = null;
+        this.tableFilterConditions = { node: [], edge: [] };
     }
 
     initialize() {
@@ -76,6 +83,25 @@ export class TablePanel {
             columnBtn.addEventListener('click', () => this.openColumnSettings());
         }
 
+        // フィルター適用ボタン
+        const filterApplyBtn = document.getElementById('table-filter-apply-btn');
+        if (filterApplyBtn) {
+            filterApplyBtn.addEventListener('click', () => {
+                this.applyFilters(this.currentTab);
+            });
+        }
+
+        // フィルター解除ボタン
+        const filterClearBtn = document.getElementById('table-filter-clear-btn');
+        if (filterClearBtn) {
+            filterClearBtn.addEventListener('click', () => {
+                this.clearAllFiltersAllTabs();
+                if (appContext.filterPanel && appContext.filterPanel.isVisible) {
+                    appContext.filterPanel.clearFilter();
+                }
+            });
+        }
+
         // 閉じるボタン
         const closeBtn = document.getElementById('table-panel-close-btn');
         if (closeBtn) {
@@ -103,21 +129,11 @@ export class TablePanel {
 
         // Cytoscape選択イベントとの連動
         if (appContext.networkManager && appContext.networkManager.cy) {
-            // ネットワーク図の空き領域クリックでフィルタークリア
-            appContext.networkManager.cy.on('tap', (e) => {
-                if (e.target === appContext.networkManager.cy && this.isVisible) {
-                    // フィルターが空かつ全ノード・エッジ未選択なら何もしない
-                    const hasNodeFilter = Object.values(this.nodeFilters).some(v => v);
-                    const hasEdgeFilter = Object.values(this.edgeFilters).some(v => v);
-                    const anySelected = appContext.networkManager.cy.$(':selected').length > 0;
-                    if (!hasNodeFilter && !hasEdgeFilter && !anySelected) return;
-                    this.clearAllFilters();
-                    // 選択があればテーブル再描画
-                    if (anySelected) this.refreshTable();
-                }
-            });
-            
             appContext.networkManager.cy.on('select', (e) => {
+                if (this.isFilterSelecting || this.isClearingSelection) return;
+
+                this.applySelectionClosureFromCurrentSelection();
+
                 if (this.isVisible) {
                     // 選択されたノード/エッジのみテーブルに表示（遅延描画）
                     this.clearAllFilters();
@@ -132,6 +148,10 @@ export class TablePanel {
             });
             
             appContext.networkManager.cy.on('unselect', (e) => {
+                if (this.isFilterSelecting || this.isClearingSelection) return;
+
+                this.applySelectionClosureFromCurrentSelection();
+
                 if (this.isVisible) {
                     // 選択解除時は全ノード/エッジをテーブルに表示（遅延描画）
                     this.clearAllFilters();
@@ -384,11 +404,15 @@ export class TablePanel {
         if (!tbody || !thead) return;
 
         // 選択されたノードがあればそれらのみ、なければ全て
+        const allNodes = appContext.networkManager.cy.nodes();
         const selectedNodes = appContext.networkManager.cy.nodes(':selected');
-        const nodes = selectedNodes.length > 0 ? selectedNodes : appContext.networkManager.cy.nodes();
+        const hasExternal = this.externalFilteredNodes !== null;
+        const nodes = hasExternal
+            ? this.externalFilteredNodes
+            : (selectedNodes.length > 0 ? selectedNodes : allNodes);
         
         // キャッシュ用: 選択ID、フィルター状態、表示カラムを文字列化
-        const selectedIds = Array.from(selectedNodes).map(n => n.id()).sort().join(',');
+        const selectedIds = (hasExternal ? 'external:' : 'selection:') + Array.from(nodes).map(n => n.id()).sort().join(',');
         const filterString = JSON.stringify(this.nodeFilters);
         const visibleColumnsString = Array.from(this.visibleNodeColumns).sort().join(',');
         if (selectedIds === this._lastNodeSelectionIds && 
@@ -402,7 +426,7 @@ export class TablePanel {
         this._lastNodeVisibleColumns = visibleColumnsString;
         
         // 利用可能なカラムを更新
-        this.updateAvailableColumns('node', nodes);
+        this.updateAvailableColumns('node', allNodes);
         
         if (recreateHeader) {
             // ヘッダーを生成
@@ -509,6 +533,9 @@ export class TablePanel {
         
         // フィルター適用
         nodeData = this.filterData(nodeData, this.nodeFilters);
+
+        // 外部フィルターの表示オーバーライド適用
+        this.applyExternalFilterOverrides(nodeData, 'node');
         
         nodeData.forEach(rowData => {
             const tr = document.createElement('tr');
@@ -556,11 +583,15 @@ export class TablePanel {
         if (!tbody || !thead) return;
 
         // 選択されたエッジがあればそれらのみ、なければ全て
+        const allEdges = appContext.networkManager.cy.edges();
         const selectedEdges = appContext.networkManager.cy.edges(':selected');
-        const edges = selectedEdges.length > 0 ? selectedEdges : appContext.networkManager.cy.edges();
+        const hasExternal = this.externalFilteredEdges !== null;
+        const edges = hasExternal
+            ? this.externalFilteredEdges
+            : (selectedEdges.length > 0 ? selectedEdges : allEdges);
         
         // キャッシュ用: 選択ID、フィルター状態、表示カラムを文字列化
-        const selectedIds = Array.from(selectedEdges).map(e => e.id()).sort().join(',');
+        const selectedIds = (hasExternal ? 'external:' : 'selection:') + Array.from(edges).map(e => e.id()).sort().join(',');
         const filterString = JSON.stringify(this.edgeFilters);
         const visibleColumnsString = Array.from(this.visibleEdgeColumns).sort().join(',');
         if (selectedIds === this._lastEdgeSelectionIds && 
@@ -574,7 +605,7 @@ export class TablePanel {
         this._lastEdgeVisibleColumns = visibleColumnsString;
         
         // 利用可能なカラムを更新
-        this.updateAvailableColumns('edge', edges);
+        this.updateAvailableColumns('edge', allEdges);
         
         if (recreateHeader) {
             // ヘッダーを生成
@@ -679,6 +710,9 @@ export class TablePanel {
         
         // フィルター適用
         edgeData = this.filterData(edgeData, this.edgeFilters);
+
+        // 外部フィルターの表示オーバーライド適用
+        this.applyExternalFilterOverrides(edgeData, 'edge');
         
         edgeData.forEach(rowData => {
             const tr = document.createElement('tr');
@@ -852,10 +886,242 @@ export class TablePanel {
         });
     }
 
+    getExternalConditionsByType(type) {
+        if (!Array.isArray(this.externalFilterConditions)) return [];
+        return this.externalFilterConditions.filter(c => c.column && c.value && c.column.startsWith(`${type}.`));
+    }
+
+    getTableConditionsByType(type) {
+        if (!this.tableFilterConditions || !Array.isArray(this.tableFilterConditions[type])) return [];
+        return this.tableFilterConditions[type].filter(c => c.column && c.value && c.column.startsWith(`${type}.`));
+    }
+
+    getCombinedConditionsByType(type) {
+        return [...this.getExternalConditionsByType(type), ...this.getTableConditionsByType(type)];
+    }
+
+    buildTableFilterConditions(type) {
+        const filters = type === 'node' ? this.nodeFilters : this.edgeFilters;
+        return Object.keys(filters)
+            .filter(col => filters[col] && String(filters[col]).trim() !== '')
+            .map(col => ({
+                column: `${type}.${col}`,
+                operator: 'contains',
+                value: String(filters[col]),
+                logicalOp: 'AND'
+            }));
+    }
+
+    evaluateExternalConditionValue(value, operator, targetValue) {
+        if (value === null || value === undefined) {
+            value = '';
+        }
+
+        if (operator === 'contains') {
+            const rawValue = String(value).toLowerCase();
+            const rawTarget = String(targetValue).toLowerCase();
+            return rawValue.includes(rawTarget);
+        }
+
+        const numValue = Number(value);
+        const numTarget = Number(targetValue);
+        const isNumeric = !isNaN(numValue) && !isNaN(numTarget) && value !== '' && targetValue !== '';
+
+        if (isNumeric) {
+            switch (operator) {
+                case '=': return numValue === numTarget;
+                case '>=': return numValue >= numTarget;
+                case '>': return numValue > numTarget;
+                case '<': return numValue < numTarget;
+                case '<=': return numValue <= numTarget;
+                case '<>': return numValue !== numTarget;
+                default: return false;
+            }
+        }
+
+        const ymdRegex = /^\d{4}-\d{2}-\d{2}$/;
+        const rawValue = String(value);
+        const rawTarget = String(targetValue);
+
+        if (ymdRegex.test(rawValue) && ymdRegex.test(rawTarget)) {
+            switch (operator) {
+                case '=': return rawValue === rawTarget;
+                case '>=': return rawValue >= rawTarget;
+                case '>': return rawValue > rawTarget;
+                case '<': return rawValue < rawTarget;
+                case '<=': return rawValue <= rawTarget;
+                case '<>': return rawValue !== rawTarget;
+                default: return false;
+            }
+        }
+
+        const strValue = rawValue.toLowerCase();
+        const strTarget = rawTarget.toLowerCase();
+
+        switch (operator) {
+            case '=': return strValue === strTarget;
+            case '>=': return strValue >= strTarget;
+            case '>': return strValue > strTarget;
+            case '<': return strValue < strTarget;
+            case '<=': return strValue <= strTarget;
+            case '<>': return strValue !== strTarget;
+            default: return false;
+        }
+    }
+
+    evaluateExternalConditionSequence(value, conditions) {
+        let result = true;
+        let lastLogicalOp = 'OR';
+
+        for (let i = 0; i < conditions.length; i++) {
+            const condition = conditions[i];
+            const conditionResult = this.evaluateExternalConditionValue(value, condition.operator, condition.value);
+
+            if (i === 0) {
+                result = conditionResult;
+            } else if (lastLogicalOp === 'AND') {
+                result = result && conditionResult;
+            } else if (lastLogicalOp === 'OR') {
+                result = result || conditionResult;
+            } else if (lastLogicalOp === 'NOT') {
+                result = result && !conditionResult;
+            }
+
+            lastLogicalOp = condition.logicalOp || 'OR';
+        }
+
+        return result;
+    }
+
+    getMatchedIndicesForArray(items, conditions) {
+        if (!items || items.length === 0 || !conditions || conditions.length === 0) return [];
+
+        let resultSet = null;
+        let lastLogicalOp = 'OR';
+
+        conditions.forEach((condition, index) => {
+            const matched = items
+                .map((item, idx) => ({ item, idx }))
+                .filter(({ item }) => this.evaluateExternalConditionValue(item, condition.operator, condition.value))
+                .map(({ idx }) => idx);
+
+            const matchedSet = new Set(matched);
+
+            if (index === 0) {
+                resultSet = new Set(matched);
+            } else if (lastLogicalOp === 'AND') {
+                resultSet = new Set([...resultSet].filter(i => matchedSet.has(i)));
+            } else if (lastLogicalOp === 'OR') {
+                resultSet = new Set([...resultSet, ...matchedSet]);
+            } else if (lastLogicalOp === 'NOT') {
+                resultSet = new Set([...resultSet].filter(i => !matchedSet.has(i)));
+            }
+
+            lastLogicalOp = condition.logicalOp || 'OR';
+        });
+
+        return resultSet ? Array.from(resultSet).sort((a, b) => a - b) : [];
+    }
+
+    applyExternalFilterOverrides(data, type) {
+        const externalConditions = this.getCombinedConditionsByType(type);
+        const crossType = type === 'node' ? 'edge' : 'node';
+        const crossConditions = this.getCombinedConditionsByType(crossType);
+        if (externalConditions.length === 0 && crossConditions.length === 0) return;
+
+        const conditionsByColumn = new Map();
+        externalConditions.forEach(condition => {
+            const [, columnName] = condition.column.split('.');
+            if (!columnName) return;
+            if (!conditionsByColumn.has(columnName)) {
+                conditionsByColumn.set(columnName, []);
+            }
+            conditionsByColumn.get(columnName).push(condition);
+        });
+
+        const crossConditionsByColumn = new Map();
+        crossConditions.forEach(condition => {
+            const [, columnName] = condition.column.split('.');
+            if (!columnName) return;
+            if (!crossConditionsByColumn.has(columnName)) {
+                crossConditionsByColumn.set(columnName, []);
+            }
+            crossConditionsByColumn.get(columnName).push(condition);
+        });
+
+        data.forEach(row => {
+            if (!row) return;
+            row._displayOverrides = row._displayOverrides || {};
+
+            const arrayColumns = this.getArrayColumns(row);
+            let arrayMatchedIndices = null;
+
+            conditionsByColumn.forEach((conditions, columnName) => {
+                if (row[columnName] === undefined) return;
+
+                const items = this.getArrayItems(row[columnName]);
+                if (items && items.length > 0) {
+                    const matchedIndices = this.getMatchedIndicesForArray(items, conditions);
+                    if (arrayMatchedIndices === null) {
+                        arrayMatchedIndices = matchedIndices;
+                    } else {
+                        arrayMatchedIndices = arrayMatchedIndices.filter(i => matchedIndices.includes(i));
+                    }
+                } else {
+                    const matched = this.evaluateExternalConditionSequence(row[columnName], conditions);
+                    row._displayOverrides[columnName] = matched ? row[columnName] : '';
+                }
+            });
+
+            if (crossConditionsByColumn.size > 0 && arrayColumns.length > 0) {
+                let crossMatchedIndices = null;
+
+                arrayColumns.forEach(colName => {
+                    const conditionsForColumn = crossConditionsByColumn.get(colName);
+                    if (!conditionsForColumn || conditionsForColumn.length === 0) return;
+                    const items = this.getArrayItems(row[colName]);
+                    if (!items || items.length === 0) return;
+                    const matchedIndices = this.getMatchedIndicesForArray(items, conditionsForColumn);
+
+                    if (crossMatchedIndices === null) {
+                        crossMatchedIndices = matchedIndices;
+                    } else {
+                        crossMatchedIndices = crossMatchedIndices.filter(i => matchedIndices.includes(i));
+                    }
+                });
+
+                if (crossMatchedIndices !== null) {
+                    if (arrayMatchedIndices === null) {
+                        arrayMatchedIndices = crossMatchedIndices;
+                    } else {
+                        arrayMatchedIndices = arrayMatchedIndices.filter(i => crossMatchedIndices.includes(i));
+                    }
+                }
+            }
+
+            if (arrayMatchedIndices !== null && arrayColumns.length > 0) {
+                arrayColumns.forEach(colName => {
+                    const items = this.getArrayItems(row[colName]);
+                    if (items && items.length > 0) {
+                        row._displayOverrides[colName] = arrayMatchedIndices
+                            .map(i => items[i])
+                            .filter(v => v !== undefined);
+                    }
+                });
+            }
+        });
+    }
+
     /**
      * フィルターを適用してテーブルを再描画
      */
     applyFilters(type) {
+        if (type === 'node') {
+            this.tableFilterConditions.node = this.buildTableFilterConditions('node');
+        } else {
+            this.tableFilterConditions.edge = this.buildTableFilterConditions('edge');
+        }
+
         if (type === this.currentTab) {
             // フィルター適用時はヘッダーを再生成せず、tbodyのみ更新
             if (type === 'node') {
@@ -863,7 +1129,127 @@ export class TablePanel {
             } else {
                 this.renderEdgeTable(false);
             }
+            this.updateSelectionFromFilters(type);
         }
+    }
+
+    hasActiveFilters(type) {
+        const filters = type === 'node' ? this.nodeFilters : this.edgeFilters;
+        return Object.values(filters).some(v => v && v.trim() !== '');
+    }
+
+    getFilteredElements(type) {
+        if (!appContext.networkManager || !appContext.networkManager.cy) return [];
+        const cy = appContext.networkManager.cy;
+        if (type === 'node') {
+            const selectedNodes = cy.nodes(':selected');
+            const nodes = selectedNodes.length > 0 ? selectedNodes : cy.nodes();
+            let nodeData = nodes.map(node => {
+                const data = node.data();
+                const row = {};
+                Array.from(this.visibleNodeColumns).forEach(col => {
+                    row[col] = data[col] !== undefined ? data[col] : '';
+                });
+                row._element = node;
+                return row;
+            });
+            nodeData = this.filterData(nodeData, this.nodeFilters);
+            return nodeData.map(row => row._element);
+        }
+
+        const selectedEdges = cy.edges(':selected');
+        const edges = selectedEdges.length > 0 ? selectedEdges : cy.edges();
+        let edgeData = edges.map(edge => {
+            const data = edge.data();
+            const row = {};
+            Array.from(this.visibleEdgeColumns).forEach(col => {
+                row[col] = data[col] !== undefined ? data[col] : '';
+            });
+            row._element = edge;
+            return row;
+        });
+        edgeData = this.filterData(edgeData, this.edgeFilters);
+        return edgeData.map(row => row._element);
+    }
+
+    updateSelectionFromFilters(type) {
+        if (!this.hasActiveFilters(type)) return;
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
+
+        const elements = this.getFilteredElements(type);
+        const nodes = type === 'node' ? elements : [];
+        const edges = type === 'edge' ? elements : [];
+
+        this.applySelectionClosure(nodes, edges, { setOpacity: false });
+    }
+
+    applySelectionClosure(nodes, edges, options = {}) {
+        if (!appContext.networkManager || !appContext.networkManager.cy) {
+            return { nodes: [], edges: [] };
+        }
+
+        const cy = appContext.networkManager.cy;
+        const { nodes: expandedNodes, edges: expandedEdges } = expandSelectionWithConnections(cy, nodes, edges);
+
+        this.isFilterSelecting = true;
+        try {
+            applySelectionToCy(cy, expandedNodes, expandedEdges, options);
+        } finally {
+            this.isFilterSelecting = false;
+        }
+
+        return { nodes: expandedNodes, edges: expandedEdges };
+    }
+
+    applySelectionClosureFromCurrentSelection() {
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
+
+        const cy = appContext.networkManager.cy;
+        const selectedNodes = cy.nodes(':selected');
+        const selectedEdges = cy.edges(':selected');
+
+        if (selectedNodes.length === 0 && selectedEdges.length === 0) return;
+
+        this.applySelectionClosure(selectedNodes, selectedEdges, { setOpacity: false });
+    }
+
+    suppressSelectionSync(action) {
+        this.isFilterSelecting = true;
+        try {
+            action();
+        } finally {
+            this.isFilterSelecting = false;
+        }
+    }
+
+    clearSelection() {
+        if (!appContext.networkManager || !appContext.networkManager.cy) return;
+        this.isClearingSelection = true;
+        this.suppressSelectionSync(() => {
+            appContext.networkManager.cy.elements().unselect();
+            if (typeof appContext.networkManager.resetSelectionStyles === 'function') {
+                appContext.networkManager.resetSelectionStyles();
+            }
+        });
+        window.requestAnimationFrame(() => {
+            this.isClearingSelection = false;
+        });
+    }
+
+    setExternalFilterResults(nodes, edges, conditions = null) {
+        this.externalFilteredNodes = Array.isArray(nodes) ? nodes : null;
+        this.externalFilteredEdges = Array.isArray(edges) ? edges : null;
+        this.externalFilterConditions = Array.isArray(conditions) ? conditions : null;
+        this._lastNodeSelectionIds = null;
+        this._lastEdgeSelectionIds = null;
+    }
+
+    clearExternalFilterResults() {
+        this.externalFilteredNodes = null;
+        this.externalFilteredEdges = null;
+        this.externalFilterConditions = null;
+        this._lastNodeSelectionIds = null;
+        this._lastEdgeSelectionIds = null;
     }
 
     /**
@@ -882,7 +1268,10 @@ export class TablePanel {
                     break;
                 }
             }
-            if (cleared) this.nodeFilters = {};
+            if (cleared) {
+                this.nodeFilters = {};
+                this.tableFilterConditions.node = [];
+            }
         } else {
             for (const key in this.edgeFilters) {
                 if (this.edgeFilters[key]) {
@@ -890,9 +1279,37 @@ export class TablePanel {
                     break;
                 }
             }
-            if (cleared) this.edgeFilters = {};
+            if (cleared) {
+                this.edgeFilters = {};
+                this.tableFilterConditions.edge = [];
+            }
         }
         if (cleared) this.refreshTable();
+    }
+
+    clearAllFiltersAllTabs() {
+        let cleared = false;
+
+        if (Object.values(this.nodeFilters).some(v => v)) {
+            this.nodeFilters = {};
+            this.tableFilterConditions.node = [];
+            cleared = true;
+        }
+
+        if (Object.values(this.edgeFilters).some(v => v)) {
+            this.edgeFilters = {};
+            this.tableFilterConditions.edge = [];
+            cleared = true;
+        }
+
+        if (cleared) {
+            this._lastNodeFilterString = null;
+            this._lastEdgeFilterString = null;
+        }
+
+        if (cleared) {
+            this.refreshTable();
+        }
     }
 
     sortData(data, column) {

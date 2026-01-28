@@ -487,6 +487,7 @@ body {
     border-radius: 8px 8px 0 0;
     cursor: move;
     user-select: none;
+    position: relative;
 }
 
 .tools-panel-header h3 {
@@ -540,6 +541,12 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.style-panel-header-with-btn .tools-panel-close {
+    position: static;
+    transform: none;
+    margin-left: 8px;
 }
 
 .style-panel-buttons {
@@ -1300,6 +1307,20 @@ body {
     align-items: center;
 }
 
+.table-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 8px;
+    min-width: 28px;
+}
+
+.table-filter-icon {
+    display: block;
+    width: 16px;
+    height: 16px;
+}
+
 .table-panel-body {
     flex: 1;
     overflow: hidden;
@@ -1710,7 +1731,6 @@ body {
     gap: 6px;
 }
 
-#filter-clear-btn,
 #filter-apply-btn {
     padding: 6px 12px;
     border: none;

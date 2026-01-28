@@ -96,7 +96,12 @@ export class NetworkManager {
             // ホバー中ならピンク色ではなく、ホバー前の色を保存
             const hoverBg = node.data('_hoverOriginalBg');
             const currentBg = node.style('background-color');
-            node.data('_originalBg', hoverBg !== undefined ? hoverBg : currentBg);
+            if (node.data('_originalBg') === undefined) {
+                const baseBg = appContext.stylePanel
+                    ? appContext.stylePanel.getStyleValue(node, 'fillColor', appContext.stylePanel.nodeStyles.fillColor)
+                    : currentBg;
+                node.data('_originalBg', hoverBg !== undefined ? hoverBg : baseBg);
+            }
             node.style({
                 'background-color': '#eab308',
                 'border-width': 3,
@@ -113,7 +118,7 @@ export class NetworkManager {
         this.cy.on('unselect', 'node', (event) => {
             const node = event.target;
             const originalBg = node.data('_originalBg');
-            if (originalBg) {
+            if (typeof originalBg !== 'undefined') {
                 node.style('background-color', originalBg);
             }
             node.style({
@@ -129,8 +134,12 @@ export class NetworkManager {
             const edge = event.target;
             const currentColor = edge.style('line-color');
             const currentWidth = edge.style('width');
-            edge.data('_originalLineColor', currentColor);
-            edge.data('_originalWidth', currentWidth);
+            if (edge.data('_originalLineColor') === undefined) {
+                edge.data('_originalLineColor', currentColor);
+            }
+            if (edge.data('_originalWidth') === undefined) {
+                edge.data('_originalWidth', currentWidth);
+            }
             edge.style({
                 'line-color': '#ef4444',
                 'target-arrow-color': '#ef4444',
@@ -154,11 +163,11 @@ export class NetworkManager {
             const edge = event.target;
             const originalColor = edge.data('_originalLineColor');
             const originalWidth = edge.data('_originalWidth');
-            if (originalColor) {
+            if (typeof originalColor !== 'undefined') {
                 edge.style('line-color', originalColor);
                 edge.style('target-arrow-color', originalColor);
             }
-            if (originalWidth) {
+            if (typeof originalWidth !== 'undefined') {
                 edge.style('width', originalWidth);
             }
         });
@@ -166,7 +175,12 @@ export class NetworkManager {
         // 背景クリックで選択解除
         this.cy.on('tap', (event) => {
             if (event.target === this.cy) {
-                this.cy.elements().unselect();
+                if (appContext.tablePanel && typeof appContext.tablePanel.clearSelection === 'function') {
+                    appContext.tablePanel.clearSelection();
+                } else {
+                    this.cy.elements().unselect();
+                }
+                this.resetSelectionStyles();
             }
         });
 
@@ -431,6 +445,40 @@ export class NetworkManager {
             });
             this.hoveredElements = null;
         }
+    }
+
+    /**
+     * 選択スタイルを強制的に復元
+     * @param {Collection} elements
+     */
+    resetSelectionStyles(elements = null) {
+        const targetElements = elements || this.cy.elements();
+
+        targetElements.forEach(ele => {
+            if (ele.isNode()) {
+                const originalBg = ele.data('_originalBg');
+                if (typeof originalBg !== 'undefined') {
+                    ele.style('background-color', originalBg);
+                    ele.removeData('_originalBg');
+                }
+                ele.style({
+                    'border-width': appContext.stylePanel ? appContext.stylePanel.nodeStyles.borderWidth.value : 0,
+                    'border-color': appContext.stylePanel ? appContext.stylePanel.getStyleValue(ele, 'borderColor', appContext.stylePanel.nodeStyles.borderColor) : '#000000'
+                });
+            } else if (ele.isEdge()) {
+                const originalColor = ele.data('_originalLineColor');
+                const originalWidth = ele.data('_originalWidth');
+                if (typeof originalColor !== 'undefined') {
+                    ele.style('line-color', originalColor);
+                    ele.style('target-arrow-color', originalColor);
+                    ele.removeData('_originalLineColor');
+                }
+                if (typeof originalWidth !== 'undefined') {
+                    ele.style('width', originalWidth);
+                    ele.removeData('_originalWidth');
+                }
+            }
+        });
     }
 
     /**

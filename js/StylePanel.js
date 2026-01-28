@@ -64,6 +64,7 @@ export class StylePanel {
                         <button id="style-cancel-btn" class="btn btn-secondary style-cancel-btn">Cancel</button>
                         <button id="style-apply-btn" class="btn btn-primary style-apply-btn">Apply</button>
                     </div>
+                    <button class="tools-panel-close" id="style-panel-close-btn">&times;</button>
                 </div>
                 <div class="style-panel-tabs">
                     <button class="style-tab active" data-tab="node">Node</button>
@@ -587,6 +588,11 @@ export class StylePanel {
             cancelBtn.addEventListener('click', () => this.cancelStyles());
         }
 
+        const closeBtn = document.getElementById('style-panel-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closePanel());
+        }
+
         // マッピングタイプ変更
         document.querySelectorAll('.style-mapping-type').forEach(select => {
             select.addEventListener('change', (e) => {
@@ -601,14 +607,7 @@ export class StylePanel {
             });
         });
 
-        // ネットワーク図の空白クリックでパネルを閉じる
-        if (appContext.networkManager && appContext.networkManager.cy) {
-            appContext.networkManager.cy.on('tap', (e) => {
-                if (e.target === appContext.networkManager.cy && this.panel && this.panel.classList.contains('active')) {
-                    this.closePanel();
-                }
-            });
-        }
+        // 空白クリックで閉じる挙動は無効化
     }
 
     setupNodeStyleListeners() {

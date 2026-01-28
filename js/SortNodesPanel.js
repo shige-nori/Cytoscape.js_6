@@ -32,13 +32,10 @@ export class SortNodesPanel {
             });
         }
 
-        // ネットワーク図の空白クリックでパネルを閉じる
-        if (appContext.networkManager && appContext.networkManager.cy) {
-            appContext.networkManager.cy.on('tap', (e) => {
-                if (e.target === appContext.networkManager.cy && this.panel && this.panel.classList.contains('active')) {
-                    this.closePanel();
-                }
-            });
+        // 閉じるボタン
+        const closeBtn = document.getElementById('sort-nodes-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closePanel());
         }
     }
 

@@ -26,6 +26,11 @@ export class EdgeBends {
         const bendStrengthSlider = document.getElementById('bend-strength-slider') || document.getElementById('edge-bends-slider');
         const bendValueEl = document.getElementById('bend-strength-value') || document.getElementById('edge-bends-value-input');
 
+        const closeBtn = document.getElementById('edge-bends-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => this.closePanel());
+        }
+
         if (bendStrengthSlider) {
             bendStrengthSlider.addEventListener('input', (e) => {
                 this.currentBendStrength = parseFloat(e.target.value);
@@ -49,14 +54,7 @@ export class EdgeBends {
             });
         }
 
-        // ネットワーク図の空白クリックでパネルを閉じる
-        if (appContext.networkManager && appContext.networkManager.cy) {
-            appContext.networkManager.cy.on('tap', (e) => {
-                if (e.target === appContext.networkManager.cy && this.panel && this.panel.classList.contains('active')) {
-                    this.closePanel();
-                }
-            });
-        }
+        // 空白クリックで閉じる挙動は無効化
     }
 
     setupPanelDrag() {

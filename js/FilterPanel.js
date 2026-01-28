@@ -1,5 +1,6 @@
 import { appContext } from './AppContext.js';
 import { progressOverlay } from './ProgressOverlay.js';
+import { applySelectionToCy, expandSelectionWithConnections } from './FilterSelectionUtils.js';
 
 /**
  * FilterPanel - フィルターパネル管理クラス
@@ -117,6 +118,10 @@ export class FilterPanel {
         } else {
             this.openPanel();
         }
+    }
+
+    hasActiveConditions() {
+        return this.conditions.some(c => c.column && c.value);
     }
 
     /**
@@ -464,7 +469,7 @@ export class FilterPanel {
             });
             
             // 結果を適用
-            this.applyFilterResults(matchedNodes, matchedEdges);
+            this.applyFilterResults(matchedNodes, matchedEdges, validConditions);
             
             // プログレスオーバーレイを非表示
             progressOverlay.hide();
@@ -623,43 +628,29 @@ export class FilterPanel {
     /**
      * フィルター結果を適用
      */
-    applyFilterResults(matchedNodes, matchedEdges) {
+    applyFilterResults(matchedNodes, matchedEdges, conditions = null) {
         if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
-        
-        const allNodes = appContext.networkManager.cy.nodes();
-        const allEdges = appContext.networkManager.cy.edges();
+
+        const cy = appContext.networkManager.cy;
+        const { nodes: expandedNodes, edges: expandedEdges } = expandSelectionWithConnections(cy, matchedNodes, matchedEdges);
         
         // すべての選択を解除
-        appContext.networkManager.cy.elements().unselect();
+        if (appContext.tablePanel) {
+            const expanded = appContext.tablePanel.applySelectionClosure(expandedNodes, expandedEdges, { setOpacity: true });
+            matchedNodes = expanded.nodes;
+            matchedEdges = expanded.edges;
+        } else {
+            applySelectionToCy(cy, expandedNodes, expandedEdges, { setOpacity: true });
+            matchedNodes = expandedNodes;
+            matchedEdges = expandedEdges;
+        }
         
-        // 選択可能にしてから選択（Path Trace等で選択が無効でも反映するため）
-        matchedNodes.forEach(node => node.selectify());
-        matchedEdges.forEach(edge => edge.selectify());
-
-        // 条件に合致した要素を選択
-        matchedNodes.forEach(node => node.select());
-        matchedEdges.forEach(edge => edge.select());
-        
-        // 条件に合致しない要素を薄く表示（透明度80%）
-        allNodes.forEach(node => {
-            if (!matchedNodes.includes(node)) {
-                node.style('opacity', 0.8);
-            } else {
-                node.style('opacity', 1);
+        // Table Panelを更新（抽出結果を連動）
+        if (appContext.tablePanel) {
+            appContext.tablePanel.setExternalFilterResults(matchedNodes, matchedEdges, conditions);
+            if (appContext.tablePanel.isVisible) {
+                appContext.tablePanel.refreshTable();
             }
-        });
-        
-        allEdges.forEach(edge => {
-            if (!matchedEdges.includes(edge)) {
-                edge.style('opacity', 0.8);
-            } else {
-                edge.style('opacity', 1);
-            }
-        });
-        
-        // Table Panelを更新
-        if (appContext.tablePanel && appContext.tablePanel.isVisible) {
-            appContext.tablePanel.refreshTable();
         }
         
     }
@@ -671,7 +662,11 @@ export class FilterPanel {
         if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
         
         // すべての選択を解除
-        appContext.networkManager.cy.elements().unselect();
+        if (appContext.tablePanel && typeof appContext.tablePanel.clearSelection === 'function') {
+            appContext.tablePanel.clearSelection();
+        } else {
+            appContext.networkManager.cy.elements().unselect();
+        }
         
         // すべての要素の透明度をリセット
         appContext.networkManager.cy.elements().style('opacity', 1);
@@ -680,9 +675,13 @@ export class FilterPanel {
         this.conditions = [];
         this.addCondition();
         
-        // Table Panelを更新
-        if (appContext.tablePanel && appContext.tablePanel.isVisible) {
-            appContext.tablePanel.refreshTable();
+        // Table Panelを更新（外部フィルターを解除）
+        if (appContext.tablePanel) {
+            appContext.tablePanel.clearExternalFilterResults();
+            appContext.tablePanel.clearAllFiltersAllTabs();
+            if (appContext.tablePanel.isVisible) {
+                appContext.tablePanel.refreshTable();
+            }
         }
         
     }
