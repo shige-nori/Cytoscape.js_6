@@ -167,6 +167,7 @@ export class MenuManager {
                 appContext.sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
                 if (appContext.stylePanel) appContext.stylePanel.closePanel(); // Style Panelを閉じる
                 if (appContext.pathTracePanel) appContext.pathTracePanel.closePanel(); // Path Traceパネルを閉じる
+                if (appContext.annotationPanel) appContext.annotationPanel.closePanel(); // Annotationパネルを閉じる
                 appContext.layoutTools.openPanel();
             }
             this.closeAllMenus();
@@ -179,6 +180,7 @@ export class MenuManager {
                 appContext.sortNodesPanel.closePanel(); // Sort Nodesパネルを閉じる
                 if (appContext.stylePanel) appContext.stylePanel.closePanel(); // Style Panelを閉じる
                 if (appContext.pathTracePanel) appContext.pathTracePanel.closePanel(); // Path Traceパネルを閉じる
+                if (appContext.annotationPanel) appContext.annotationPanel.closePanel(); // Annotationパネルを閉じる
                 appContext.edgeBends.openPanel();
             }
             this.closeAllMenus();
@@ -191,6 +193,7 @@ export class MenuManager {
                 appContext.edgeBends.closePanel();
                 if (appContext.stylePanel) appContext.stylePanel.closePanel();
                 if (appContext.pathTracePanel) appContext.pathTracePanel.closePanel();
+                if (appContext.annotationPanel) appContext.annotationPanel.closePanel();
                 appContext.sortNodesPanel.openPanel();
             }
             this.closeAllMenus();
@@ -203,6 +206,7 @@ export class MenuManager {
                 appContext.edgeBends.closePanel();
                 appContext.sortNodesPanel.closePanel();
                 if (appContext.pathTracePanel) appContext.pathTracePanel.closePanel();
+                if (appContext.annotationPanel) appContext.annotationPanel.closePanel();
                 if (appContext.stylePanel) appContext.stylePanel.openPanel();
             }
             this.closeAllMenus();
@@ -231,6 +235,7 @@ export class MenuManager {
                 appContext.edgeBends.closePanel();
                 appContext.sortNodesPanel.closePanel();
                 if (appContext.stylePanel) appContext.stylePanel.closePanel();
+                if (appContext.annotationPanel) appContext.annotationPanel.closePanel();
                 if (appContext.pathTracePanel) appContext.pathTracePanel.openPanel();
             }
             this.closeAllMenus();
@@ -240,10 +245,15 @@ export class MenuManager {
         // Annotation メニュー
         // ============================================
         
-        // Open Annotation Panel
+        // Open Annotation Panel (close other panels first)
         document.getElementById('open-annotation-panel')?.addEventListener('click', () => {
             if (appContext.networkManager.hasNetwork()) {
-                appContext.annotationPanel?.togglePanel();
+                appContext.layoutTools.closePanel();
+                appContext.edgeBends.closePanel();
+                appContext.sortNodesPanel.closePanel();
+                if (appContext.stylePanel) appContext.stylePanel.closePanel();
+                if (appContext.pathTracePanel) appContext.pathTracePanel.closePanel();
+                if (appContext.annotationPanel) appContext.annotationPanel.openPanel();
             }
             this.closeAllMenus();
         });
