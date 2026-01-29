@@ -46,6 +46,36 @@ export class StylePanel {
         this.committedNodeStyles = JSON.parse(JSON.stringify(this.nodeStyles));
         this.committedEdgeStyles = JSON.parse(JSON.stringify(this.edgeStyles));
         this.committedNetworkStyles = JSON.parse(JSON.stringify(this.networkStyles));
+        // 古い設定で 'passthrough' が残っている場合に備え、正規化する
+        this.normalizePassthroughTypes();
+    }
+
+    // 古い 'passthrough' タイプを削除して安全な 'default' に正規化する
+    normalizePassthroughTypes() {
+        const normalize = (styles) => {
+            Object.keys(styles).forEach(prop => {
+                const cfg = styles[prop];
+                if (!cfg || typeof cfg !== 'object') return;
+                if (cfg.type === 'passthrough') {
+                    cfg.type = 'default';
+                    cfg.attribute = null;
+                    cfg.mapping = null;
+                }
+                if (cfg.base && cfg.base.type === 'passthrough') {
+                    cfg.base.type = 'default';
+                    cfg.base.attribute = null;
+                    cfg.base.mapping = null;
+                }
+            });
+        };
+
+        try {
+            if (this.nodeStyles) normalize(this.nodeStyles);
+            if (this.edgeStyles) normalize(this.edgeStyles);
+            if (this.networkStyles) normalize(this.networkStyles);
+        } catch (err) {
+            console.warn('StylePanel: normalizePassthroughTypes error', err);
+        }
     }
 
     initialize() {
@@ -105,7 +135,6 @@ export class StylePanel {
                         <option value="default" selected>Default</option>
                         <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
-                        <option value="passthrough">Passthrough</option>
                         <option value="continuous">Continuous</option>
                     </select>
                     <input type="color" class="style-color-input" id="node-fillColor" value="#2563eb">
@@ -133,7 +162,6 @@ export class StylePanel {
                         <option value="default" selected>Default</option>
                         <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
-                        <option value="passthrough">Passthrough</option>
                     </select>
                     <select class="style-select" id="node-shape">
                         <option value="ellipse">Ellipse</option>
@@ -230,7 +258,6 @@ export class StylePanel {
                         <option value="default" selected>Default</option>
                         <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
-                        <option value="passthrough">Passthrough</option>
                         <option value="continuous">Continuous</option>
                     </select>
                     <input type="color" class="style-color-input" id="node-labelColor" value="#000000">
@@ -296,7 +323,6 @@ export class StylePanel {
                         <option value="default" selected>Default</option>
                         <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
-                        <option value="passthrough">Passthrough</option>
                         <option value="continuous">Continuous</option>
                     </select>
                     <input type="color" class="style-color-input" id="node-borderColor" value="#000000">
@@ -350,7 +376,6 @@ export class StylePanel {
                         <option value="default" selected>Default</option>
                         <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
-                        <option value="passthrough">Passthrough</option>
                         <option value="continuous">Continuous</option>
                     </select>
                     <input type="color" class="style-color-input" id="edge-lineColor" value="#94a3b8">
@@ -406,7 +431,6 @@ export class StylePanel {
                         <option value="default" selected>Default</option>
                         <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
-                        <option value="passthrough">Passthrough</option>
                     </select>
                     <select class="style-select" id="edge-style">
                         <option value="solid">Solid</option>
@@ -431,7 +455,6 @@ export class StylePanel {
                         <option value="default" selected>Default</option>
                         <option value="bypass">Bypass</option>
                         <option value="discrete">Discrete</option>
-                        <option value="passthrough">Passthrough</option>
                     </select>
                     <select class="style-select" id="edge-targetArrow">
                         <option value="none">None</option>
@@ -1032,12 +1055,6 @@ export class StylePanel {
                     this.buildDiscreteMappingTable(discreteDiv, property, element, selectedAttr);
                     discreteDiv.classList.remove('hidden');
                 }
-            }
-        } else if (mappingType === 'passthrough') {
-            // Passthroughモード: 属性選択のみ表示
-            if (attrSelect) {
-                attrSelect.classList.remove('hidden');
-                this.updateAttributeOptions(attrSelect, element);
             }
         } else if (mappingType === 'continuous') {
             // Continuousモード: 属性選択と範囲設定を表示
@@ -1728,12 +1745,7 @@ export class StylePanel {
             }
             return value; // デフォルト値
         }
-
-        if (type === 'passthrough') {
-            // パススルー: データ値をそのまま使用
-            return dataValue;
-        }
-
+        
         if (type === 'continuous') {
             // 連続マッピング: 数値データを範囲にマップ
             return this.mapContinuousValue(element, property, styleConfig, dataValue);
@@ -1877,6 +1889,9 @@ export class StylePanel {
         this.edgeStyles = JSON.parse(JSON.stringify(this.committedEdgeStyles));
         this.networkStyles = JSON.parse(JSON.stringify(this.committedNetworkStyles));
 
+        // 互換性のために passthrough を正規化
+        this.normalizePassthroughTypes();
+
         // 属性リストを更新
         this.refreshAttributes();
 
@@ -2004,11 +2019,6 @@ export class StylePanel {
                     this.buildDiscreteMappingTable(discreteDiv, property, elementType, attribute);
                     discreteDiv.classList.remove('hidden');
                 }
-                if (rangeDiv) rangeDiv.classList.add('hidden');
-            } else if (type === 'passthrough') {
-                if (colorInput) colorInput.classList.add('hidden');
-                if (attrSelectElement) attrSelectElement.classList.remove('hidden');
-                if (discreteDiv) discreteDiv.classList.add('hidden');
                 if (rangeDiv) rangeDiv.classList.add('hidden');
             } else if (type === 'continuous') {
                 if (colorInput) colorInput.classList.add('hidden');

@@ -202,11 +202,14 @@ export class FilterPanel {
         // Operator
         const operatorSelect = document.createElement('select');
         operatorSelect.className = 'filter-operator-select';
-        operatorSelect.value = condition.operator;
         operatorSelect.addEventListener('change', (e) => {
             condition.operator = e.target.value;
         });
         this.updateOperatorSelectOptions(operatorSelect, condition.column);
+        // updateOperatorSelectOptions recreates options; reapply the saved value
+        if (condition.operator) {
+            operatorSelect.value = condition.operator;
+        }
         
         // Value
         const valueInput = document.createElement('input');
@@ -448,36 +451,32 @@ export class FilterPanel {
         
         // フィルター処理を非同期で実行（UIをブロックしないため）
         setTimeout(() => {
-            try {
-                // フィルター処理
-                const nodes = appContext.networkManager.cy.nodes();
-                const edges = appContext.network_manager ? appContext.network_manager.cy.edges() : appContext.networkManager.cy.edges();
-
-                const matchedNodes = [];
-                const matchedEdges = [];
-
-                // ノードをフィルタリング
-                nodes.forEach(node => {
-                    if (this.evaluateConditions(node, 'node', validConditions)) {
-                        matchedNodes.push(node);
-                    }
-                });
-
-                // エッジをフィルタリング
-                edges.forEach(edge => {
-                    if (this.evaluateConditions(edge, 'edge', validConditions)) {
-                        matchedEdges.push(edge);
-                    }
-                });
-
-                // 結果を適用
-                this.applyFilterResults(matchedNodes, matchedEdges, validConditions);
-            } catch (err) {
-                console.error('FilterPanel.applyFilter error', err);
-            } finally {
-                // プログレスオーバーレイを必ず非表示
-                progressOverlay.hide();
-            }
+            // フィルター処理
+            const nodes = appContext.networkManager.cy.nodes();
+            const edges = appContext.networkManager.cy.edges();
+            
+            const matchedNodes = [];
+            const matchedEdges = [];
+            
+            // ノードをフィルタリング
+            nodes.forEach(node => {
+                if (this.evaluateConditions(node, 'node', validConditions)) {
+                    matchedNodes.push(node);
+                }
+            });
+            
+            // エッジをフィルタリング
+            edges.forEach(edge => {
+                if (this.evaluateConditions(edge, 'edge', validConditions)) {
+                    matchedEdges.push(edge);
+                }
+            });
+            
+            // 結果を適用
+            this.applyFilterResults(matchedNodes, matchedEdges, validConditions);
+            
+            // プログレスオーバーレイを非表示
+            progressOverlay.hide();
         }, 50);
     }
 

@@ -128,6 +128,10 @@ export class HistoryManager {
             }))
         } : null;
 
+        // スナップショット作成前に古い passthrough を正規化
+        if (appContext.stylePanel && typeof appContext.stylePanel.normalizePassthroughTypes === 'function') {
+            try { appContext.stylePanel.normalizePassthroughTypes(); } catch (e) { /* ignore */ }
+        }
         const styleSettings = appContext.stylePanel ? {
             nodeStyles: appContext.stylePanel.nodeStyles,
             edgeStyles: appContext.stylePanel.edgeStyles,

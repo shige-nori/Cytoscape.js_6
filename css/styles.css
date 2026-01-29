@@ -481,10 +481,13 @@ body {
 }
 
 .tools-panel-header {
-    padding: 12px 16px;
+    padding: 6px 8px;
     background-color: var(--menubar-bg);
     border-bottom: 1px solid var(--border-color);
-    border-radius: 8px 8px 0 0;
+    border-radius: 6px 6px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     cursor: move;
     user-select: none;
     position: relative;
@@ -492,7 +495,7 @@ body {
 
 .tools-panel-header h3 {
     margin: 0;
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     color: white;
 }
@@ -506,11 +509,11 @@ body {
 
 .tools-tab {
     flex: 1;
-    padding: 10px 16px;
+    padding: 6px 10px;
     border: none;
     background: transparent;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     color: #64748b;
     transition: all 0.2s;
@@ -558,7 +561,7 @@ body {
     padding: 6px 16px;
     border: none;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     background-color: var(--secondary-color);
@@ -578,7 +581,7 @@ body {
     padding: 6px 16px;
     border: none;
     border-radius: 4px;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     background-color: var(--primary-color);
@@ -595,12 +598,12 @@ body {
 }
 
 .tools-panel-body {
-    padding: 16px;
+    padding: 10px;
 }
 
 .tools-section {
-    margin-bottom: 16px;
-    padding: 12px;
+    margin-bottom: 12px;
+    padding: 8px;
     border: 1px solid var(--border-color);
     border-radius: 6px;
     background-color: #fafafa;
@@ -621,14 +624,16 @@ body {
 /* Icon Button Grid for Align/Distribute */
 .icon-button-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    /* halve button size by doubling the number of columns */
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
 }
 
 .icon-btn {
     width: 100%;
     aspect-ratio: 1;
-    padding: 2px;
+    /* reduce internal padding so visible button area is smaller */
+    padding: 1px;
     border: 1px solid #cbd5e1;
     border-radius: 2px;
     background-color: white;
@@ -652,8 +657,9 @@ body {
 }
 
 .icon-btn svg {
-    width: 24px;
-    height: 24px;
+    /* increase icon glyph to 1.5x (from 20px -> 30px) */
+    width: 30px;
+    height: 30px;
     color: #475569;
 }
 
@@ -812,11 +818,78 @@ body {
 
 .value-input {
     width: 80px;
-    padding: 6px 8px;
+    padding: 4px 6px;
+    height: 28px;
+    line-height: 18px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 14px;
     text-align: center;
+}
+
+/* Compact adjustments for Scale / Rotate tab */
+#scale-rotate-tab h4 {
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+#scale-rotate-tab .radio-group {
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+#scale-rotate-tab .radio-group label {
+    font-size: 14px;
+}
+
+#scale-rotate-tab .slider {
+    height: 4px;
+}
+
+#scale-rotate-tab .slider::-webkit-slider-runnable-track {
+    height: 4px;
+}
+
+#scale-rotate-tab .slider::-moz-range-track {
+    height: 4px;
+}
+
+#scale-rotate-tab .slider::-webkit-slider-thumb {
+    width: 12px;
+    height: 12px;
+    margin-top: -4px;
+}
+
+#scale-rotate-tab .slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+}
+
+#scale-rotate-tab .slider-ticks .tick {
+    height: 10px;
+}
+
+#scale-rotate-tab .value-input {
+    padding: 3px 6px;
+    height: 24px;
+    line-height: 16px;
+    font-size: 14px;
+}
+
+/* Move ticks and labels vertically (adjust downwards) */
+#scale-rotate-tab .slider-ticks {
+    top: 8px; /* ticks just below the slider */
+}
+
+#scale-rotate-tab .slider-labels {
+    margin-top: -2px; /* bring numeric labels very close under the slider */
+    font-size: 14px;
+    padding: 0 4px;
+}
+
+/* Position label text tightly under the slider/ticks */
+#scale-rotate-tab .slider-labels span {
+    top: -6px;
 }
 
 .value-input:focus {
@@ -881,6 +954,7 @@ body {
     cursor: pointer;
     font-size: 14px;
     font-weight: 500;
+    font-size: 14px;
     color: var(--secondary-color);
     transition: all 0.2s ease;
     border-bottom: 2px solid transparent;
@@ -945,7 +1019,7 @@ body {
 
 .collapse-icon {
     display: inline-block;
-    font-size: 10px;
+    font-size: 14px;
     transition: transform 0.2s;
     color: var(--text-color);
     margin-left: auto;
@@ -956,7 +1030,7 @@ body {
 }
 
 .style-property-header label {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text-color);
     cursor: pointer;
@@ -978,7 +1052,7 @@ body {
 
 .style-mapping-type {
     padding: 6px 10px;
-    font-size: 13px;
+    font-size: 14px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     background-color: white;
@@ -1013,7 +1087,7 @@ body {
 .style-select {
     flex: 1;
     padding: 6px 10px;
-    font-size: 13px;
+    font-size: 14px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     background-color: white;
@@ -1028,7 +1102,7 @@ body {
 .style-attribute-select {
     flex: 1;
     padding: 6px 10px;
-    font-size: 13px;
+    font-size: 14px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     background-color: white;
@@ -1072,7 +1146,7 @@ body {
 .style-number-input {
     width: 60px;
     padding: 6px 8px;
-    font-size: 13px;
+    font-size: 14px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     text-align: center;
@@ -1105,7 +1179,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--secondary-color);
     font-weight: 500;
 }
@@ -1128,14 +1202,14 @@ body {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
+    font-size: 14px;
     color: var(--secondary-color);
 }
 
 .range-inputs input {
     width: 60px;
     padding: 4px 6px;
-    font-size: 12px;
+    font-size: 14px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     text-align: center;
@@ -1167,7 +1241,7 @@ body {
 .discrete-mapping-table table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .discrete-mapping-table thead {
@@ -1210,7 +1284,7 @@ body {
 .discrete-input {
     width: 100%;
     padding: 4px 6px;
-    font-size: 12px;
+    font-size: 14px;
     border: 1px solid var(--border-color);
     border-radius: 3px;
 }
@@ -1576,6 +1650,7 @@ body {
     z-index: 2500;
     overflow: hidden;
     flex-direction: column;
+    font-size: 14px;
 }
 
 .filter-panel.active {
@@ -1583,7 +1658,7 @@ body {
 }
 
 .filter-panel-header {
-    padding: 8px 12px;
+    padding: 6px 8px;
     background-color: var(--menubar-bg);
     border-bottom: 1px solid var(--border-color);
     border-radius: 6px 6px 0 0;
@@ -1596,7 +1671,7 @@ body {
 
 .filter-panel-header h3 {
     margin: 0;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     color: white;
 }
@@ -1605,11 +1680,11 @@ body {
     background: none;
     border: none;
     color: white;
-    font-size: 20px;
+    font-size: 18px;
     cursor: pointer;
     padding: 0;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1622,7 +1697,7 @@ body {
 }
 
 .filter-panel-body {
-    padding: 12px;
+    padding: 8px;
     overflow-y: auto;
     flex: 1;
 }
@@ -1630,28 +1705,30 @@ body {
 .filter-conditions-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .filter-condition {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
 }
 
 .filter-condition-row {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     align-items: center;
 }
 
 .filter-column-select,
 .filter-operator-select,
 .filter-logical-select {
-    padding: 6px;
+    padding: 4px 6px;
+    height: 28px;
+    line-height: 18px;
     border: 1px solid var(--border-color);
     border-radius: 3px;
-    font-size: 12px;
+    font-size: 14px;
     background-color: white;
     cursor: pointer;
 }
@@ -1666,10 +1743,12 @@ body {
 
 .filter-value-input {
     flex: 1.5;
-    padding: 6px;
+    padding: 4px 6px;
+    height: 28px;
+    line-height: 18px;
     border: 1px solid var(--border-color);
     border-radius: 3px;
-    font-size: 12px;
+    font-size: 14px;
 }
 
 .filter-remove-btn {
@@ -1677,8 +1756,8 @@ body {
     color: white;
     border: none;
     border-radius: 3px;
-    width: 26px;
-    height: 26px;
+    width: 22px;
+    height: 22px;
     cursor: pointer;
     font-size: 14px;
     display: flex;
@@ -1705,18 +1784,19 @@ body {
 .filter-add-row {
     display: flex;
     justify-content: center;
-    padding: 6px 0;
+    padding: 4px 0;
 }
 
 .filter-add-btn {
-    padding: 6px 12px;
+    padding: 8px 12px;
     background-color: var(--primary-color);
     color: white;
     border: none;
-    border-radius: 3px;
-    font-size: 12px;
+    border-radius: 4px;
+    font-size: 14px;
     cursor: pointer;
     transition: background-color 0.2s;
+    min-height: 36px;
 }
 
 .filter-add-btn:hover {
@@ -1724,25 +1804,30 @@ body {
 }
 
 .filter-panel-footer {
-    padding: 8px 12px;
+    padding: 6px 8px;
     border-top: 1px solid var(--border-color);
     display: flex;
     justify-content: flex-end;
     gap: 6px;
 }
 
+
 #filter-apply-btn {
-    padding: 6px 12px;
+    padding: 8px 12px;
     border: none;
-    border-radius: 3px;
-    font-size: 12px;
+    border-radius: 4px;
+    font-size: 14px;
     cursor: pointer;
     transition: background-color 0.2s;
+    min-height: 36px;
 }
 
 #filter-clear-btn {
     background-color: var(--secondary-color);
     color: white;
+    padding: 8px 12px;
+    font-size: 14px;
+    min-height: 36px;
 }
 
 #filter-clear-btn:hover {
@@ -1752,6 +1837,7 @@ body {
 #filter-apply-btn {
     background-color: var(--primary-color);
     color: white;
+    padding: 4px 8px;
 }
 
 #filter-apply-btn:hover {
@@ -1780,20 +1866,17 @@ body {
     background: none;
     border: none;
     color: white;
-    font-size: 20px;
+    font-size: 18px;
     cursor: pointer;
     padding: 0;
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 3px;
     transition: background-color 0.2s;
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
+    position: static;
 }
 
 .tools-panel-close:hover {

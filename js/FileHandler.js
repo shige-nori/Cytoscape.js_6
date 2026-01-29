@@ -577,7 +577,10 @@ export class FileHandler {
                 }))
             };
             
-            // スタイル設定を保存
+            // スタイル設定を保存（念のため旧passthroughを正規化してから取得）
+            if (appContext.stylePanel && typeof appContext.stylePanel.normalizePassthroughTypes === 'function') {
+                try { appContext.stylePanel.normalizePassthroughTypes(); } catch (e) { /* ignore */ }
+            }
             const styleSettings = appContext.stylePanel ? {
                 nodeStyles: appContext.stylePanel.nodeStyles,
                 edgeStyles: appContext.stylePanel.edgeStyles,

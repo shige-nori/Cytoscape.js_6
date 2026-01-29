@@ -1,7 +1,6 @@
 import { appContext } from './AppContext.js';
 import { applySelectionToCy, expandSelectionWithConnections } from './FilterSelectionUtils.js';
 import { evaluateExternalConditionValue, evaluateExternalConditionSequence, getMatchedIndicesForArray } from './FilterEval.js';
-import { debounce } from './Utils.js';
 
 /**
  * TablePanel - テーブルパネル管理クラス
@@ -131,14 +130,13 @@ export class TablePanel {
 
         // Cytoscape選択イベントとの連動
         if (appContext.networkManager && appContext.networkManager.cy) {
-            const cy = appContext.networkManager.cy;
-
-            const handleSelectChange = (e) => {
+            appContext.networkManager.cy.on('select', (e) => {
                 if (this.isFilterSelecting || this.isClearingSelection) return;
 
                 this.applySelectionClosureFromCurrentSelection();
 
                 if (this.isVisible) {
+                    // 選択されたノード/エッジのみテーブルに表示（遅延描画）
                     this.clearAllFilters();
                     window.requestAnimationFrame(() => {
                         if (this.currentTab === 'node') {
@@ -148,12 +146,25 @@ export class TablePanel {
                         }
                     });
                 }
-            };
+            });
+            
+            appContext.networkManager.cy.on('unselect', (e) => {
+                if (this.isFilterSelecting || this.isClearingSelection) return;
 
-            const debouncedHandler = debounce(handleSelectChange, 120).bind(this);
+                this.applySelectionClosureFromCurrentSelection();
 
-            cy.on('select', debouncedHandler);
-            cy.on('unselect', debouncedHandler);
+                if (this.isVisible) {
+                    // 選択解除時は全ノード/エッジをテーブルに表示（遅延描画）
+                    this.clearAllFilters();
+                    window.requestAnimationFrame(() => {
+                        if (this.currentTab === 'node') {
+                            this.renderNodeTable(true);
+                        } else {
+                            this.renderEdgeTable(true);
+                        }
+                    });
+                }
+            });
         }
     }
 
