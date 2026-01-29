@@ -90,11 +90,13 @@ export class StylePanel {
             <div class="style-panel" id="style-panel">
                 <div class="tools-panel-header style-panel-header-with-btn">
                     <h3>Style</h3>
-                    <div class="style-panel-buttons">
-                        <button id="style-cancel-btn" class="btn btn-secondary style-cancel-btn">Cancel</button>
-                        <button id="style-apply-btn" class="btn btn-primary style-apply-btn">Apply</button>
+                    <div class="style-panel-right">
+                        <div class="style-panel-buttons">
+                            <button id="style-cancel-btn" class="btn btn-secondary style-cancel-btn">Cancel</button>
+                            <button id="style-apply-btn" class="btn btn-primary style-apply-btn">Apply</button>
+                        </div>
+                        <button class="tools-panel-close" id="style-panel-close-btn">&times;</button>
                     </div>
-                    <button class="tools-panel-close" id="style-panel-close-btn">&times;</button>
                 </div>
                 <div class="style-panel-tabs">
                     <button class="style-tab active" data-tab="node">Node</button>
@@ -1428,9 +1430,26 @@ export class StylePanel {
     }
 
     closePanel() {
-        // パネルを閉じる前に Apply されていない変更を破棄
-        this.cancelStyles();
-        if (this.panel) this.panel.classList.remove('active');
+        // 未保存の変更がある場合は確認モーダルを表示
+        if (this.hasUnsavedChanges()) {
+            this.showConfirmDialog('スタイルに未保存の変更があります。変更を適用しますか？', '適用する', '破棄する')
+                .then(choice => {
+                    if (choice === 'apply') {
+                        this.commitStyles();
+                    } else {
+                        this.cancelStyles();
+                    }
+                    if (this.panel) this.panel.classList.remove('active');
+                }).catch(err => {
+                    // 何らかのエラーやキャンセル時は破棄して閉じる
+                    this.cancelStyles();
+                    if (this.panel) this.panel.classList.remove('active');
+                });
+        } else {
+            // 変更がなければ直ちに閉じる（既存の挙動）
+            this.cancelStyles();
+            if (this.panel) this.panel.classList.remove('active');
+        }
     }
 
     resetStyles() {
@@ -2101,6 +2120,87 @@ export class StylePanel {
     }
 
     // ヘルパー: 深いコピー
+
+    // 未保存の変更があるか比較する
+    hasUnsavedChanges() {
+        try {
+            const a = JSON.stringify(this.nodeStyles);
+            const b = JSON.stringify(this.committedNodeStyles);
+            if (a !== b) return true;
+            const c = JSON.stringify(this.edgeStyles);
+            const d = JSON.stringify(this.committedEdgeStyles);
+            if (c !== d) return true;
+            const e = JSON.stringify(this.networkStyles);
+            const f = JSON.stringify(this.committedNetworkStyles);
+            if (e !== f) return true;
+            return false;
+        } catch (err) {
+            console.warn('StylePanel: hasUnsavedChanges error', err);
+            return false;
+        }
+    }
+
+    // カスタム確認ダイアログを表示して Promise で結果を返す
+    showConfirmDialog(message, applyLabel = 'Apply', discardLabel = 'Discard') {
+        return new Promise((resolve, reject) => {
+            // 既に同一モーダルが存在する場合は拒否
+            if (document.getElementById('style-confirm-overlay')) return reject(new Error('Confirm dialog already shown'));
+
+            const overlay = document.createElement('div');
+            overlay.id = 'style-confirm-overlay';
+            overlay.className = 'modal-overlay active';
+
+            const content = document.createElement('div');
+            content.className = 'modal-content';
+            content.style.maxWidth = '420px';
+
+            content.innerHTML = `
+                <div class="modal-header">
+                    <h2>確認</h2>
+                    <button class="modal-close" id="style-confirm-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>${message}</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="style-confirm-discard">${discardLabel}</button>
+                    <button class="btn btn-primary" id="style-confirm-apply">${applyLabel}</button>
+                </div>
+            `;
+
+            overlay.appendChild(content);
+            document.body.appendChild(overlay);
+
+            const cleanup = () => {
+                overlay.remove();
+            };
+
+            // ボタンハンドラ
+            document.getElementById('style-confirm-apply').addEventListener('click', () => {
+                cleanup();
+                resolve('apply');
+            });
+            document.getElementById('style-confirm-discard').addEventListener('click', () => {
+                cleanup();
+                resolve('discard');
+            });
+            document.getElementById('style-confirm-close').addEventListener('click', () => {
+                cleanup();
+                // treat close as discard
+                resolve('discard');
+            });
+
+            // ESC キーでキャンセル（破棄）
+            const onKey = (ev) => {
+                if (ev.key === 'Escape') {
+                    cleanup();
+                    document.removeEventListener('keydown', onKey);
+                    resolve('discard');
+                }
+            };
+            document.addEventListener('keydown', onKey);
+        });
+    }
     deepCopy(obj) {
         return JSON.parse(JSON.stringify(obj));
     }

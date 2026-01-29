@@ -557,6 +557,13 @@ body {
     gap: 8px;
 }
 
+/* Right side container to group buttons and close icon */
+.style-panel-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .style-cancel-btn {
     padding: 6px 16px;
     border: none;
