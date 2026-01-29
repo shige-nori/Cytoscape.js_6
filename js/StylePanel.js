@@ -2021,27 +2021,41 @@ export class StylePanel {
         // マッピングタイプに応じた表示/非表示を更新
         const propertyGroup = mappingSelect?.closest('.style-property-group');
         if (propertyGroup) {
-            const colorInput = propertyGroup.querySelector('.style-color-input, .style-number-input, .style-select-input');
+            const controlDiv = propertyGroup.querySelector('.style-property-control');
             const attrSelectElement = propertyGroup.querySelector('.style-attribute-select');
             const discreteDiv = propertyGroup.querySelector('.style-discrete-mapping');
             const rangeDiv = propertyGroup.querySelector('.style-continuous-range, .style-color-range');
 
+            // find all direct inputs (exclude mapping-type select and attribute select)
+            let directInputs = [];
+            if (controlDiv) {
+                directInputs = Array.from(controlDiv.querySelectorAll('input, select')).filter(el =>
+                    !el.classList.contains('style-attribute-select') && !el.classList.contains('style-mapping-type')
+                );
+            }
+
             if (type === 'default' || type === 'bypass') {
-                if (colorInput) colorInput.classList.remove('hidden');
+                directInputs.forEach(el => el.classList.remove('hidden'));
                 if (attrSelectElement) attrSelectElement.classList.add('hidden');
                 if (discreteDiv) discreteDiv.classList.add('hidden');
                 if (rangeDiv) rangeDiv.classList.add('hidden');
             } else if (type === 'discrete') {
-                if (colorInput) colorInput.classList.add('hidden');
-                if (attrSelectElement) attrSelectElement.classList.remove('hidden');
+                directInputs.forEach(el => el.classList.add('hidden'));
+                if (attrSelectElement) {
+                    attrSelectElement.classList.remove('hidden');
+                    this.updateAttributeOptions(attrSelectElement, elementType);
+                }
                 if (discreteDiv && attribute) {
                     this.buildDiscreteMappingTable(discreteDiv, property, elementType, attribute);
                     discreteDiv.classList.remove('hidden');
                 }
                 if (rangeDiv) rangeDiv.classList.add('hidden');
             } else if (type === 'continuous') {
-                if (colorInput) colorInput.classList.add('hidden');
-                if (attrSelectElement) attrSelectElement.classList.remove('hidden');
+                directInputs.forEach(el => el.classList.add('hidden'));
+                if (attrSelectElement) {
+                    attrSelectElement.classList.remove('hidden');
+                    this.updateAttributeOptions(attrSelectElement, elementType);
+                }
                 if (discreteDiv) discreteDiv.classList.add('hidden');
                 if (rangeDiv) rangeDiv.classList.remove('hidden');
             }

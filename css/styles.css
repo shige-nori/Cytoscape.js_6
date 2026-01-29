@@ -17,6 +17,11 @@
     box-sizing: border-box;
 }
 
+/* Utility hidden class used throughout the UI */
+.hidden {
+    display: none !important;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
     background-color: var(--background-color);
