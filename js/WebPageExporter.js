@@ -417,9 +417,48 @@ export class WebPageExporter {
             border-radius: 4px;
             font-size: 12px;
         }
+        /* Progress Overlay */
+        .progress-overlay {
+            display: none;
+            position: fixed;
+            top: 40px; /* Below menu bar */
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .progress-overlay.active {
+            display: flex;
+        }
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #2563eb;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .progress-text {
+            margin-top: 16px;
+            color: #64748b;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
+    <div class="progress-overlay active" id="progress-overlay">
+        <div class="spinner"></div>
+        <p class="progress-text">Loading...</p>
+    </div>
     <div class="top-menubar">
         <div class="menu-item">
             <span class="menu-label">Path Trace</span>
@@ -462,6 +501,29 @@ export class WebPageExporter {
     <script type="application/json" id="background-json">${backgroundJson}</script>
     <script>
         try {
+            // Loading Overlay Helpers
+            const progressOverlay = document.getElementById('progress-overlay');
+            const showLoading = (msg = 'Loading...') => {
+                if(progressOverlay) {
+                    progressOverlay.querySelector('.progress-text').textContent = msg;
+                    progressOverlay.classList.add('active');
+                }
+            };
+            const hideLoading = () => {
+                if(progressOverlay) progressOverlay.classList.remove('active');
+            };
+            // Force redraw for UI update
+            const withLoading = (fn, msg) => {
+                showLoading(msg);
+                // Ensure browser paints the overlay before blocking
+                requestAnimationFrame(() => {
+                    setTimeout(() => {
+                        fn();
+                        hideLoading();
+                    }, 0);
+                });
+            };
+
             // Network data
             const elements = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('elements-json').textContent || ''))));
 
@@ -506,6 +568,7 @@ export class WebPageExporter {
             const columnWidths = { node: {}, edge: {} };
             let selectionEnabled = false;
             let isFilterSelecting = false;
+            let renderTableDebounceTimer = null;
 
             const setTableVisible = (visible) => {
                 tableVisible = visible;
@@ -776,6 +839,23 @@ export class WebPageExporter {
                                 });
                             }
                         });
+
+                        // Logic 2: If we are filtering edges, and this edge matches, record its parallel index
+                        // This allows "Edge Table Filter -> Parallel Edge Index -> Node Table Array Index" syncing.
+                        if (targetType === 'edge' && ele.isEdge()) {
+                            const parallels = ele.parallelEdges();
+                            if (parallels.length > 1) {
+                                // Sort by ID to establish consistent index
+                                const sorted = parallels.sort((a,b) => {
+                                    return a.id().localeCompare(b.id(), undefined, { numeric: true, sensitivity: 'base' });
+                                });
+                                const idx = sorted.indexOf(ele);
+                                if (idx !== -1) {
+                                    matchedIndices.add(idx);
+                                    anyArrayFilterMatches = true; // Use array flag to signal we found valid indices
+                                }
+                            }
+                        }
                     });
 
                     return anyArrayFilterMatches ? matchedIndices : null;
@@ -911,31 +991,34 @@ export class WebPageExporter {
                     // We should intersect allowedIndices with row-specific matches if any active filter applies.
 
                     if (allowedIndices !== null) {
-                         // Refine per row
+                         // Refine per row: Intersect global allowed indices with row-local matches
                          Object.keys(activeFilters).forEach(col => {
                              const query = activeFilters[col];
                              if (!query) return;
-                             const items = getArrayItems(row[col]);
+                             const colVal = row[col];
+                             const items = getArrayItems(colVal);
+                             
                              if (items) {
+                                 // Identify indices in this row's array that match the filter for this column
                                  const rowMatchedIndices = new Set();
                                  items.forEach((item, i) => {
                                      if (String(item).toLowerCase().includes(String(query).toLowerCase())) {
                                          rowMatchedIndices.add(i);
                                      }
                                  });
-                                 // Intersect validIndices with rowMatchedIndices
-                                 // Wait, if we do intersection, we might lose indices that were allowed by CROSS filter but not self filter?
-                                 // No, if I have self filter, I only want to see things matching self filter.
-                                 // If I have cross filter, I only want to see things matching cross filter.
-                                 // So intersection is correct.
                                  
-                                 // However, "rowMatchedIndices" are indices where THIS row matches THIS column query.
-                                 // If we have multiple columns, we need logical AND across columns?
-                                 // Table logic is AND for rows. For array display... usually we show union of matches within row.
-                                 // But let's stick to the "allowedIndices" which is global.
-                                 
-                                 // If we assume indices are aligned, then allowedIndices is the master mask.
-                                 // We just use allowedIndices as is.
+                                 // Intersect with validIndices
+                                 // If validIndices has {0, 1} (Global Union) but this row only matches at {0},
+                                 // we must restrict display to {0}.
+                                 if (validIndices) {
+                                     const next = new Set();
+                                     validIndices.forEach(idx => {
+                                         if (rowMatchedIndices.has(idx)) {
+                                             next.add(idx);
+                                         }
+                                     });
+                                     validIndices = next;
+                                 }
                              }
                          });
                     }
@@ -1007,10 +1090,17 @@ export class WebPageExporter {
             }
             if (tableClearBtn) {
                 tableClearBtn.addEventListener('click', () => {
-                    filters.node = {};
-                    filters.edge = {};
-                    cy.elements().unselect();
-                    renderTable();
+                    withLoading(() => {
+                        filters.node = {};
+                        filters.edge = {};
+                        cy.elements().unselect();
+                        // Cancel pending debounced render since we render immediately
+                        if (renderTableDebounceTimer) {
+                            clearTimeout(renderTableDebounceTimer);
+                            renderTableDebounceTimer = null;
+                        }
+                        renderTable();
+                    }, 'Clearing...');
                 });
             }
             if (tableToggle) {
@@ -1577,22 +1667,35 @@ export class WebPageExporter {
             cy.on('select unselect', () => {
                 if (!selectionEnabled) return;
                 if (isFilterSelecting) return;
-                renderTable();
+                
+                if (renderTableDebounceTimer) clearTimeout(renderTableDebounceTimer);
+                renderTableDebounceTimer = setTimeout(() => {
+                    renderTable();
+                    renderTableDebounceTimer = null;
+                }, 100);
             });
 
             // Background click clears selection and shows all rows
             cy.on('tap', (evt) => {
                 if (evt.target !== cy) return;
-                filters.node = {};
-                filters.edge = {};
-                cy.elements().unselect();
-                renderTable();
+                withLoading(() => {
+                    filters.node = {};
+                    filters.edge = {};
+                    cy.elements().unselect();
+                    // Cancel pending debounced render since we render immediately
+                    if (renderTableDebounceTimer) {
+                        clearTimeout(renderTableDebounceTimer);
+                        renderTableDebounceTimer = null;
+                    }
+                    renderTable();
+                }, 'Clearing...');
             });
 
             // Fit to view on load (including overlays)
             cy.ready(function() {
                 console.log('Cytoscape ready');
                 fitToViewWithOverlays(50);
+                setTimeout(hideLoading, 500);
             });
         } catch (error) {
             console.error('Error initializing network:', error);
