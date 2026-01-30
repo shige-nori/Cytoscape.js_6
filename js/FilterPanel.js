@@ -615,18 +615,86 @@ export class FilterPanel {
     applyFilterResults(matchedNodes, matchedEdges, conditions = null) {
         if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
 
-        const cy = appContext.networkManager.cy;
-        const { nodes: expandedNodes, edges: expandedEdges } = expandSelectionWithConnections(cy, matchedNodes, matchedEdges);
         
-        // すべての選択を解除
+
+        const cy = appContext.networkManager.cy;
+
+        // エッジが明示的にフィルタで選択されている場合は、並列エッジの自動拡張を行わず
+        // そのまま該当エッジのみを選択する（ネットワーク上で1本のエッジをクリックした時と同じ振る舞い）
+        let resultingNodes = matchedNodes;
+        let resultingEdges = matchedEdges;
+
+        if (Array.isArray(matchedEdges) && matchedEdges.length > 0) {
+            // 明示的なエッジがある場合、エッジの両端ノードを明示的に収集して使用
+            const nodeSet = new Set();
+            matchedEdges.forEach(edge => {
+                try {
+                    const s = edge.source(); if (s) nodeSet.add(s);
+                    const t = edge.target(); if (t) nodeSet.add(t);
+                } catch (e) {
+                    // edge が element でない可能性を想定（保険）
+                }
+            });
+            resultingNodes = Array.from(nodeSet);
+            resultingEdges = matchedEdges;
+        } else {
+            // エッジが明示されていない場合は、まずノードフィルタ条件に一致する
+            // 配列カラム検索（例: 論文ID の要素一致）を優先して、該当する隣接エッジを絞り込む
+            let foundEdges = [];
+            if (Array.isArray(conditions) && conditions.length > 0 && Array.isArray(matchedNodes) && matchedNodes.length > 0) {
+                // node.XXX の条件を抽出（単純に '=' の場合を扱う）
+                const nodeConds = conditions.filter(c => typeof c.column === 'string' && c.column.startsWith('node.') && c.value !== undefined && c.value !== null && String(c.value).trim() !== '');
+                if (nodeConds.length > 0) {
+                    const seen = new Set();
+                    matchedNodes.forEach(node => {
+                        try {
+                            const incident = node.connectedEdges();
+                            nodeConds.forEach(cond => {
+                                const [, colName] = cond.column.split('.');
+                                const targetVal = cond.value;
+                                incident.forEach(edge => {
+                                    const edgeVal = edge.data(colName);
+                                    if (edgeVal === undefined || edgeVal === null) return;
+                                    if (Array.isArray(edgeVal)) {
+                                        if (edgeVal.includes(targetVal) && !seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
+                                    } else {
+                                        if (String(edgeVal) === String(targetVal) && !seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
+                                    }
+                                });
+                            });
+                        } catch (e) {
+                            // 何もしない
+                        }
+                    });
+                }
+            }
+
+            if (foundEdges.length > 0) {
+                // 絞り込んだエッジを採用
+                resultingEdges = foundEdges;
+                const nodeSet2 = new Set();
+                foundEdges.forEach(edge => {
+                    const s = edge.source(); if (s) nodeSet2.add(s);
+                    const t = edge.target(); if (t) nodeSet2.add(t);
+                });
+                resultingNodes = Array.from(nodeSet2);
+            } else {
+                // 既存の拡張ロジックを使用
+                const expanded = expandSelectionWithConnections(cy, matchedNodes, matchedEdges);
+                resultingNodes = expanded.nodes;
+                resultingEdges = expanded.edges;
+            }
+        }
+
+        // すべての選択を解除して結果を適用
         if (appContext.tablePanel) {
-            const expanded = appContext.tablePanel.applySelectionClosure(expandedNodes, expandedEdges, { setOpacity: true });
+            const expanded = appContext.tablePanel.applySelectionClosure(resultingNodes, resultingEdges, { setOpacity: true, fromFilter: true });
             matchedNodes = expanded.nodes;
             matchedEdges = expanded.edges;
         } else {
-            applySelectionToCy(cy, expandedNodes, expandedEdges, { setOpacity: true });
-            matchedNodes = expandedNodes;
-            matchedEdges = expandedEdges;
+            applySelectionToCy(cy, resultingNodes, resultingEdges, { setOpacity: true });
+            matchedNodes = resultingNodes;
+            matchedEdges = resultingEdges;
         }
         
         // Table Panelを更新（抽出結果を連動）
@@ -645,6 +713,9 @@ export class FilterPanel {
     clearFilter() {
         if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
         
+        // フィルター解除中に他の処理がプログラム的に選択を再適用するのを防止するフラグ
+        appContext.suppressProgrammaticSelection = true;
+        
         // すべての選択を解除
         if (appContext.tablePanel && typeof appContext.tablePanel.clearSelection === 'function') {
             appContext.tablePanel.clearSelection();
@@ -661,12 +732,17 @@ export class FilterPanel {
         
         // Table Panelを更新（外部フィルターを解除）
         if (appContext.tablePanel) {
+            
             appContext.tablePanel.clearExternalFilterResults();
             appContext.tablePanel.clearAllFiltersAllTabs();
             if (appContext.tablePanel.isVisible) {
                 appContext.tablePanel.refreshTable();
             }
         }
+        // 少し時間を置いて抑止フラグを解除（他の同期的/非同期的な再選択が完了するのを待つ）
+        setTimeout(() => {
+            appContext.suppressProgrammaticSelection = false;
+        }, 200);
         
     }
 }

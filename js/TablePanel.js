@@ -43,6 +43,7 @@ export class TablePanel {
         this.externalFilteredEdges = null;
         this.externalFilterConditions = null;
         this.tableFilterConditions = { node: [], edge: [] };
+        this.selectionFromFilters = false;
     }
 
     initialize() {
@@ -254,6 +255,7 @@ export class TablePanel {
     }
 
     refreshTable() {
+        
         if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) {
             this.renderEmptyTable();
             return;
@@ -578,6 +580,7 @@ export class TablePanel {
     }
 
     renderEdgeTable(recreateHeader = true) {
+        
         const tbody = document.querySelector('#table-panel tbody');
         const thead = document.querySelector('#table-panel thead');
         
@@ -1065,6 +1068,11 @@ export class TablePanel {
     }
 
     updateSelectionFromFilters(type) {
+        // フィルター解除中など外部でプログラム的選択を抑止している場合は処理を行わない
+        if (appContext && appContext.suppressProgrammaticSelection) {
+            return;
+        }
+
         if (!this.hasActiveFilters(type)) return;
         if (!appContext.networkManager || !appContext.networkManager.cy) return;
 
@@ -1072,7 +1080,7 @@ export class TablePanel {
         const nodes = type === 'node' ? elements : [];
         const edges = type === 'edge' ? elements : [];
 
-        this.applySelectionClosure(nodes, edges, { setOpacity: false });
+        this.applySelectionClosure(nodes, edges, { setOpacity: false, fromFilter: true });
     }
 
     applySelectionClosure(nodes, edges, options = {}) {
@@ -1081,13 +1089,62 @@ export class TablePanel {
         }
 
         const cy = appContext.networkManager.cy;
-        const { nodes: expandedNodes, edges: expandedEdges } = expandSelectionWithConnections(cy, nodes, edges);
+        const { fromFilter = false } = options || {};
+
+        // ノードのみが与えられ、エッジが空の場合は、Table側の nodeFilters を参照して
+        // ノードの配列カラム検索に一致する隣接エッジを優先的に選択する
+        let resultingNodes = nodes;
+        let resultingEdges = edges;
+
+        if (Array.isArray(nodes) && nodes.length > 0 && (!Array.isArray(edges) || edges.length === 0)) {
+            try {
+                const nf = this.nodeFilters || {};
+                const filterEntries = Object.entries(nf).filter(([k, v]) => v !== undefined && v !== null && String(v).trim() !== '');
+                if (filterEntries.length > 0) {
+                    const seen = new Set();
+                    const foundEdges = [];
+                    nodes.forEach(node => {
+                        try {
+                            const incident = node.connectedEdges();
+                            filterEntries.forEach(([col, val]) => {
+                                incident.forEach(edge => {
+                                    const edgeVal = edge.data(col);
+                                    if (edgeVal === undefined || edgeVal === null) return;
+                                    if (Array.isArray(edgeVal)) {
+                                        if (edgeVal.includes(val) && !seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
+                                    } else {
+                                        if (String(edgeVal) === String(val) && !seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
+                                    }
+                                });
+                            });
+                        } catch (e) {
+                            // ignore
+                        }
+                    });
+
+                    if (foundEdges.length > 0) {
+                        resultingEdges = foundEdges;
+                        const nodeSet = new Set();
+                        foundEdges.forEach(edge => { const s = edge.source(); if (s) nodeSet.add(s); const t = edge.target(); if (t) nodeSet.add(t); });
+                        resultingNodes = Array.from(nodeSet);
+                    }
+                }
+            } catch (e) {
+                // ignore and fall back
+            }
+        }
+
+        const { nodes: expandedNodes, edges: expandedEdges } = expandSelectionWithConnections(cy, resultingNodes, resultingEdges);
 
         this.isFilterSelecting = true;
         try {
             applySelectionToCy(cy, expandedNodes, expandedEdges, options);
         } finally {
             this.isFilterSelecting = false;
+        }
+
+        if (fromFilter) {
+            this.selectionFromFilters = true;
         }
 
         return { nodes: expandedNodes, edges: expandedEdges };
@@ -1101,6 +1158,17 @@ export class TablePanel {
         const selectedEdges = cy.edges(':selected');
 
         if (selectedNodes.length === 0 && selectedEdges.length === 0) return;
+
+        // エッジが明示的に選択されている場合は、ノード間の全エッジ拡張を行わない
+        if (selectedEdges.length > 0) {
+            this.isFilterSelecting = true;
+            try {
+                applySelectionToCy(cy, selectedNodes, selectedEdges, { setOpacity: false });
+            } finally {
+                this.isFilterSelecting = false;
+            }
+            return;
+        }
 
         this.applySelectionClosure(selectedNodes, selectedEdges, { setOpacity: false });
     }
@@ -1142,6 +1210,21 @@ export class TablePanel {
         this.externalFilterConditions = null;
         this._lastNodeSelectionIds = null;
         this._lastEdgeSelectionIds = null;
+        
+        if (this.selectionFromFilters) {
+            this.selectionFromFilters = false;
+            if (typeof this.clearSelection === 'function') {
+                this.clearSelection();
+            }
+        }
+        // 外部フィルター解除時は表示を確実に更新する
+        if (this.isVisible) {
+            try {
+                this.refreshTable();
+            } catch (e) {
+                console.warn('refreshTable failed after clearExternalFilterResults', e);
+            }
+        }
     }
 
     /**
@@ -1200,6 +1283,12 @@ export class TablePanel {
         }
 
         if (cleared) {
+            if (this.selectionFromFilters) {
+                this.selectionFromFilters = false;
+                if (typeof this.clearSelection === 'function') {
+                    this.clearSelection();
+                }
+            }
             this.refreshTable();
         }
     }

@@ -7,6 +7,7 @@ export class NetworkManager {
     constructor() {
         this.cy = null;
         this.isSelectingNodesFromEdge = false; // エッジ選択によるノード選択中フラグ
+        this.suppressAutoEdgeSelectionUntil = 0;
         this.hoveredElements = null; // ホバー中のハイライト要素
         this.hoverHighlightEnabled = false; // ホバーハイライト機能の有効/無効（初期設定はOFF）
         this.init();
@@ -93,7 +94,9 @@ export class NetworkManager {
         // 選択時のスタイル変更
         this.cy.on('select', 'node', (event) => {
             // テーブル／フィルタ側からのプログラム的な選択変更中は処理をスキップ
-            if (appContext.tablePanel && (appContext.tablePanel.isFilterSelecting || appContext.tablePanel.isClearingSelection)) return;
+            if (appContext.tablePanel && (appContext.tablePanel.isFilterSelecting || appContext.tablePanel.isClearingSelection)) {
+                return;
+            }
 
             const node = event.target;
             // ホバー中ならピンク色ではなく、ホバー前の色を保存
@@ -112,9 +115,14 @@ export class NetworkManager {
             });
             
             // エッジ選択によるノード選択の場合は、エッジ自動選択をスキップ
-            if (!this.isSelectingNodesFromEdge) {
-                // 隣接ノード間のエッジを自動選択
-                this.selectEdgesBetweenSelectedNodes();
+            const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            
+            if (!this.isSelectingNodesFromEdge && !(now < this.suppressAutoEdgeSelectionUntil)) {
+                // 既にエッジが選択されている場合は並列エッジの自動選択を行わない
+                if (this.cy.edges(':selected').length === 0) {
+                    // 隣接ノード間のエッジを自動選択
+                    this.selectEdgesBetweenSelectedNodes();
+                }
             }
         });
 
@@ -138,7 +146,9 @@ export class NetworkManager {
 
         this.cy.on('select', 'edge', (event) => {
             // テーブル／フィルタ側からのプログラム的な選択変更中は処理をスキップ
-            if (appContext.tablePanel && (appContext.tablePanel.isFilterSelecting || appContext.tablePanel.isClearingSelection)) return;
+            if (appContext.tablePanel && (appContext.tablePanel.isFilterSelecting || appContext.tablePanel.isClearingSelection)) {
+                return;
+            }
 
             const edge = event.target;
             const currentColor = edge.style('line-color');
@@ -155,8 +165,11 @@ export class NetworkManager {
                 'width': currentWidth
             });
             
+            
             // 両端のノードも選択（フラグを立てて他のエッジが選択されないようにする）
             this.isSelectingNodesFromEdge = true;
+            const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
+            this.suppressAutoEdgeSelectionUntil = now + 200;
             const source = edge.source();
             const target = edge.target();
             if (!source.selected()) {
@@ -165,7 +178,10 @@ export class NetworkManager {
             if (!target.selected()) {
                 target.select();
             }
-            this.isSelectingNodesFromEdge = false;
+            // ノード選択イベントが非同期で走る場合に備えて、フラグ解除を遅延
+            setTimeout(() => {
+                this.isSelectingNodesFromEdge = false;
+            }, 0);
         });
 
         this.cy.on('unselect', 'edge', (event) => {
@@ -206,7 +222,12 @@ export class NetworkManager {
                     }
 
                     if (externalActive) {
+                        // 外部フィルター（FilterPanel → Table）の解除は表示更新を保証する
                         tp.clearExternalFilterResults();
+                        if (tp.isVisible && typeof tp.refreshTable === 'function') {
+                            
+                            tp.refreshTable();
+                        }
                     }
                 }
 
@@ -316,12 +337,14 @@ export class NetworkManager {
     selectEdgesBetweenSelectedNodes() {
         const selectedNodes = this.cy.nodes(':selected');
         
+        
         // 選択されたノード間のすべてのエッジを取得
         selectedNodes.forEach(node1 => {
             selectedNodes.forEach(node2 => {
                 if (node1.id() !== node2.id()) {
                     // node1とnode2を接続するエッジを取得
                     const edges = this.cy.edges(`[source="${node1.id()}"][target="${node2.id()}"], [source="${node2.id()}"][target="${node1.id()}"]`);
+                    
                     edges.forEach(edge => {
                         if (!edge.selected()) {
                             edge.select();
@@ -337,6 +360,7 @@ export class NetworkManager {
      */
     deselectOrphanEdges() {
         const selectedEdges = this.cy.edges(':selected');
+        
         
         selectedEdges.forEach(edge => {
             const source = edge.source();

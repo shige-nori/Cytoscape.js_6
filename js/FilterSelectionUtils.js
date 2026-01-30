@@ -6,6 +6,7 @@ import { appContext } from './AppContext.js';
 export function expandSelectionWithConnections(cy, nodes, edges) {
     const nodeMap = new Map();
     const edgeMap = new Map();
+    const hasExplicitEdges = Array.isArray(edges) && edges.length > 0;
 
     (nodes || []).forEach(node => {
         if (node) nodeMap.set(node.id(), node);
@@ -15,7 +16,7 @@ export function expandSelectionWithConnections(cy, nodes, edges) {
         if (edge) edgeMap.set(edge.id(), edge);
     });
 
-    if (nodeMap.size >= 2) {
+    if (!hasExplicitEdges && nodeMap.size >= 2) {
         cy.edges().forEach(edge => {
             const src = edge.source();
             const tgt = edge.target();
@@ -43,15 +44,22 @@ export function expandSelectionWithConnections(cy, nodes, edges) {
 export function applySelectionToCy(cy, nodes, edges, options = {}) {
     const { setOpacity = false } = options;
 
+    // 外部でフィルター解除等の操作中にプログラム的な選択を抑止する場合がある
+    if (appContext && appContext.suppressProgrammaticSelection) {
+        return;
+    }
+
     const nodeIds = new Set((nodes || []).map(node => node.id()));
     const edgeIds = new Set((edges || []).map(edge => edge.id()));
 
     // まず全選択解除（視覚的なクリーンアップ）
     cy.elements().unselect();
 
-    // 選択対象に対して選択フラグを立てる
-    (nodes || []).forEach(node => node.select());
+    // 選択フラグを付ける順序に注意:
+    // エッジを先に選択→エッジの select ハンドラが両端ノードを選択する場合、
+    // ノード選択ハンドラが誤って並列エッジを自動選択するのを抑制するため
     (edges || []).forEach(edge => edge.select());
+    (nodes || []).forEach(node => node.select());
 
     // NetworkManager のイベントハンドラが抑止されている場合でも
     // 選択スタイルが反映されるように、ここで元スタイルを保存して
