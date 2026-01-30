@@ -39,13 +39,14 @@ export class MenuManager {
         // Open Network
         document.getElementById('open-network').addEventListener('click', async () => {
             this.closeAllMenus();
+
+            if (!await this.confirmDiscardCurrentNetwork()) {
+                return;
+            }
             
             // File System Access APIを使用してファイルを開く
             if ('showOpenFilePicker' in window) {
                 try {
-                    if (appContext.networkManager.hasNetwork()) {
-                        appContext.networkManager.closeNetwork();
-                    }
                     const [fileHandle] = await window.showOpenFilePicker({
                         types: [{
                             description: 'CX2 Network File',
@@ -109,7 +110,11 @@ export class MenuManager {
         });
 
         // Import Network File
-        document.getElementById('import-network').addEventListener('click', () => {
+        document.getElementById('import-network').addEventListener('click', async () => {
+            if (!await this.confirmDiscardCurrentNetwork()) {
+                this.closeAllMenus();
+                return;
+            }
             document.getElementById('file-input-network').click();
             this.closeAllMenus();
         });
@@ -126,12 +131,15 @@ export class MenuManager {
         });
 
         // Close Network
-        document.getElementById('close-network').addEventListener('click', () => {
+        document.getElementById('close-network').addEventListener('click', async () => {
             if (appContext.networkManager.hasNetwork()) {
-                if (confirm('Are you sure you want to close the current network?')) {
-                    appContext.networkManager.closeNetwork();
-                    this.updateMenuStates();
+                // 未保存の変更がある場合は確認ダイアログを表示
+                if (!await this.confirmDiscardCurrentNetwork()) {
+                    this.closeAllMenus();
+                    return;
                 }
+                appContext.networkManager.closeNetwork();
+                this.updateMenuStates();
             }
             this.closeAllMenus();
         });
@@ -276,8 +284,9 @@ export class MenuManager {
         document.getElementById('file-input-cx2').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
-                if (appContext.networkManager.hasNetwork()) {
-                    appContext.networkManager.closeNetwork();
+                if (!await this.confirmDiscardCurrentNetwork()) {
+                    e.target.value = '';
+                    return;
                 }
                 await appContext.fileHandler.openCX2File(file);
                 if (appContext.menuManager) {
@@ -291,6 +300,10 @@ export class MenuManager {
         document.getElementById('file-input-network').addEventListener('change', async (e) => {
             const file = e.target.files[0];
             if (file) {
+                if (!await this.confirmDiscardCurrentNetwork()) {
+                    e.target.value = '';
+                    return;
+                }
                 await appContext.fileHandler.startNetworkImport(file);
             }
             e.target.value = ''; // リセット
@@ -328,6 +341,26 @@ export class MenuManager {
         document.querySelectorAll('.menu-item').forEach(item => {
             item.classList.remove('active');
         });
+    }
+
+    /**
+     * 現在のネットワーク破棄の確認（Open/Import 共通）
+     * @returns {Promise<boolean>} 続行する場合 true
+     */
+    async confirmDiscardCurrentNetwork() {
+        if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return true;
+        // 変更がない場合は確認不要
+        if (!appContext.hasUnsavedChanges) return true;
+        const currentFileName = appContext.fileHandler && appContext.fileHandler.currentFilePath
+            ? appContext.fileHandler.currentFilePath
+            : null;
+
+        const message = currentFileName
+            ? `${currentFileName}の変更は保存されません。よろしいですか？`
+            : '現在のネットワーク図は破棄されます。よろしいですか？';
+
+        const result = await appContext.modalManager.showDynamicConfirm(message, 'OK', 'キャンセル');
+        return result === 'primary';
     }
 
     /**

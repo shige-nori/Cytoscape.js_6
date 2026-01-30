@@ -514,6 +514,9 @@ export class FileHandler {
             this.currentFilePath = file.name;
             this.currentFileHandle = fileHandle; // ファイルハンドルを保存
             
+            // 未保存の変更フラグをクリア
+            appContext.hasUnsavedChanges = false;
+            
             // Saveメニューを有効化
             if (appContext.menuManager) {
                 appContext.menuManager.updateMenuStates();
@@ -637,6 +640,9 @@ export class FileHandler {
                     await writable.write(blob);
                     await writable.close();
                     
+                    // 未保存の変更フラグをクリア
+                    appContext.hasUnsavedChanges = false;
+                    
                     // Saveメニューを有効化
                     if (appContext.menuManager) {
                         appContext.menuManager.updateMenuStates();
@@ -667,6 +673,9 @@ export class FileHandler {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
+            
+            // 未保存の変更フラグをクリア
+            appContext.hasUnsavedChanges = false;
             
             // ファイルパスを保存
             this.currentFilePath = finalName;

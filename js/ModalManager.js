@@ -30,6 +30,36 @@ export class ModalManager {
                 this.hide();
             }
         });
+        
+        // 確認モーダルの初期化
+        this.confirmModal = document.getElementById('confirm-modal');
+        this.confirmModalMessage = document.getElementById('confirm-modal-message');
+        this.confirmModalOk = document.getElementById('confirm-modal-ok');
+        this.confirmModalCancel = document.getElementById('confirm-modal-cancel');
+        this.confirmModalClose = document.getElementById('confirm-modal-close');
+        
+        // 確認モーダルイベントリスナー
+        this.confirmModalClose.addEventListener('click', () => this.hideConfirm());
+        this.confirmModal.addEventListener('click', (e) => {
+            if (e.target === this.confirmModal) {
+                this.hideConfirm();
+            }
+        });
+        
+        // 3ボタン確認モーダルの初期化
+        this.threeButtonConfirmModal = document.getElementById('three-button-confirm-modal');
+        this.threeButtonConfirmMessage = document.getElementById('three-button-confirm-message');
+        this.threeButtonConfirmApply = document.getElementById('three-button-confirm-apply');
+        this.threeButtonConfirmDiscard = document.getElementById('three-button-confirm-discard');
+        this.threeButtonConfirmClose = document.getElementById('three-button-confirm-close');
+        
+        // 3ボタン確認モーダルイベントリスナー
+        this.threeButtonConfirmClose.addEventListener('click', () => this.hideThreeButtonConfirm());
+        this.threeButtonConfirmModal.addEventListener('click', (e) => {
+            if (e.target === this.threeButtonConfirmModal) {
+                this.hideThreeButtonConfirm();
+            }
+        });
     }
 
     /**
@@ -200,5 +230,161 @@ export class ModalManager {
      */
     hide() {
         this.modal.classList.remove('active');
+    }
+
+    /**
+     * 確認モーダルを表示
+     * @param {string} message - 表示するメッセージ
+     * @returns {Promise<boolean>} OKがクリックされた場合true、キャンセルの場合false
+     */
+    showConfirm(message) {
+        return new Promise((resolve) => {
+            this.confirmModalMessage.textContent = message;
+            this.confirmModal.classList.add('active');
+            
+            const handleOk = () => {
+                cleanup();
+                resolve(true);
+            };
+            
+            const handleCancel = () => {
+                cleanup();
+                resolve(false);
+            };
+            
+            const cleanup = () => {
+                this.confirmModalOk.removeEventListener('click', handleOk);
+                this.confirmModalCancel.removeEventListener('click', handleCancel);
+                this.hideConfirm();
+            };
+            
+            this.confirmModalOk.addEventListener('click', handleOk);
+            this.confirmModalCancel.addEventListener('click', handleCancel);
+        });
+    }
+
+    /**
+     * 確認モーダルを非表示
+     */
+    hideConfirm() {
+        this.confirmModal.classList.remove('active');
+    }
+
+    /**
+     * 3ボタン確認モーダルを表示
+     * @param {string} message - 表示するメッセージ
+     * @param {string} applyLabel - 適用ボタンのラベル
+     * @param {string} discardLabel - 破棄ボタンのラベル
+     * @returns {Promise<string>} 'apply', 'discard', 'cancel'のいずれか
+     */
+    showThreeButtonConfirm(message, applyLabel = '適用', discardLabel = '破棄') {
+        return new Promise((resolve) => {
+            this.threeButtonConfirmMessage.textContent = message;
+            this.threeButtonConfirmApply.textContent = applyLabel;
+            this.threeButtonConfirmDiscard.textContent = discardLabel;
+            this.threeButtonConfirmModal.classList.add('active');
+            
+            const handleApply = () => {
+                cleanup();
+                resolve('apply');
+            };
+            
+            const handleDiscard = () => {
+                cleanup();
+                resolve('discard');
+            };
+            
+            const handleClose = () => {
+                cleanup();
+                resolve('cancel');
+            };
+            
+            const cleanup = () => {
+                this.threeButtonConfirmApply.removeEventListener('click', handleApply);
+                this.threeButtonConfirmDiscard.removeEventListener('click', handleDiscard);
+                this.threeButtonConfirmClose.removeEventListener('click', handleClose);
+                this.hideThreeButtonConfirm();
+            };
+            
+            this.threeButtonConfirmApply.addEventListener('click', handleApply);
+            this.threeButtonConfirmDiscard.addEventListener('click', handleDiscard);
+            this.threeButtonConfirmClose.addEventListener('click', handleClose);
+        });
+    }
+
+    /**
+     * 3ボタン確認モーダルを非表示
+     */
+    hideThreeButtonConfirm() {
+        this.threeButtonConfirmModal.classList.remove('active');
+    }
+
+    /**
+     * カスタム確認ダイアログを動的に表示（以前のStylePanelの実装）
+     * @param {string} message - 表示するメッセージ
+     * @param {string} primaryLabel - プライマリボタンのラベル
+     * @param {string} secondaryLabel - セカンダリボタンのラベル
+     * @returns {Promise<string>} 'primary', 'secondary', 'cancel'のいずれか
+     */
+    showDynamicConfirm(message, primaryLabel = 'OK', secondaryLabel = 'キャンセル') {
+        return new Promise((resolve, reject) => {
+            // 既に同一モーダルが存在する場合は拒否
+            if (document.getElementById('dynamic-confirm-overlay')) {
+                return reject(new Error('Confirm dialog already shown'));
+            }
+
+            const overlay = document.createElement('div');
+            overlay.id = 'dynamic-confirm-overlay';
+            overlay.className = 'modal-overlay active';
+
+            const content = document.createElement('div');
+            content.className = 'modal-content';
+            content.style.maxWidth = '420px';
+
+            content.innerHTML = `
+                <div class="modal-header">
+                    <h2>確認</h2>
+                    <button class="modal-close" id="dynamic-confirm-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p>${message}</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="dynamic-confirm-secondary">${secondaryLabel}</button>
+                    <button class="btn btn-primary" id="dynamic-confirm-primary">${primaryLabel}</button>
+                </div>
+            `;
+
+            overlay.appendChild(content);
+            document.body.appendChild(overlay);
+
+            const cleanup = () => {
+                overlay.remove();
+            };
+
+            // ボタンハンドラ
+            document.getElementById('dynamic-confirm-primary').addEventListener('click', () => {
+                cleanup();
+                resolve('primary');
+            });
+            document.getElementById('dynamic-confirm-secondary').addEventListener('click', () => {
+                cleanup();
+                resolve('secondary');
+            });
+            document.getElementById('dynamic-confirm-close').addEventListener('click', () => {
+                cleanup();
+                resolve('cancel');
+            });
+
+            // ESC キーでキャンセル
+            const onKey = (ev) => {
+                if (ev.key === 'Escape') {
+                    cleanup();
+                    document.removeEventListener('keydown', onKey);
+                    resolve('cancel');
+                }
+            };
+            document.addEventListener('keydown', onKey);
+        });
     }
 }

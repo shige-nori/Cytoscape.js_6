@@ -12,5 +12,6 @@ export const appContext = {
     modalManager: null,
     menuManager: null,
     historyManager: null,
-    webPageExporter: null
+    webPageExporter: null,
+    hasUnsavedChanges: false  // ネットワークに未保存の変更があるかどうか
 };

@@ -1432,19 +1432,21 @@ export class StylePanel {
     closePanel() {
         // 未保存の変更がある場合は確認モーダルを表示
         if (this.hasUnsavedChanges()) {
-            this.showConfirmDialog('スタイルに未保存の変更があります。変更を適用しますか？', '適用する', '破棄する')
-                .then(choice => {
-                    if (choice === 'apply') {
-                        this.commitStyles();
-                    } else {
-                        this.cancelStyles();
-                    }
-                    if (this.panel) this.panel.classList.remove('active');
-                }).catch(err => {
-                    // 何らかのエラーやキャンセル時は破棄して閉じる
+            appContext.modalManager.showDynamicConfirm(
+                'スタイルに未保存の変更があります。変更を適用しますか？', 
+                '適用して閉じる', 
+                '破棄して閉じる'
+            ).then(choice => {
+                if (choice === 'primary') {
+                    this.commitStyles();
+                } else if (choice === 'secondary') {
                     this.cancelStyles();
-                    if (this.panel) this.panel.classList.remove('active');
-                });
+                }
+                // choice === 'cancel' の場合は何もしない（パネルを開いたまま）
+                if (choice !== 'cancel' && this.panel) {
+                    this.panel.classList.remove('active');
+                }
+            });
         } else {
             // 変更がなければ直ちに閉じる（既存の挙動）
             this.cancelStyles();
@@ -1487,6 +1489,14 @@ export class StylePanel {
         // スタイルを再適用
         if (appContext.networkManager && appContext.networkManager.cy && appContext.networkManager.cy.nodes().length > 0) {
             this.applyStyles();
+        }
+        // リセットした状態をコミット済みとして扱う（未保存フラグが立たないようにする）
+        try {
+            this.committedNodeStyles = JSON.parse(JSON.stringify(this.nodeStyles));
+            this.committedEdgeStyles = JSON.parse(JSON.stringify(this.edgeStyles));
+            this.committedNetworkStyles = JSON.parse(JSON.stringify(this.networkStyles));
+        } catch (e) {
+            console.warn('StylePanel: failed to commit reset styles', e);
         }
     }
 
@@ -1585,6 +1595,14 @@ export class StylePanel {
         document.querySelectorAll('.style-attribute-select').forEach(select => {
             select.value = '';
         });
+        // resetToDefault もコミット済み状態として扱う
+        try {
+            this.committedNodeStyles = JSON.parse(JSON.stringify(this.nodeStyles));
+            this.committedEdgeStyles = JSON.parse(JSON.stringify(this.edgeStyles));
+            this.committedNetworkStyles = JSON.parse(JSON.stringify(this.networkStyles));
+        } catch (e) {
+            console.warn('StylePanel: failed to commit default styles', e);
+        }
     }
 
     applyStyles() {
@@ -2154,67 +2172,6 @@ export class StylePanel {
         }
     }
 
-    // カスタム確認ダイアログを表示して Promise で結果を返す
-    showConfirmDialog(message, applyLabel = 'Apply', discardLabel = 'Discard') {
-        return new Promise((resolve, reject) => {
-            // 既に同一モーダルが存在する場合は拒否
-            if (document.getElementById('style-confirm-overlay')) return reject(new Error('Confirm dialog already shown'));
-
-            const overlay = document.createElement('div');
-            overlay.id = 'style-confirm-overlay';
-            overlay.className = 'modal-overlay active';
-
-            const content = document.createElement('div');
-            content.className = 'modal-content';
-            content.style.maxWidth = '420px';
-
-            content.innerHTML = `
-                <div class="modal-header">
-                    <h2>確認</h2>
-                    <button class="modal-close" id="style-confirm-close">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <p>${message}</p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" id="style-confirm-discard">${discardLabel}</button>
-                    <button class="btn btn-primary" id="style-confirm-apply">${applyLabel}</button>
-                </div>
-            `;
-
-            overlay.appendChild(content);
-            document.body.appendChild(overlay);
-
-            const cleanup = () => {
-                overlay.remove();
-            };
-
-            // ボタンハンドラ
-            document.getElementById('style-confirm-apply').addEventListener('click', () => {
-                cleanup();
-                resolve('apply');
-            });
-            document.getElementById('style-confirm-discard').addEventListener('click', () => {
-                cleanup();
-                resolve('discard');
-            });
-            document.getElementById('style-confirm-close').addEventListener('click', () => {
-                cleanup();
-                // treat close as discard
-                resolve('discard');
-            });
-
-            // ESC キーでキャンセル（破棄）
-            const onKey = (ev) => {
-                if (ev.key === 'Escape') {
-                    cleanup();
-                    document.removeEventListener('keydown', onKey);
-                    resolve('discard');
-                }
-            };
-            document.addEventListener('keydown', onKey);
-        });
-    }
     deepCopy(obj) {
         return JSON.parse(JSON.stringify(obj));
     }

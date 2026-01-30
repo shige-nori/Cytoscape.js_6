@@ -36,6 +36,14 @@ export class HistoryManager {
             this.undoStack.shift();
         }
         this.redoStack = [];
+
+        // システム由来の状態キャプチャ（初期化やファイルオープン/インポート/クローズ等）の場合は
+        // 未保存フラグを立てない。ユーザー操作による変更のみ未保存フラグを立てる。
+        const skipUnsavedReasons = /^(init|open|import|close)/i;
+        if (!reason || !skipUnsavedReasons.test(reason)) {
+            appContext.hasUnsavedChanges = true;
+        }
+        
         this.notifyStateChanged();
     }
 

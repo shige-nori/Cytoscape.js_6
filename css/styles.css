@@ -245,7 +245,9 @@ body {
     max-height: 80vh;
     display: flex;
     flex-direction: column;
+    font-size: 14px; /* モーダル内の本文とボタン文字を14pxに統一 */
     animation: slideIn 0.2s ease;
+    overflow: hidden; /* ヘッダ背景が角に食い込まないようクリッピング */
 }
 
 @keyframes slideIn {
@@ -267,22 +269,36 @@ body {
     border-bottom: 1px solid var(--border-color);
 }
 
+.modal-header {
+    /* 統一デザイン: ヘッダは紺色、文字は白、フォントサイズは14px */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background-color: var(--menubar-bg); /* ツールパネルと同じ紺色に統一 */
+    color: #ffffff;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
 .modal-header h2 {
-    font-size: 18px;
+    font-size: 14px;
     font-weight: 600;
+    color: #ffffff;
 }
 
 .modal-close {
     background: none;
     border: none;
-    font-size: 24px;
+    font-size: 20px;
     cursor: pointer;
-    color: var(--secondary-color);
+    color: #ffffff; /* ヘッダに合わせて白にする */
     line-height: 1;
 }
 
 .modal-close:hover {
-    color: var(--text-color);
+    color: #e6eefc;
 }
 
 .modal-body {

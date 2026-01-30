@@ -216,6 +216,14 @@ export class NetworkManager {
                     const edgeFiltersActive = Object.values(tp.edgeFilters || {}).some(v => v && String(v).trim() !== '');
                     const externalActive = (tp.externalFilteredNodes && tp.externalFilteredNodes.length > 0) || (tp.externalFilteredEdges && tp.externalFilteredEdges.length > 0);
 
+                    // 先に選択を解除してからテーブルのフィルター状態をクリア/再描画する
+                    if (typeof tp.clearSelection === 'function') {
+                        tp.clearSelection();
+                    } else {
+                        this.cy.elements().unselect();
+                    }
+                    this.resetSelectionStyles();
+
                     if (nodeFiltersActive || edgeFiltersActive) {
                         // フィルター値をクリアしてテーブル更新
                         tp.clearAllFiltersAllTabs();
@@ -225,19 +233,21 @@ export class NetworkManager {
                         // 外部フィルター（FilterPanel → Table）の解除は表示更新を保証する
                         tp.clearExternalFilterResults();
                         if (tp.isVisible && typeof tp.refreshTable === 'function') {
-                            
                             tp.refreshTable();
                         }
                     }
-                }
 
-                // 最後に選択を解除
-                if (appContext.tablePanel && typeof appContext.tablePanel.clearSelection === 'function') {
-                    appContext.tablePanel.clearSelection();
+                    // 選択解除によるテーブルの表示更新を保証する
+                    if (!nodeFiltersActive && !edgeFiltersActive && !externalActive) {
+                        if (tp.isVisible && typeof tp.refreshTable === 'function') {
+                            tp.refreshTable();
+                        }
+                    }
                 } else {
+                    // TablePanelがなければ通常どおり選択のみ解除
                     this.cy.elements().unselect();
+                    this.resetSelectionStyles();
                 }
-                this.resetSelectionStyles();
             }
         });
 
