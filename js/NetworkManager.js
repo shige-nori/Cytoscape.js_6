@@ -391,10 +391,20 @@ export class NetworkManager {
         // 既存のハイライトをクリア
         this.clearHighlight();
 
-        // 論文IDを持つノードかチェック
-        const hoveredPaperIds = node.data('論文ID');
+        // ノードが持つ論文IDフィールドを取得する。
+        // データによってキー名が異なるため、候補キーを順に試す（互換性向上）。
+        const paperIdKeys = ['論文ID', 'paperId', 'PaperID', 'PaperId', 'pmid'];
+        let hoveredPaperIds = null;
+        for (let k of paperIdKeys) {
+            const v = node.data(k);
+            if (v !== undefined && v !== null && v !== '') {
+                hoveredPaperIds = v;
+                break;
+            }
+        }
+
         if (!hoveredPaperIds) {
-            return; // 論文IDがない場合は何もしない
+            return; // 論文IDが見つからなければ何もしない
         }
 
         // 論文IDを配列に正規化
@@ -418,7 +428,15 @@ export class NetworkManager {
         // 論文IDが一致するエッジのみをフィルタリングして追加
         const matchedEdges = this.cy.collection();
         allPathEdges.forEach(edge => {
-            const edgePaperIds = edge.data('論文ID');
+            // エッジ側の論文IDフィールドも候補キーを試して取得
+            let edgePaperIds = null;
+            for (let k of ['論文ID', 'paperId', 'PaperID', 'PaperId', 'pmid']) {
+                const v = edge.data(k);
+                if (v !== undefined && v !== null && v !== '') {
+                    edgePaperIds = v;
+                    break;
+                }
+            }
             if (edgePaperIds) {
                 // エッジの論文IDを配列に正規化
                 const edgePaperIdArray = Array.isArray(edgePaperIds) ? edgePaperIds : [edgePaperIds];
