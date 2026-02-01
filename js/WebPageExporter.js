@@ -291,7 +291,7 @@ export class WebPageExporter {
             bottom: 0;
             left: 0;
             right: 0;
-            height: 300px;
+            height: var(--table-panel-height);
             background: #ffffff;
             border-top: 1px solid #e2e8f0;
             display: none;
@@ -452,6 +452,20 @@ export class WebPageExporter {
             color: #64748b;
             font-size: 14px;
         }
+        /* Table panel vertical resize handle */
+        .table-resize-handle {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            cursor: ns-resize;
+            z-index: 1200;
+            background: transparent;
+        }
+        .table-resize-handle.active {
+            background: rgba(37,99,235,0.12);
+        }
     </style>
 </head>
 <body>
@@ -568,7 +582,10 @@ export class WebPageExporter {
             const columnWidths = { node: {}, edge: {} };
             let selectionEnabled = false;
             let isFilterSelecting = false;
+            let isEdgeSelectingNodes = false;
             let renderTableDebounceTimer = null;
+            // Table panel height state (px)
+            let tablePanelHeight = 300;
 
             const setTableVisible = (visible) => {
                 tableVisible = visible;
@@ -579,9 +596,47 @@ export class WebPageExporter {
                     tableToggle.textContent = visible ? 'ON' : 'OFF';
                     tableToggle.classList.toggle('off', !visible);
                 }
-                document.documentElement.style.setProperty('--table-panel-height', visible ? '300px' : '0px');
+                // respect previously set height
+                document.documentElement.style.setProperty('--table-panel-height', visible ? (tablePanelHeight + 'px') : '0px');
                 cy.resize();
                 renderTable();
+            };
+
+            // Create vertical resize handle for table panel
+            const ensureTableResizeHandle = () => {
+                if (!tablePanel) return;
+                let handle = document.getElementById('table-resize-handle');
+                if (!handle) {
+                    handle = document.createElement('div');
+                    handle.id = 'table-resize-handle';
+                    handle.className = 'table-resize-handle';
+                    // insert at top of panel
+                    tablePanel.insertBefore(handle, tablePanel.firstChild);
+
+                    let startY = 0;
+                    let startH = 0;
+                    const onMouseMove = (ev) => {
+                        const dy = startY - ev.clientY; // dragging upwards increases height
+                        let newH = Math.max(80, startH + dy);
+                        tablePanelHeight = newH;
+                        document.documentElement.style.setProperty('--table-panel-height', newH + 'px');
+                        cy.resize();
+                    };
+                    const onMouseUp = () => {
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                        handle.classList.remove('active');
+                    };
+
+                    handle.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        startY = e.clientY;
+                        startH = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--table-panel-height')) || tablePanelHeight;
+                        handle.classList.add('active');
+                        document.addEventListener('mousemove', onMouseMove);
+                        document.addEventListener('mouseup', onMouseUp);
+                    });
+                }
             };
 
             const shouldIncludeColumn = (col) => col && !String(col).startsWith('_');
@@ -1581,6 +1636,8 @@ export class WebPageExporter {
             }
             setPathTraceMode(false);
             setTableVisible(false);
+            // ensure resize handle exists
+            ensureTableResizeHandle();
 
             cy.on('mouseover', 'node', function(event) {
                 if (!pathTraceEnabled) return;
@@ -1597,7 +1654,8 @@ export class WebPageExporter {
                 if (!selectionEnabled) return;
                 
                 // Select induced edges when manually selecting nodes
-                if (!isFilterSelecting) {
+                // Skip if this node selection was triggered by edge selection
+                if (!isFilterSelecting && !isEdgeSelectingNodes) {
                     const selectedNodes = cy.nodes(':selected');
                     if (selectedNodes.length > 1) {
                         const inducedEdges = selectedNodes.edgesWith(selectedNodes);
@@ -1635,6 +1693,16 @@ export class WebPageExporter {
 
             cy.on('select', 'edge', (e) => {
                 if (!selectionEnabled) return;
+
+                // When an edge is selected, select its connected nodes
+                if (!isFilterSelecting) {
+                     // Use flag to prevent infinite loop or unwanted induced edge selection by the node handler
+                     isEdgeSelectingNodes = true;
+                     const connectedNodes = e.target.connectedNodes();
+                     connectedNodes.select();
+                     isEdgeSelectingNodes = false;
+                }
+
                 const edge = e.target;
                 if (edge.data('_selectionOriginalLineColor') === undefined) {
                     edge.data('_selectionOriginalLineColor', edge.style('line-color'));
@@ -1675,9 +1743,13 @@ export class WebPageExporter {
                 }, 100);
             });
 
-            // Background click clears selection and shows all rows
+            // Background click: if anything is selected, clear selection and filters
             cy.on('tap', (evt) => {
                 if (evt.target !== cy) return;
+                // If nothing is selected, do nothing
+                const currSel = cy.elements(':selected');
+                if (!currSel || currSel.length === 0) return;
+
                 withLoading(() => {
                     filters.node = {};
                     filters.edge = {};
