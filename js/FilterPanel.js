@@ -702,11 +702,11 @@ export class FilterPanel {
 
         // すべての選択を解除して結果を適用
         if (appContext.tablePanel) {
-            const expanded = appContext.tablePanel.applySelectionClosure(resultingNodes, resultingEdges, { setOpacity: true, fromFilter: true });
+            const expanded = appContext.tablePanel.applySelectionClosure(resultingNodes, resultingEdges, { setOpacity: true, fromFilter: true, bringToFront: true });
             matchedNodes = expanded.nodes;
             matchedEdges = expanded.edges;
         } else {
-            applySelectionToCy(cy, resultingNodes, resultingEdges, { setOpacity: true });
+            applySelectionToCy(cy, resultingNodes, resultingEdges, { setOpacity: true, bringToFront: true });
             matchedNodes = resultingNodes;
             matchedEdges = resultingEdges;
         }

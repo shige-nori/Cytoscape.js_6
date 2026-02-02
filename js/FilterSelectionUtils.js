@@ -42,7 +42,7 @@ export function expandSelectionWithConnections(cy, nodes, edges) {
 }
 
 export function applySelectionToCy(cy, nodes, edges, options = {}) {
-    const { setOpacity = false } = options;
+    const { setOpacity = false, bringToFront = true } = options;
 
     // 外部でフィルター解除等の操作中にプログラム的な選択を抑止する場合がある
     if (appContext && appContext.suppressProgrammaticSelection) {
@@ -60,6 +60,14 @@ export function applySelectionToCy(cy, nodes, edges, options = {}) {
     // ノード選択ハンドラが誤って並列エッジを自動選択するのを抑制するため
     (edges || []).forEach(edge => edge.select());
     (nodes || []).forEach(node => node.select());
+
+    if (bringToFront && Array.isArray(edges) && edges.length > 0) {
+        try {
+            edges.forEach(edge => edge.moveToFront());
+        } catch (e) {
+            console.warn('applySelectionToCy: moveToFront failed', e);
+        }
+    }
 
     // NetworkManager のイベントハンドラが抑止されている場合でも
     // 選択スタイルが反映されるように、ここで元スタイルを保存して
@@ -89,16 +97,21 @@ export function applySelectionToCy(cy, nodes, edges, options = {}) {
         try {
             const currentColor = edge.style('line-color');
             const currentWidth = edge.style('width');
+            const currentZIndex = edge.style('z-index');
             if (edge.data('_originalLineColor') === undefined) {
                 edge.data('_originalLineColor', currentColor);
             }
             if (edge.data('_originalWidth') === undefined) {
                 edge.data('_originalWidth', currentWidth);
             }
+            if (edge.data('_originalZIndex') === undefined) {
+                edge.data('_originalZIndex', currentZIndex);
+            }
             edge.style({
                 'line-color': '#ef4444',
                 'target-arrow-color': '#ef4444',
-                'width': currentWidth
+                'width': currentWidth,
+                'z-index': 9999
             });
         } catch (e) {
             console.warn('applySelectionToCy: edge style apply failed', e);

@@ -153,16 +153,21 @@ export class NetworkManager {
             const edge = event.target;
             const currentColor = edge.style('line-color');
             const currentWidth = edge.style('width');
+            const currentZIndex = edge.style('z-index');
             if (edge.data('_originalLineColor') === undefined) {
                 edge.data('_originalLineColor', currentColor);
             }
             if (edge.data('_originalWidth') === undefined) {
                 edge.data('_originalWidth', currentWidth);
             }
+            if (edge.data('_originalZIndex') === undefined) {
+                edge.data('_originalZIndex', currentZIndex);
+            }
             edge.style({
                 'line-color': '#ef4444',
                 'target-arrow-color': '#ef4444',
-                'width': currentWidth
+                'width': currentWidth,
+                'z-index': 9999
             });
             
             
@@ -191,12 +196,16 @@ export class NetworkManager {
             const edge = event.target;
             const originalColor = edge.data('_originalLineColor');
             const originalWidth = edge.data('_originalWidth');
+            const originalZIndex = edge.data('_originalZIndex');
             if (typeof originalColor !== 'undefined') {
                 edge.style('line-color', originalColor);
                 edge.style('target-arrow-color', originalColor);
             }
             if (typeof originalWidth !== 'undefined') {
                 edge.style('width', originalWidth);
+            }
+            if (typeof originalZIndex !== 'undefined') {
+                edge.style('z-index', originalZIndex);
             }
         });
 

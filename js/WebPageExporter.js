@@ -1019,6 +1019,21 @@ export class WebPageExporter {
                 isFilterSelecting = true; // IMPORTANT: Prevent recursive logic loops
                 toSelect.select();
                 isFilterSelecting = false;
+
+                const bringToFront = options.bringToFront !== undefined ? options.bringToFront : true;
+                if (bringToFront && Array.isArray(edges) && edges.length > 0) {
+                    try {
+                        edges.forEach(edge => {
+                            const currentZIndex = edge.style('z-index');
+                            if (edge.data('_selectionOriginalZIndex') === undefined) {
+                                edge.data('_selectionOriginalZIndex', currentZIndex);
+                            }
+                            edge.style('z-index', 9999);
+                        });
+                    } catch (e) {
+                        console.warn('applySelectionToCy: z-index setting failed', e);
+                    }
+                }
             }
 
             // --- FilterPanel Class ---
@@ -1387,7 +1402,7 @@ export class WebPageExporter {
                         }
                     }
 
-                    applySelectionToCy(this.cy, resNodes, resEdges, {setOpacity: true});
+                    applySelectionToCy(this.cy, resNodes, resEdges, {setOpacity: true, bringToFront: true});
                     
                     externalFilterResults = { nodes: resNodes, edges: resEdges, conditions: conditions };
                     if(typeof renderTable === 'function') renderTable();
@@ -2678,11 +2693,13 @@ export class WebPageExporter {
                     edge.data('_selectionOriginalLineColor', edge.style('line-color'));
                     edge.data('_selectionOriginalTargetArrowColor', edge.style('target-arrow-color'));
                     edge.data('_selectionOriginalWidth', edge.style('width'));
+                    edge.data('_selectionOriginalZIndex', edge.style('z-index'));
                 }
                 edge.style({
                     'line-color': '#ef4444',
                     'target-arrow-color': '#ef4444',
-                    'width': 3
+                    'width': 3,
+                    'z-index': 9999
                 });
             });
 
@@ -2691,14 +2708,17 @@ export class WebPageExporter {
                 const lc = edge.data('_selectionOriginalLineColor');
                 const tc = edge.data('_selectionOriginalTargetArrowColor');
                 const w = edge.data('_selectionOriginalWidth');
+                const zi = edge.data('_selectionOriginalZIndex');
                 
                 if (lc !== undefined) edge.style('line-color', lc);
                 if (tc !== undefined) edge.style('target-arrow-color', tc);
                 if (w !== undefined) edge.style('width', w);
+                if (zi !== undefined) edge.style('z-index', zi);
                 
                 edge.removeData('_selectionOriginalLineColor');
                 edge.removeData('_selectionOriginalTargetArrowColor');
                 edge.removeData('_selectionOriginalWidth');
+                edge.removeData('_selectionOriginalZIndex');
             });
 
             // Selection -> Table Panel sync
