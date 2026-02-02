@@ -228,13 +228,29 @@ export class MenuManager {
             this.closeAllMenus();
         });
 
-        // Filter Panel
-        document.getElementById('toggle-filter-panel').addEventListener('click', () => {
-            if (appContext.networkManager.hasNetwork()) {
-                if (appContext.filterPanel) appContext.filterPanel.togglePanel();
-            }
-            this.closeAllMenus();
-        });
+        // Filter Panel (submenu removed from DOM in index.html)
+        const toggleFilterBtn = document.getElementById('toggle-filter-panel');
+        if (toggleFilterBtn) {
+            toggleFilterBtn.addEventListener('click', () => {
+                if (appContext.networkManager.hasNetwork()) {
+                    if (appContext.filterPanel) appContext.filterPanel.togglePanel();
+                }
+                this.closeAllMenus();
+            });
+        }
+
+        // Top-level Filter menu click should open the Filter Panel directly
+        const filterMenuItem = document.querySelector('.menu-item[data-menu="filter"]');
+        if (filterMenuItem) {
+            filterMenuItem.addEventListener('click', (e) => {
+                // If the click was inside the submenu (e.g., clicking submenu items), ignore here
+                if (e.target && e.target.closest && e.target.closest('.submenu')) return;
+                if (appContext.networkManager.hasNetwork()) {
+                    if (appContext.filterPanel) appContext.filterPanel.togglePanel();
+                }
+                this.closeAllMenus();
+            });
+        }
 
         // Path Trace
         document.getElementById('path-trace-menu').addEventListener('click', () => {
@@ -273,6 +289,29 @@ export class MenuManager {
             if (!e.target.closest('.menubar')) {
                 this.closeAllMenus();
             }
+        });
+
+        // メニューのクリックで少し凹む（押下）エフェクトを追加
+        const menuItems = document.querySelectorAll('.menubar .menu-item');
+        menuItems.forEach(mi => {
+            // マウス操作
+            mi.addEventListener('mousedown', (ev) => {
+                mi.classList.add('depressed');
+            });
+            mi.addEventListener('mouseup', (ev) => {
+                mi.classList.remove('depressed');
+            });
+            mi.addEventListener('mouseleave', (ev) => {
+                mi.classList.remove('depressed');
+            });
+
+            // キーボード操作（Enter / Space）で視覚効果を短く出す
+            mi.addEventListener('keydown', (ev) => {
+                if (ev.key === 'Enter' || ev.key === ' ') {
+                    mi.classList.add('depressed');
+                    setTimeout(() => mi.classList.remove('depressed'), 150);
+                }
+            });
         });
     }
 
