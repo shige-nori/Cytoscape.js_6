@@ -1360,18 +1360,10 @@ export class WebPageExporter {
                                         const targetVal = cond.value;
                                         incident.forEach(edge => {
                                             const edgeVal = edge.data(colName);
-                                            // Simple loose equality check or array check to match 'contains' logic roughly
-                                            if (edgeVal !== undefined && edgeVal !== null) {
-                                                let match = false;
-                                                // Handle single value string/number equality
-                                                if (String(edgeVal) == String(targetVal)) match = true;
-                                                // Handle array inclusion
-                                                if (Array.isArray(edgeVal) && (edgeVal.includes(targetVal) || edgeVal.some(v => String(v) == String(targetVal)))) match = true;
-                                                
-                                                if (match && !edgeSeen.has(edge.id())) {
-                                                    edgeSeen.add(edge.id());
-                                                    foundEdges.push(edge);
-                                                }
+                                            // Use consistent loose/exact matching logic (unifying behavior with TablePanel)
+                                            if (valueMatches(edgeVal, targetVal) && !edgeSeen.has(edge.id())) {
+                                                edgeSeen.add(edge.id());
+                                                foundEdges.push(edge);
                                             }
                                         });
                                     });
@@ -1547,13 +1539,31 @@ export class WebPageExporter {
                 return Array.from(cols);
             };
 
+            const isNumericQuery = (query) => {
+                const s = String(query ?? '').trim();
+                return s !== '' && !Number.isNaN(Number(s));
+            };
+
+            const itemMatches = (item, query) => {
+                if (!query) return true;
+                const itemStr = String(item ?? '').trim();
+                const queryStr = String(query ?? '').trim();
+
+                if (isNumericQuery(query)) {
+                    if (itemStr === '' || Number.isNaN(Number(itemStr))) return false;
+                    if (itemStr === queryStr) return true;
+                    return Number(itemStr) === Number(queryStr);
+                }
+
+                return itemStr.toLowerCase().includes(String(query).toLowerCase());
+            };
+
             const valueMatches = (value, query) => {
                 if (!query) return true;
-                const q = String(query).toLowerCase();
                 if (Array.isArray(value)) {
-                    return value.some(v => String(v).toLowerCase().includes(q));
+                    return value.some(v => itemMatches(v, query));
                 }
-                return String(value ?? '').toLowerCase().includes(q);
+                return itemMatches(value, query);
             };
 
             const formatCellValue = (value) => {
@@ -1726,6 +1736,7 @@ export class WebPageExporter {
                 const getArrayItems = (val) => {
                     if (Array.isArray(val)) return val.map(v => String(v));
                     if (typeof val === 'string' && val.includes('\\n')) return val.split('\\n');
+                    if (typeof val === 'string' && val.includes('|')) return val.split('|');
                     return null;
                 };
 
@@ -1760,9 +1771,9 @@ export class WebPageExporter {
                             const items = getArrayItems(val);
                             if (items) {
                                 // If array, does it have at least one match?
-                                return items.some(v => String(v).toLowerCase().includes(String(query).toLowerCase()));
+                                return items.some(v => itemMatches(v, query));
                             }
-                            return String(val).toLowerCase().includes(String(query).toLowerCase());
+                            return itemMatches(val, query);
                         });
 
                         if (!rowMatches) return;
@@ -1775,7 +1786,7 @@ export class WebPageExporter {
                             if (items) {
                                 anyArrayFilterMatches = true;
                                 items.forEach((item, i) => {
-                                    if (String(item).toLowerCase().includes(String(query).toLowerCase())) {
+                                    if (itemMatches(item, query)) {
                                         matchedIndices.add(i);
                                     }
                                 });
@@ -1864,6 +1875,7 @@ export class WebPageExporter {
                            filtered.forEach(row => {
                                if (row._element) selectedElements.merge(row._element);
                            });
+
                            
                            selectedElements.select();
                            
@@ -1906,8 +1918,65 @@ export class WebPageExporter {
                            };
 
                            if (type === 'node') {
+                               // [New Logic]: Propagate to edges matching the node filter
+                               const activeEntries = Object.entries(activeFilters).filter(([k,v]) => v && v.trim() !== '');
+                               if (activeEntries.length > 0) {
+                                   const nodesToCheck = selectedElements.toArray();
+                                   const edgesToSelect = cy.collection();
+                                   
+                                   nodesToCheck.forEach(node => {
+                                       const incident = node.connectedEdges();
+                                       incident.forEach(edge => {
+                                            activeEntries.forEach(([col, query]) => {
+                                                const val = edge.data(col);
+                                                if (val === undefined || val === null) return;
+                                                
+                                                const items = getArrayItems(val);
+                                                if (items) {
+                                                    // Array item using itemMatches for consistent logic (numeric=exact, string=substring)
+                                                    if (items.some(item => itemMatches(item, query))) {
+                                                        edgesToSelect.merge(edge);
+                                                    }
+                                                } else {
+                                                    // Scalar match using itemMatches (numeric=exact, string=substring)
+                                                    if (itemMatches(val, query)) {
+                                                        edgesToSelect.merge(edge);
+                                                    }
+                                                }
+                                            });
+                                       });
+                                   });
+                                   
+                                   if (edgesToSelect.length > 0) {
+                                       edgesToSelect.select();
+                                       edgesToSelect.connectedNodes().select();
+                                   }
+                               }
+
                                // For node filter, also select induced edges (edges between selected nodes)
-                               let inducedEdges = selectedElements.edgesWith(selectedElements);
+                               const currentSelectedNodes = cy.nodes(':selected');
+                               let inducedEdges = currentSelectedNodes.edgesWith(currentSelectedNodes);
+                               
+                               // Filter induced edges: They must match the active filter criteria if they possess the filtered property
+                               // This prevents selecting unrelated edges (e.g. "Peptide sequencing") just because they connect selected nodes
+                               if (activeEntries.length > 0) {
+                                   inducedEdges = inducedEdges.filter(edge => {
+                                       return activeEntries.every(([col, query]) => {
+                                            const val = edge.data(col);
+                                            // If edge does not have this property, we assume it's just a structural connection and keep it.
+                                            // If edge HAS this property, it MUST match the query.
+                                            if (val === undefined || val === null) return true;
+                                            
+                                            // Use shared matching logic
+                                            const items = getArrayItems(val);
+                                            if (items) {
+                                                return items.some(item => itemMatches(item, query));
+                                            }
+                                            return itemMatches(val, query);
+                                       });
+                                   });
+                               }
+
                                inducedEdges = filterByAllowedIndices(inducedEdges);
                                inducedEdges.select();
                            } else if (type === 'edge') {
@@ -1944,7 +2013,7 @@ export class WebPageExporter {
                                  // Identify indices in this row's array that match the filter for this column
                                  const rowMatchedIndices = new Set();
                                  items.forEach((item, i) => {
-                                     if (String(item).toLowerCase().includes(String(query).toLowerCase())) {
+                                     if (itemMatches(item, query)) {
                                          rowMatchedIndices.add(i);
                                      }
                                  });

@@ -845,12 +845,26 @@ export class TablePanel {
                     return true;
                 }
 
+                const isFilterNumeric = !isNaN(Number(filterValue)) && filterValue.trim() !== '';
+
                 const items = this.getArrayItems(row[col]);
                 if (items && items.length > 0) {
                     const lowerFilter = filterValue.toLowerCase();
                     const matchedIndices = items
                         .map((item, idx) => ({ item, idx }))
-                        .filter(({ item }) => String(item).toLowerCase().includes(lowerFilter))
+                        .filter(({ item }) => {
+                            const itemStr = String(item).trim();
+
+                            if (isFilterNumeric) {
+                                if (itemStr !== '' && !isNaN(Number(itemStr))) {
+                                    if (itemStr === String(filterValue).trim()) return true;
+                                    return Number(itemStr) === Number(filterValue);
+                                }
+                                return false;
+                            }
+
+                            return itemStr.toLowerCase().includes(lowerFilter);
+                        })
                         .map(({ idx }) => idx);
 
                     if (matchedIndices.length === 0) {
@@ -869,6 +883,22 @@ export class TablePanel {
                 }
 
                 const cellValue = this.formatCellValue(row[col]);
+
+                if (isFilterNumeric) {
+                    // セル値（表示文字列）も数値として扱えるかチェック
+                    // Check if cell value (displayed string) is also numeric
+                    if (!isNaN(Number(cellValue)) && cellValue.trim() !== '') {
+                        const filterNum = Number(filterValue);
+                        
+                        // 文字列同士で比較して完全一致ならOK (例: "39" vs "39")
+                        if (cellValue.trim() === String(filterValue).trim()) return true;
+
+                        // 数値として一致する場合もOK (例: 39.0 vs 39, 39 vs 39.0)
+                        return Number(cellValue) === filterNum;
+                    }
+                    return false;
+                }
+
                 return cellValue.toLowerCase().includes(filterValue.toLowerCase());
             });
 
@@ -906,14 +936,45 @@ export class TablePanel {
 
     buildTableFilterConditions(type) {
         const filters = type === 'node' ? this.nodeFilters : this.edgeFilters;
+        const currentData = type === 'node' ? appContext.networkManager.cy.nodes().map(n=>n.data()) : appContext.networkManager.cy.edges().map(e=>e.data());
+        
         return Object.keys(filters)
             .filter(col => filters[col] && String(filters[col]).trim() !== '')
-            .map(col => ({
-                column: `${type}.${col}`,
-                operator: 'contains',
-                value: String(filters[col]),
-                logicalOp: 'AND'
-            }));
+            .map(col => {
+                // サンプリングして数値カラムか判定（先頭100件等を確認）
+                const isNumericCol = currentData.slice(0, 100).some(d => {
+                    const v = d[col];
+                    if (typeof v === 'number') return true;
+                    if (Array.isArray(v)) {
+                        return v.some(item => {
+                            const s = String(item).trim();
+                            return s !== '' && !isNaN(Number(s));
+                        });
+                    }
+                    if (typeof v === 'string') {
+                        const raw = v.trim();
+                        if (raw === '') return false;
+                        if (raw.includes('\n') || raw.includes('|')) {
+                            return raw
+                                .split(/\n|\|/)
+                                .some(part => {
+                                    const s = String(part).trim();
+                                    return s !== '' && !isNaN(Number(s));
+                                });
+                        }
+                        return !isNaN(Number(raw));
+                    }
+                    return false;
+                });
+                const operator = isNumericCol ? '=' : 'contains';
+                
+                return {
+                    column: `${type}.${col}`,
+                    operator: operator,
+                    value: String(filters[col]),
+                    logicalOp: 'AND'
+                };
+            });
     }
 
     // フィルター評価ロジックは `js/FilterEval.js` に移譲しています
@@ -1110,10 +1171,34 @@ export class TablePanel {
                                 incident.forEach(edge => {
                                     const edgeVal = edge.data(col);
                                     if (edgeVal === undefined || edgeVal === null) return;
+                                    // 数値の場合は部分一致検索しない
+                                    const isNumericVal = !isNaN(Number(val)) && String(val).trim() !== '';
+
                                     if (Array.isArray(edgeVal)) {
-                                        if (edgeVal.includes(val) && !seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
+                                        let matched = false;
+                                        if (isNumericVal) {
+                                            // 数値は完全一致
+                                            // Numeric values use exact match
+                                            matched = edgeVal.some(v => String(v).trim() === String(val).trim());
+                                        } else {
+                                            // 文字列は部分一致
+                                            // Strings use substring match
+                                            const lowerVal = String(val).toLowerCase();
+                                            matched = edgeVal.some(v => String(v).toLowerCase().includes(lowerVal));
+                                        }
+
+                                        if (matched && !seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
                                     } else {
-                                        if (String(edgeVal) === String(val) && !seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
+                                        let matched = false;
+                                        if (isNumericVal) {
+                                            // 数値は完全一致
+                                            matched = String(edgeVal).trim() === String(val).trim();
+                                        } else {
+                                            // 文字列は部分一致
+                                            matched = String(edgeVal).toLowerCase().includes(String(val).toLowerCase());
+                                        }
+
+                                        if (matched && !seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
                                     }
                                 });
                             });
