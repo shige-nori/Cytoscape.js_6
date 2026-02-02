@@ -668,6 +668,104 @@ export class WebPageExporter {
         #filter-apply-btn:hover {
             background-color: #1d4ed8;
         }
+
+        /* Confirm Modal */
+        .confirm-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        .confirm-modal-overlay.active {
+            display: flex;
+        }
+        .confirm-modal-content {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            min-width: 300px;
+            width: 90%;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+            overflow: hidden;
+        }
+        .confirm-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            background-color: #1e293b;
+            color: #ffffff;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        .confirm-modal-header h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+        }
+        .confirm-modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #ffffff;
+            line-height: 1;
+        }
+        .confirm-modal-close:hover {
+            color: #e6eefc;
+        }
+        .confirm-modal-body {
+            padding: 10px 20px;
+            overflow-y: auto;
+            flex: 1 1 auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        .confirm-modal-body p {
+            margin: 0;
+        }
+        .confirm-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 8px 10px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .confirm-modal-footer .btn {
+            padding: 5px 12px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .confirm-modal-footer .btn-primary {
+            background-color: #2563eb;
+            color: #fff;
+        }
+        .confirm-modal-footer .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+        .confirm-modal-footer .btn-secondary {
+            background-color: #fff;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+        }
+        .confirm-modal-footer .btn-secondary:hover {
+            background-color: #f8fafc;
+        }
     </style>
 </head>
 <body>
@@ -728,6 +826,23 @@ export class WebPageExporter {
         </div>
     </div>
 
+    <!-- Confirm Modal -->
+    <div class="confirm-modal-overlay" id="confirm-modal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <h2>確認</h2>
+                <button class="confirm-modal-close" id="confirm-modal-close">×</button>
+            </div>
+            <div class="confirm-modal-body">
+                <p id="confirm-modal-message"></p>
+            </div>
+            <div class="confirm-modal-footer">
+                <button class="btn btn-secondary" id="confirm-modal-cancel">キャンセル</button>
+                <button class="btn btn-primary" id="confirm-modal-ok">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script type="application/json" id="elements-json">${elementsJson}</script>
     <script type="application/json" id="styles-json">${stylesJson}</script>
     <script type="application/json" id="layers-json">${layersJson}</script>
@@ -745,6 +860,54 @@ export class WebPageExporter {
             };
             const hideLoading = () => {
                 if(progressOverlay) progressOverlay.classList.remove('active');
+            };
+
+            // Confirm Modal Helper
+            const showConfirm = (message) => {
+                return new Promise((resolve) => {
+                    const modal = document.getElementById('confirm-modal');
+                    const messageEl = document.getElementById('confirm-modal-message');
+                    const okBtn = document.getElementById('confirm-modal-ok');
+                    const cancelBtn = document.getElementById('confirm-modal-cancel');
+                    const closeBtn = document.getElementById('confirm-modal-close');
+                    
+                    if (!modal || !messageEl || !okBtn || !cancelBtn || !closeBtn) {
+                        resolve(window.confirm(message));
+                        return;
+                    }
+                    
+                    messageEl.textContent = message;
+                    modal.classList.add('active');
+                    
+                    const handleOk = () => {
+                        cleanup();
+                        resolve(true);
+                    };
+                    
+                    const handleCancel = () => {
+                        cleanup();
+                        resolve(false);
+                    };
+                    
+                    const cleanup = () => {
+                        okBtn.removeEventListener('click', handleOk);
+                        cancelBtn.removeEventListener('click', handleCancel);
+                        closeBtn.removeEventListener('click', handleCancel);
+                        modal.classList.remove('active');
+                    };
+                    
+                    okBtn.addEventListener('click', handleOk);
+                    cancelBtn.addEventListener('click', handleCancel);
+                    closeBtn.addEventListener('click', handleCancel);
+                    
+                    // Close on background click
+                    modal.addEventListener('click', function bgClick(e) {
+                        if (e.target === modal) {
+                            modal.removeEventListener('click', bgClick);
+                            handleCancel();
+                        }
+                    });
+                });
             };
 
             // Global Filter Variables
@@ -1111,11 +1274,20 @@ export class WebPageExporter {
                     \`;
                 }
 
-                applyFilter() {
+                async applyFilter() {
                     this.syncConditionsFromUI();
                     const valid = this.conditions.filter(c => c.column && c.value);
                     if(valid.length === 0) { alert('Please specify at least one filter condition.'); return; }
-                    
+
+                    // If Path Trace is enabled, confirm turning it off before applying filter
+                    if (typeof pathTraceEnabled !== 'undefined' && pathTraceEnabled) {
+                        const confirmMsg = 'Path Trace機能はOFFになります。よろしいですか？';
+                        const ok = await showConfirm(confirmMsg);
+                        if (!ok) return;
+                        // turn off path trace
+                        setPathTraceMode(false);
+                    }
+
                     showLoading('Applying filter...');
                     setTimeout(() => {
                          const nodes = this.cy.nodes();
@@ -2345,8 +2517,22 @@ export class WebPageExporter {
                 renderTable();
             };
             if (pathTraceToggle) {
-                pathTraceToggle.addEventListener('click', () => {
-                    setPathTraceMode(!pathTraceEnabled);
+                pathTraceToggle.addEventListener('click', async () => {
+                    const requestEnable = !pathTraceEnabled;
+                    if (requestEnable) {
+                        // If enabling Path Trace, check for active filter or selection
+                        const hasFilter = externalFilterResults && (externalFilterResults.nodes && externalFilterResults.nodes.length > 0 || externalFilterResults.edges && externalFilterResults.edges.length > 0);
+                        const hasSelection = cy.elements(':selected').length > 0;
+                        if (hasFilter || hasSelection) {
+                            const confirmMsg = 'フィルター機能、ノード・エッジ選択機能は解除されます。よろしいですか？';
+                            const ok = await showConfirm(confirmMsg);
+                            if (!ok) return; // abort enabling
+                            // Clear filters and selections before enabling
+                            if (typeof clearFilter === 'function') clearFilter();
+                            cy.elements().unselect();
+                        }
+                    }
+                    setPathTraceMode(requestEnable);
                 });
             }
             setPathTraceMode(false);

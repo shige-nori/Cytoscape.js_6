@@ -427,12 +427,26 @@ export class FilterPanel {
     /**
      * フィルターを適用
      */
-    applyFilter() {
+    async applyFilter() {
         if (!appContext.networkManager || !appContext.networkManager.hasNetwork()) return;
 
-        // Path TraceがONならOFFにしてから適用
+        // Path TraceがONなら確認メッセージを表示してOFFにする
         if (appContext.pathTracePanel && appContext.pathTracePanel.isEnabled) {
-            appContext.pathTracePanel.togglePathTrace(false);
+             let confirmed = true;
+             if (appContext.modalManager && typeof appContext.modalManager.showConfirm === 'function') {
+                 confirmed = await appContext.modalManager.showConfirm(
+                     'Path Trace機能はOFFになります。よろしいですか？'
+                 );
+             } else {
+                 confirmed = confirm('Path Trace機能はOFFになります。よろしいですか？');
+             }
+
+             if (!confirmed) {
+                 return;
+             }
+             
+             // 確認OKならPath TraceをOFFにする
+             appContext.pathTracePanel.togglePathTrace(false);
         }
 
         // UIの最新値を条件に反映

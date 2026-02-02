@@ -111,7 +111,38 @@ export class PathTracePanel {
     /**
      * Path Trace機能のON/OFF
      */
-    togglePathTrace(enabled) {
+    async togglePathTrace(enabled) {
+        // ONにする場合に確認メッセージを表示
+        if (enabled) {
+            // 他のフィルタや選択状態が存在するか確認
+            const hasActiveFilter = appContext.filterPanel && appContext.filterPanel.conditions && appContext.filterPanel.conditions.some(c => c.column && c.value);
+            const hasSelection = appContext.networkManager && appContext.networkManager.cy && appContext.networkManager.cy.elements(':selected').length > 0;
+
+            if (hasActiveFilter || hasSelection) {
+                // appContext.modalManager.showTwoButtonConfirm を使うと仮定、もしくは汎用的な確認モーダルを使用
+                // ModalManagerに汎用的な確認メソッドがあるか確認しましたが、 dynamicConfirm はあるようです
+                // しかし、既存のクラスメソッド showConfirm(message) は Promise<boolean> を返します。
+                
+                let confirmed = true;
+                if (appContext.modalManager && typeof appContext.modalManager.showConfirm === 'function') {
+                    confirmed = await appContext.modalManager.showConfirm(
+                        'フィルター機能およびノード・エッジの選択状態は解除されますがよろしいですか？\n(Path Trace機能はこれらと排他利用になります)'
+                    );
+                } else {
+                    confirmed = confirm('フィルター機能およびノード・エッジの選択状態は解除されますがよろしいですか？\n(Path Trace機能はこれらと排他利用になります)');
+                }
+
+                if (!confirmed) {
+                    // キャンセルの場合、スイッチをOFFに戻す
+                    const toggleSwitch = document.getElementById('path-trace-toggle');
+                    if (toggleSwitch) {
+                        toggleSwitch.checked = false;
+                    }
+                    return;
+                }
+            }
+        }
+
         this.isEnabled = enabled;
 
         // UIトグルを状態に同期
@@ -121,9 +152,22 @@ export class PathTracePanel {
         }
         
         if (appContext.networkManager) {
-            // ONにする場合、既存の選択をすべて解除
-            if (enabled && appContext.networkManager.cy) {
-                appContext.networkManager.cy.elements().unselect();
+            // ONにする場合、フィルターと選択状態をすべて解除
+            if (enabled) {
+                // フィルターが掛かっている場合は解除
+                if (appContext.filterPanel) {
+                    appContext.filterPanel.clearFilter();
+                }
+                
+                // 既存の選択をすべて解除
+                if (appContext.networkManager.cy) {
+                    appContext.networkManager.cy.elements().unselect();
+                }
+                
+                // Table Panelの選択も解除
+                if (appContext.tablePanel) {
+                    appContext.tablePanel.clearSelection();
+                }
             }
             
             // ホバーハイライトの有効/無効を切り替え

@@ -20,6 +20,8 @@ export function evaluateSingleValue(value, operator, targetValue) {
             case '<': return numValue < numTarget;
             case '<=': return numValue <= numTarget;
             case '<>': return numValue !== numTarget;
+            // 'contains' for numbers should fall through to string comparison
+            case 'contains': break; 
             default: return false;
         }
     }
