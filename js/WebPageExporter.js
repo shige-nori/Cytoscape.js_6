@@ -466,6 +466,208 @@ export class WebPageExporter {
         .table-resize-handle.active {
             background: rgba(37,99,235,0.12);
         }
+
+        /* Filter Panel Styles */
+        .filter-panel {
+            display: none;
+            position: fixed;
+            top: 60px;
+            left: 20px;
+            width: 500px;
+            max-height: 70vh;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 2500;
+            overflow: hidden;
+            flex-direction: column;
+            font-size: 14px;
+        }
+
+        .filter-panel.active {
+            display: flex;
+        }
+
+        .filter-panel-header {
+            padding: 6px 8px;
+            background-color: #1e293b;
+            border-bottom: 1px solid #e2e8f0;
+            border-radius: 6px 6px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .filter-panel-header h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: white;
+        }
+
+        .filter-panel-close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+
+        .filter-panel-close-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .filter-panel-body {
+            padding: 8px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .filter-conditions-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-condition {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-condition-row {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .filter-column-select,
+        .filter-operator-select,
+        .filter-logical-select {
+            padding: 4px 6px;
+            height: 28px;
+            line-height: 18px;
+            border: 1px solid #e2e8f0;
+            border-radius: 3px;
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+        }
+
+        .filter-column-select { flex: 2; }
+        .filter-operator-select { flex: 0.8; }
+
+        .filter-value-input {
+            flex: 1.5;
+            padding: 4px 6px;
+            height: 28px;
+            line-height: 18px;
+            border: 1px solid #e2e8f0;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+
+        .filter-remove-btn {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .filter-remove-btn:hover {
+            background-color: #dc2626;
+        }
+        
+        .filter-logical-row {
+            display: flex;
+            justify-content: center;
+            padding: 3px 0;
+        }
+
+        .filter-logical-select {
+            width: 100px;
+        }
+
+        .filter-add-row {
+            display: flex;
+            justify-content: center;
+            padding: 4px 0;
+        }
+
+        .filter-add-btn {
+            padding: 8px 12px;
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-height: 36px;
+        }
+
+        .filter-add-btn:hover {
+            background-color: #1d4ed8;
+        }
+
+        .filter-panel-footer {
+            padding: 6px 8px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+
+        #filter-clear-btn {
+            background-color: #64748b;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            min-height: 36px;
+        }
+
+        #filter-clear-btn:hover {
+            background-color: #475569;
+        }
+
+        #filter-apply-btn {
+            background-color: #2563eb;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            min-height: 36px;
+        }
+
+        #filter-apply-btn:hover {
+            background-color: #1d4ed8;
+        }
     </style>
 </head>
 <body>
@@ -482,10 +684,28 @@ export class WebPageExporter {
             <span class="menu-label">Table Panel</span>
             <button id="table-panel-toggle" class="table-toggle off">OFF</button>
         </div>
+        <div class="menu-item">
+            <span class="menu-label">Filter</span>
+            <button id="filter-panel-toggle" class="table-toggle off">OFF</button>
+        </div>
     </div>
     <div id="cy"></div>
     <div id="overlay-container-back" class="overlay-container"></div>
     <div id="overlay-container" class="overlay-container"></div>
+
+    <div id="filter-panel" class="filter-panel">
+        <div class="filter-panel-header">
+            <h3>Filter</h3>
+            <button id="filter-close-btn" class="filter-panel-close-btn">×</button>
+        </div>
+        <div class="filter-panel-body">
+            <div id="filter-conditions-container" class="filter-conditions-container"></div>
+        </div>
+        <div class="filter-panel-footer">
+            <button id="filter-clear-btn">Clear</button>
+            <button id="filter-apply-btn">Apply</button>
+        </div>
+    </div>
 
     <div class="table-panel" id="table-panel">
         <div class="table-panel-header">
@@ -526,6 +746,498 @@ export class WebPageExporter {
             const hideLoading = () => {
                 if(progressOverlay) progressOverlay.classList.remove('active');
             };
+
+            // Global Filter Variables
+            let filterPanel;
+            let externalFilterResults = null;
+
+            // --- FilterEval Logic ---
+            function evaluateSingleValue(value, operator, targetValue) {
+                if (value === null || value === undefined) value = '';
+                const numValue = Number(value);
+                const numTarget = Number(targetValue);
+                const isNumeric = !isNaN(numValue) && !isNaN(numTarget) && value !== '' && targetValue !== '';
+                if (isNumeric) {
+                    switch (operator) {
+                        case '=': return numValue === numTarget;
+                        case '>=': return numValue >= numTarget;
+                        case '>': return numValue > numTarget;
+                        case '<': return numValue < numTarget;
+                        case '<=': return numValue <= numTarget;
+                        case '<>': return numValue !== numTarget;
+                        default: return false;
+                    }
+                }
+                const ymdRegex = /^\d{4}-\d{2}-\d{2}$/;
+                const rawValue = String(value);
+                const rawTarget = String(targetValue);
+                if (ymdRegex.test(rawValue) && ymdRegex.test(rawTarget)) {
+                    switch (operator) {
+                        case '=': return rawValue === rawTarget;
+                        case '>=': return rawValue >= rawTarget;
+                        case '>': return rawValue > rawTarget;
+                        case '<': return rawValue < rawTarget;
+                        case '<=': return rawValue <= rawTarget;
+                        case '<>': return rawValue !== rawTarget;
+                        default: return false;
+                    }
+                }
+                const strValue = rawValue.toLowerCase();
+                const strTarget = rawTarget.toLowerCase();
+                switch (operator) {
+                    case '=': return strValue === strTarget;
+                    case '>=': return strValue >= strTarget;
+                    case '>': return strValue > strTarget;
+                    case '<': return strValue < strTarget;
+                    case '<=': return strValue <= strTarget;
+                    case '<>': return strValue !== strTarget;
+                    case 'contains': return strValue.includes(strTarget);
+                    default: return false;
+                }
+            }
+            function evaluateCondition(value, operator, targetValue) {
+                if (value === null || value === undefined) value = '';
+                if (Array.isArray(value)) {
+                    return value.some(item => evaluateSingleValue(item, operator, targetValue));
+                }
+                return evaluateSingleValue(value, operator, targetValue);
+            }
+
+            // --- FilterSelectionUtils Logic ---
+            function expandSelectionWithConnections(cy, nodes, edges) {
+                const nodeMap = new Map();
+                const edgeMap = new Map();
+                const hasExplicitEdges = Array.isArray(edges) && edges.length > 0;
+                if(nodes) nodes.forEach(node => { if (node) nodeMap.set(node.id(), node); });
+                if(edges) edges.forEach(edge => { if (edge) edgeMap.set(edge.id(), edge); });
+                if (!hasExplicitEdges && nodeMap.size >= 2) {
+                    cy.edges().forEach(edge => {
+                        const src = edge.source();
+                        const tgt = edge.target();
+                        if (src && tgt && nodeMap.has(src.id()) && nodeMap.has(tgt.id())) {
+                            edgeMap.set(edge.id(), edge);
+                        }
+                    });
+                }
+                if (edgeMap.size > 0) {
+                    edgeMap.forEach(edge => {
+                        const src = edge.source();
+                        const tgt = edge.target();
+                        if (src) nodeMap.set(src.id(), src);
+                        if (tgt) nodeMap.set(tgt.id(), tgt);
+                    });
+                }
+                return {
+                    nodes: Array.from(nodeMap.values()),
+                    edges: Array.from(edgeMap.values())
+                };
+            }
+            
+            function applySelectionToCy(cy, nodes, edges, options = {}) {
+                if(!cy) return;
+                cy.elements().unselect();
+                cy.elements().style('opacity', 1);
+                
+                if(options.setOpacity) {
+                   // Gray out non-selected if needed? 
+                   // The original applySelectionToCy logic also handles opacity styles if highlighted
+                   // Here for export:
+                   // We need to replicate the 'highlight' effect.
+                   // All elements are visible by default. If filter is applied, only results are opaque?
+                   // Currently export doesn't implement dimming for non-selected unless Highlighting (Path Trace) does it.
+                   // But Filter Logic says "applySelection".
+                }
+                
+                // Select elements
+                const toSelect = cy.collection();
+                if(edges) edges.forEach(edge => toSelect.merge(edge));
+                if(nodes) nodes.forEach(node => toSelect.merge(node));
+                
+                isFilterSelecting = true; // IMPORTANT: Prevent recursive logic loops
+                toSelect.select();
+                isFilterSelecting = false;
+            }
+
+            // --- FilterPanel Class ---
+            class FilterPanel {
+                constructor(cyInstance) {
+                    this.cy = cyInstance;
+                    this.panel = document.getElementById('filter-panel');
+                    this.conditions = [];
+                    this.initialize();
+                }
+
+                initialize() {
+                    this.setupEventListeners();
+                    // setupPanelDrag
+                    const header = this.panel.querySelector('.filter-panel-header');
+                    if(header) {
+                        let isDragging = false;
+                        let currentX;
+                        let currentY;
+                        let initialX;
+                        let initialY;
+                        let xOffset = 0;
+                        let yOffset = 0;
+                        header.addEventListener('mousedown', (e) => {
+                            initialX = e.clientX - xOffset;
+                            initialY = e.clientY - yOffset;
+                            if (e.target === header || e.target.parentNode === header) {
+                                isDragging = true;
+                            }
+                        });
+                        document.addEventListener('mousemove', (e) => {
+                            if (isDragging) {
+                                e.preventDefault();
+                                currentX = e.clientX - initialX;
+                                currentY = e.clientY - initialY;
+                                xOffset = currentX;
+                                yOffset = currentY;
+                                this.panel.style.transform = \`translate3d(\${currentX}px, \${currentY}px, 0)\`;
+                            }
+                        });
+                        document.addEventListener('mouseup', () => {
+                            initialX = currentX;
+                            initialY = currentY;
+                            isDragging = false;
+                        });
+                    }
+                    this.addCondition(); 
+                }
+
+                setupEventListeners() {
+                    const closeBtn = document.getElementById('filter-close-btn');
+                    if(closeBtn) closeBtn.addEventListener('click', () => this.toggle(false));
+                    const applyBtn = document.getElementById('filter-apply-btn');
+                    if(applyBtn) applyBtn.addEventListener('click', () => this.applyFilter());
+                    const clearBtn = document.getElementById('filter-clear-btn');
+                    if(clearBtn) clearBtn.addEventListener('click', () => this.clearFilter());
+                }
+
+                toggle(show) {
+                    const isVisible = show !== undefined ? show : !this.panel.classList.contains('active');
+                    if (isVisible) {
+                        this.panel.classList.add('active');
+                        this.updateAllColumnSelects();
+                    } else {
+                        this.panel.classList.remove('active');
+                    }
+                    const toggleBtn = document.getElementById('filter-panel-toggle');
+                    if(toggleBtn) {
+                        toggleBtn.textContent = isVisible ? 'ON' : 'OFF';
+                        toggleBtn.classList.toggle('off', !isVisible);
+                    }
+                }
+
+                addCondition(afterId = null) {
+                    const condition = {
+                        id: Date.now() + Math.random(),
+                        column: '',
+                        operator: '=',
+                        value: '',
+                        logicalOp: 'AND'
+                    };
+                    if (afterId) {
+                        const index = this.conditions.findIndex(c => c.id === afterId);
+                        if (index !== -1) {
+                            this.conditions.splice(index + 1, 0, condition);
+                        } else {
+                            this.conditions.push(condition);
+                        }
+                    } else {
+                        this.conditions.push(condition);
+                    }
+                    this.renderConditions();
+                }
+
+                removeCondition(id) {
+                    this.conditions = this.conditions.filter(c => c.id !== id);
+                    if (this.conditions.length === 0) {
+                        this.addCondition();
+                    } else {
+                        this.renderConditions();
+                    }
+                }
+
+                renderConditions() {
+                    this.syncConditionsFromUI();
+                    const container = document.getElementById('filter-conditions-container');
+                    if(!container) return;
+                    container.innerHTML = '';
+                    this.conditions.forEach((condition, index) => {
+                        container.appendChild(this.createConditionElement(condition, index));
+                    });
+                }
+
+                syncConditionsFromUI() {
+                    const container = document.getElementById('filter-conditions-container');
+                    if (!container) return;
+                    container.querySelectorAll('.filter-condition').forEach(div => {
+                        const id = Number(div.dataset.conditionId);
+                        const condition = this.conditions.find(c => c.id === id);
+                        if (!condition) return;
+                        const colParam = div.querySelector('.filter-column-select');
+                        const opParam = div.querySelector('.filter-operator-select');
+                        const valParam = div.querySelector('.filter-value-input');
+                        const logParam = div.querySelector('.filter-logical-select');
+                        if (colParam) condition.column = colParam.value;
+                        if (opParam) condition.operator = opParam.value;
+                        if (valParam) condition.value = valParam.value;
+                        if (logParam) condition.logicalOp = logParam.value;
+                    });
+                }
+
+                createConditionElement(condition, index) {
+                    const div = document.createElement('div');
+                    div.className = 'filter-condition';
+                    div.dataset.conditionId = condition.id;
+
+                    const columnSelect = document.createElement('select');
+                    columnSelect.className = 'filter-column-select';
+                    columnSelect.innerHTML = '<option value="">Choose Column</option>';
+                    this.populateColumnOptions(columnSelect);
+                    columnSelect.value = condition.column;
+                    columnSelect.addEventListener('change', (e) => {
+                       condition.column = e.target.value;
+                       const opSel = div.querySelector('.filter-operator-select');
+                       if(opSel) this.updateOperatorSelectOptions(opSel, condition.column);
+                    });
+
+                    const operatorSelect = document.createElement('select');
+                    operatorSelect.className = 'filter-operator-select';
+                    this.updateOperatorSelectOptions(operatorSelect, condition.column);
+                    operatorSelect.addEventListener('change', (e) => condition.operator = e.target.value);
+                    if(condition.operator) operatorSelect.value = condition.operator;
+
+                    const valueInput = document.createElement('input');
+                    valueInput.type = 'text';
+                    valueInput.className = 'filter-value-input';
+                    valueInput.value = condition.value;
+                    valueInput.placeholder = 'Value';
+                    valueInput.addEventListener('input', (e) => condition.value = e.target.value);
+
+                    let removeBtn = null;
+                    if(this.conditions.length > 1) {
+                        removeBtn = document.createElement('button');
+                        removeBtn.className = 'filter-remove-btn';
+                        removeBtn.textContent = '✕';
+                        removeBtn.title = 'Remove';
+                        removeBtn.addEventListener('click', () => this.removeCondition(condition.id));
+                    }
+
+                    const row = document.createElement('div');
+                    row.className = 'filter-condition-row';
+                    row.appendChild(columnSelect);
+                    row.appendChild(operatorSelect);
+                    row.appendChild(valueInput);
+                    if(removeBtn) row.appendChild(removeBtn);
+                    div.appendChild(row);
+
+                    if(index < this.conditions.length - 1) {
+                         const logicalRow = document.createElement('div');
+                         logicalRow.className = 'filter-logical-row';
+                         const logicalSelect = document.createElement('select');
+                         logicalSelect.className = 'filter-logical-select';
+                         logicalSelect.innerHTML = '<option value="AND">AND</option><option value="OR" selected>OR</option><option value="NOT">NOT</option>';
+                         logicalSelect.value = condition.logicalOp;
+                         logicalSelect.addEventListener('change', (e) => condition.logicalOp = e.target.value);
+                         logicalRow.appendChild(logicalSelect);
+                         div.appendChild(logicalRow);
+                    } else {
+                         const addRow = document.createElement('div');
+                         addRow.className = 'filter-add-row';
+                         const addBtn = document.createElement('button');
+                         addBtn.className = 'filter-add-btn';
+                         addBtn.textContent = '+ Add Condition';
+                         addBtn.addEventListener('click', () => {
+                             condition.logicalOp = 'AND';
+                             this.addCondition(condition.id);
+                         });
+                         addRow.appendChild(addBtn);
+                         div.appendChild(addRow);
+                    }
+                    return div;
+                }
+
+                getAvailableColumns() {
+                     if(!this.cy) return [];
+                     const columns = [];
+                     const nodeSample = this.cy.nodes().slice(0, 100);
+                     const edgeSample = this.cy.edges().slice(0, 100);
+                     const nodeKeys = new Set();
+                     const edgeKeys = new Set();
+                     const excluded = ['id', 'source', 'target', 'parent', '_hoverOriginalBg', '_hoverOriginalOpacity', '_selectionOriginalBg', 'name', 'label', 'Label'];
+                     
+                     nodeSample.forEach(ele => Object.keys(ele.data()).forEach(k => {
+                        if(!k.startsWith('_') && !excluded.includes(k)) nodeKeys.add(k);
+                     }));
+                     edgeSample.forEach(ele => Object.keys(ele.data()).forEach(k => {
+                        if(!k.startsWith('_') && !excluded.includes(k)) edgeKeys.add(k);
+                     }));
+                     
+                     [...nodeKeys].sort().forEach(k => columns.push({value: 'node.'+k, label: 'Node '+k}));
+                     [...edgeKeys].sort().forEach(k => columns.push({value: 'edge.'+k, label: 'Edge '+k}));
+                     return columns;
+                }
+
+                populateColumnOptions(select) {
+                     const cols = this.getAvailableColumns();
+                     cols.forEach(c => {
+                         const opt = document.createElement('option');
+                         opt.value = c.value;
+                         opt.textContent = c.label;
+                         select.appendChild(opt);
+                     });
+                }
+
+                updateAllColumnSelects() {
+                     this.panel.querySelectorAll('.filter-column-select').forEach(sel => {
+                         const v = sel.value;
+                         sel.innerHTML = '<option value="">Choose Column</option>';
+                         this.populateColumnOptions(sel);
+                         sel.value = v;
+                     });
+                }
+                
+                updateOperatorSelectOptions(select, columnValue) {
+                    select.innerHTML = \`
+                        <option value="=">=</option>
+                        <option value=">=">≧</option>
+                        <option value=">">></option>
+                        <option value="<"><</option>
+                        <option value="<=">≦</option>
+                        <option value="<>"><></option>
+                        <option value="contains" \${columnValue && (columnValue.includes('node.') || columnValue.includes('edge.')) ? '' : ''}>contains</option>
+                    \`;
+                }
+
+                applyFilter() {
+                    this.syncConditionsFromUI();
+                    const valid = this.conditions.filter(c => c.column && c.value);
+                    if(valid.length === 0) { alert('Please specify at least one filter condition.'); return; }
+                    
+                    showLoading('Applying filter...');
+                    setTimeout(() => {
+                         const nodes = this.cy.nodes();
+                         const edges = this.cy.edges();
+                         const matchedNodes = [];
+                         const matchedEdges = [];
+                         
+                         nodes.forEach(node => {
+                             if(this.evaluateConditions(node, 'node', valid)) matchedNodes.push(node);
+                         });
+                         edges.forEach(edge => {
+                             if(this.evaluateConditions(edge, 'edge', valid)) matchedEdges.push(edge);
+                         });
+                         
+                         this.applyFilterResults(matchedNodes, matchedEdges, valid);
+                         hideLoading();
+                    }, 50);
+                }
+                
+                evaluateConditions(ele, type, conditions) {
+                    const relevant = conditions.filter(c => c.column.startsWith(type + '.'));
+                    if(relevant.length === 0) return false;
+                    let result = true;
+                    let lastOp = 'OR';
+                    relevant.forEach((c, i) => {
+                        const col = c.column.split('.')[1];
+                        const val = ele.data(col);
+                        const res = evaluateCondition(val, c.operator, c.value);
+                        if(i === 0) result = res;
+                        else if(lastOp === 'AND') result = result && res;
+                        else if(lastOp === 'OR') result = result || res;
+                        else if(lastOp === 'NOT') result = result && !res;
+                        lastOp = c.logicalOp || 'OR';
+                    });
+                    return result;
+                }
+
+                applyFilterResults(nodes, edges, conditions) {
+                    // Turn off path trace if on
+                    if(typeof pathTraceEnabled !== 'undefined' && pathTraceEnabled) {
+                        setPathTraceMode(false);
+                    }
+                    
+                    let resNodes = nodes;
+                    let resEdges = edges;
+
+                    // Specialized logic for explicit selection
+                    if (Array.isArray(edges) && edges.length > 0) {
+                        // If edges are explicitly matched, select ONLY those edges and their connected nodes.
+                        // Do NOT expand to all parallel edges.
+                        const nodeSet = new Set();
+                        edges.forEach(edge => {
+                            if(edge.source()) nodeSet.add(edge.source());
+                            if(edge.target()) nodeSet.add(edge.target());
+                        });
+                        resNodes = Array.from(nodeSet);
+                        resEdges = edges;
+                    } else {
+                        // If no edges matched explicitly, check if we can infer edges from node conditions
+                        // e.g., if filtering by "PaperID" on nodes, also find edges with that "PaperID"
+                        let foundEdges = [];
+                        if (Array.isArray(conditions) && conditions.length > 0 && Array.isArray(nodes) && nodes.length > 0) {
+                            const nodeConds = conditions.filter(c => typeof c.column === 'string' && c.column.startsWith('node.') && c.value);
+                            if (nodeConds.length > 0) {
+                                const edgeSeen = new Set();
+                                nodes.forEach(node => {
+                                    const incident = node.connectedEdges();
+                                    nodeConds.forEach(cond => {
+                                        const colName = cond.column.split('.')[1];
+                                        const targetVal = cond.value;
+                                        incident.forEach(edge => {
+                                            const edgeVal = edge.data(colName);
+                                            // Simple loose equality check or array check to match 'contains' logic roughly
+                                            if (edgeVal !== undefined && edgeVal !== null) {
+                                                let match = false;
+                                                // Handle single value string/number equality
+                                                if (String(edgeVal) == String(targetVal)) match = true;
+                                                // Handle array inclusion
+                                                if (Array.isArray(edgeVal) && (edgeVal.includes(targetVal) || edgeVal.some(v => String(v) == String(targetVal)))) match = true;
+                                                
+                                                if (match && !edgeSeen.has(edge.id())) {
+                                                    edgeSeen.add(edge.id());
+                                                    foundEdges.push(edge);
+                                                }
+                                            }
+                                        });
+                                    });
+                                });
+                            }
+                        }
+
+                        if (foundEdges.length > 0) {
+                             resEdges = foundEdges;
+                             const nodeSet2 = new Set();
+                             foundEdges.forEach(edge => {
+                                 if(edge.source()) nodeSet2.add(edge.source());
+                                 if(edge.target()) nodeSet2.add(edge.target());
+                             });
+                             resNodes = Array.from(nodeSet2);
+                        } else {
+                             // Fallback: Default expansion (likely just nodes, or implicit edges if >2 nodes)
+                             const expanded = expandSelectionWithConnections(this.cy, nodes, edges);
+                             resNodes = expanded.nodes;
+                             resEdges = expanded.edges;
+                        }
+                    }
+
+                    applySelectionToCy(this.cy, resNodes, resEdges, {setOpacity: true});
+                    
+                    externalFilterResults = { nodes: resNodes, edges: resEdges, conditions: conditions };
+                    if(typeof renderTable === 'function') renderTable();
+                }
+
+                clearFilter() {
+                    this.conditions = [];
+                    this.addCondition();
+                    this.cy.elements().unselect();
+                    this.cy.elements().style('opacity', 1);
+                    externalFilterResults = null;
+                    if(typeof renderTable === 'function') renderTable();
+                }
+            }
             // Force redraw for UI update
             const withLoading = (fn, msg) => {
                 showLoading(msg);
@@ -729,6 +1441,9 @@ export class WebPageExporter {
             };
 
             const getDisplayElements = (type) => {
+                if (externalFilterResults && externalFilterResults.conditions && externalFilterResults.conditions.length > 0) {
+                     return type === 'node' ? externalFilterResults.nodes : externalFilterResults.edges;
+                }
                 const selected = type === 'node' ? cy.nodes(':selected') : cy.edges(':selected');
                 return selected.length > 0 ? selected : (type === 'node' ? cy.nodes() : cy.edges());
             };
@@ -1766,6 +2481,17 @@ export class WebPageExporter {
             // Fit to view on load (including overlays)
             cy.ready(function() {
                 console.log('Cytoscape ready');
+                
+                // Initialize Filter Panel
+                filterPanel = new FilterPanel(cy);
+                const filterToggle = document.getElementById('filter-panel-toggle');
+                if (filterToggle) {
+                    filterToggle.addEventListener('click', () => {
+                        const show = !filterPanel.panel.classList.contains('active');
+                        filterPanel.toggle(show);
+                    });
+                }
+
                 fitToViewWithOverlays(50);
                 setTimeout(hideLoading, 500);
             });

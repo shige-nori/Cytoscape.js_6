@@ -34,6 +34,8 @@ Reserchmap　よくある問い合わせ(FAQ)
 
 Layout ToolsパネルのScale、Rotateの表示も全体的にもっと縮小してください
 
+数値でフィルターをかけると見えなくなる
+
 
 
 
