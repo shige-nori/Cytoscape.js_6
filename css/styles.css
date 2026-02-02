@@ -2341,6 +2341,12 @@ body {
     font-size: 12px;
 }
 
+/* Text group: keep Font Size and Font Family widths aligned */
+.annotation-panel .text-group .property-input {
+    flex: 0 0 140px;
+    width: 140px;
+}
+
 .annotation-panel .property-input:focus {
     outline: none;
     border-color: var(--primary-color);

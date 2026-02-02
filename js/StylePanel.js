@@ -1080,7 +1080,7 @@ export class StylePanel {
             }
         }
 
-        this.applyStyles();
+        // マッピング種別や属性選択だけではスタイルを適用しない
     }
 
     handleAttributeChange(e) {
@@ -1121,20 +1121,7 @@ export class StylePanel {
             if (rangeDiv) rangeDiv.classList.remove('hidden');
         }
 
-        this.applyStyles();
-
-        // Continuousマッピングは属性選択直後に再評価して即時反映
-        if (styleConfig.type === 'continuous') {
-            if (element === 'node') {
-                this.applyNodeStyles();
-            } else {
-                this.applyEdgeStyles();
-            }
-            if (appContext.networkManager && appContext.networkManager.cy) {
-                appContext.networkManager.cy.style().update();
-            }
-            requestAnimationFrame(() => this.applyStyles());
-        }
+        // マッピング種別や属性選択だけではスタイルを適用しない
     }
 
     updateAttributeOptions(selectElement, elementType) {

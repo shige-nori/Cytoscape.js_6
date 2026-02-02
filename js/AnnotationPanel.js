@@ -26,6 +26,21 @@ export class AnnotationPanel {
      */
     setupInsertButtons() {
         const buttons = this.panel.querySelectorAll('.annotation-insert-btn');
+        const tableInsert = this.panel.querySelector('.annotation-table-insert');
+        const showTableInsert = () => {
+            if (tableInsert) {
+                tableInsert.classList.remove('hidden');
+                const rowsInput = document.getElementById('table-insert-rows');
+                rowsInput?.focus();
+            }
+            // 直前の選択オブジェクトの設定画面を隠す
+            this.updateProperties(null);
+        };
+        const hideTableInsert = () => {
+            if (tableInsert) {
+                tableInsert.classList.add('hidden');
+            }
+        };
         buttons.forEach(button => {
             button.addEventListener('click', () => {
                 if (!appContext.networkManager.hasNetwork() || !appContext.layerManager) return;
@@ -34,6 +49,7 @@ export class AnnotationPanel {
                 if (!shape) return;
 
                 if (shape === 'text') {
+                    hideTableInsert();
                     appContext.layerManager.addObject('text', {
                         text: 'Text',
                         fillColor: '#ffffff',
@@ -42,20 +58,12 @@ export class AnnotationPanel {
                         fontSize: 14
                     });
                 } else if (shape === 'table') {
-                    const rowsInput = document.getElementById('table-insert-rows');
-                    const colsInput = document.getElementById('table-insert-cols');
-                    const rows = parseInt(rowsInput?.value || '3', 10);
-                    const cols = parseInt(colsInput?.value || '3', 10);
-                    if (!rows || !cols || rows < 1 || cols < 1) return;
-                    appContext.layerManager.addObject('table', {
-                        rows,
-                        cols,
-                        fillColor: '#ffffff',
-                        strokeColor: '#94a3b8',
-                        strokeWidth: 1,
-                        fontSize: 12
-                    });
+                    // Show row/col inputs; creation happens on Apply
+                    showTableInsert();
+                    this.openPanel();
+                    return;
                 } else {
+                    hideTableInsert();
                     appContext.layerManager.addObject(shape);
                 }
                 this.openPanel();
@@ -77,6 +85,7 @@ export class AnnotationPanel {
                 strokeWidth: 1,
                 fontSize: 12
             });
+            hideTableInsert();
             this.openPanel();
         });
     }
@@ -134,7 +143,7 @@ export class AnnotationPanel {
                                 </svg>
                             </button>
                         </div>
-                        <div class="annotation-table-insert" role="group" aria-label="Insert table">
+                        <div class="annotation-table-insert hidden" role="group" aria-label="Insert table">
                             <label>Table:</label>
                             <input type="number" id="table-insert-rows" class="property-input" min="1" value="3">
                             <input type="number" id="table-insert-cols" class="property-input" min="1" value="3">
@@ -145,7 +154,7 @@ export class AnnotationPanel {
                         </div>
                         <div class="insert-properties" style="display: none;">
                             <!-- Position -->
-                            <div class="property-group">
+                            <div class="property-group hidden">
                                 <h4>Position</h4>
                                 <div class="property-row">
                                     <label>X:</label>
@@ -158,7 +167,7 @@ export class AnnotationPanel {
                             </div>
                             
                             <!-- Size -->
-                            <div class="property-group size-group">
+                            <div class="property-group size-group hidden">
                                 <h4>Size</h4>
                                 <div class="property-row">
                                     <label>Width:</label>
@@ -206,36 +215,24 @@ export class AnnotationPanel {
                                     <input type="number" id="prop-font-size" class="property-input" min="8" max="72">
                                 </div>
                                 <div class="property-row">
+                                    <label>Font:</label>
+                                    <select id="prop-font-family" class="property-input">
+                                        <option value="Yu Gothic">Yu Gothic</option>
+                                        <option value="Meiryo">Meiryo</option>
+                                        <option value="MS PGothic">MS PGothic</option>
+                                        <option value="Hiragino Kaku Gothic ProN">Hiragino Kaku Gothic ProN</option>
+                                        <option value="Noto Sans JP">Noto Sans JP</option>
+                                        <option value="Noto Serif JP">Noto Serif JP</option>
+                                        <option value="Arial">Arial</option>
+                                    </select>
+                                </div>
+                                <div class="property-row">
                                     <label>Color:</label>
                                     <input type="color" id="prop-text-color" class="property-color">
                                 </div>
                             </div>
 
-                            <div class="property-group table-group" style="display: none;">
-                                <h4>Table</h4>
-                                <div class="property-row">
-                                    <label>Font Size:</label>
-                                    <input type="number" id="prop-table-font-size" class="property-input" min="8" max="72">
-                                </div>
-                                <div class="property-row">
-                                    <label>Row H:</label>
-                                    <input type="number" id="prop-table-row-height" class="property-input" min="10">
-                                    <button type="button" id="table-apply-row-height" class="property-table-btn">Apply</button>
-                                </div>
-                                <div class="property-row">
-                                    <label>Col W:</label>
-                                    <input type="number" id="prop-table-col-width" class="property-input" min="10">
-                                    <button type="button" id="table-apply-col-width" class="property-table-btn">Apply</button>
-                                </div>
-                                <div class="property-row">
-                                    <label>Merge:</label>
-                                    <div class="property-table-actions">
-                                        <button type="button" id="table-merge-right" class="property-table-btn">Right</button>
-                                        <button type="button" id="table-merge-down" class="property-table-btn">Down</button>
-                                        <button type="button" id="table-unmerge" class="property-table-btn">Unmerge</button>
-                                    </div>
-                                </div>
-                            </div>
+                            <!-- Table appearance controls removed per user request -->
                             </div>
                             
                             <!-- Name -->
@@ -328,8 +325,8 @@ export class AnnotationPanel {
             'prop-opacity': 'opacity',
             'prop-rotation': 'rotation',
             'prop-font-size': 'fontSize',
+            'prop-font-family': 'fontFamily',
             'prop-text-color': 'textColor',
-            'prop-table-font-size': 'fontSize',
             'prop-name': 'name'
         };
 
@@ -351,9 +348,7 @@ export class AnnotationPanel {
                     document.getElementById('prop-opacity-value').textContent = value.toFixed(1);
                 }
                 
-                if (input.id === 'prop-table-font-size' && this.currentObject.type !== 'table') {
-                    return;
-                }
+                // no table-specific input checks (table appearance controls removed)
                 appContext.layerManager?.updateObjectProperty(this.currentObject.id, property, value);
 
                 if (property === 'fillColor') {
@@ -383,39 +378,7 @@ export class AnnotationPanel {
             this.setStrokeTransparentState(true);
         });
 
-        document.getElementById('table-merge-right')?.addEventListener('click', () => {
-            if (this.currentObject?.type !== 'table') return;
-            appContext.layerManager?.mergeTableCell(this.currentObject.id, 'right');
-            this.refreshLayers();
-        });
-
-        document.getElementById('table-merge-down')?.addEventListener('click', () => {
-            if (this.currentObject?.type !== 'table') return;
-            appContext.layerManager?.mergeTableCell(this.currentObject.id, 'down');
-            this.refreshLayers();
-        });
-
-        document.getElementById('table-unmerge')?.addEventListener('click', () => {
-            if (this.currentObject?.type !== 'table') return;
-            appContext.layerManager?.unmergeTableCell(this.currentObject.id);
-            this.refreshLayers();
-        });
-
-        document.getElementById('table-apply-row-height')?.addEventListener('click', () => {
-            if (this.currentObject?.type !== 'table') return;
-            const input = document.getElementById('prop-table-row-height');
-            const value = parseFloat(input?.value);
-            if (!value || value <= 0) return;
-            appContext.layerManager?.setTableRowHeight(this.currentObject.id, value);
-        });
-
-        document.getElementById('table-apply-col-width')?.addEventListener('click', () => {
-            if (this.currentObject?.type !== 'table') return;
-            const input = document.getElementById('prop-table-col-width');
-            const value = parseFloat(input?.value);
-            if (!value || value <= 0) return;
-            appContext.layerManager?.setTableColWidth(this.currentObject.id, value);
-        });
+        // Table appearance controls removed; related event listeners cleared.
     }
 
     /**
@@ -603,7 +566,7 @@ export class AnnotationPanel {
         this.setInputValue('prop-opacity', obj.opacity);
         this.setInputValue('prop-rotation', obj.rotation);
         this.setInputValue('prop-name', obj.name);
-        this.setInputValue('prop-table-font-size', obj.fontSize || 12);
+        // table font-size input removed
         
         const opacityValue = document.getElementById('prop-opacity-value');
         if (opacityValue) opacityValue.textContent = obj.opacity.toFixed(1);
@@ -622,6 +585,7 @@ export class AnnotationPanel {
             if (obj.type === 'text') {
                 textGroup.style.display = 'block';
                 this.setInputValue('prop-font-size', obj.fontSize);
+                this.setInputValue('prop-font-family', obj.fontFamily || 'Yu Gothic');
                 this.setInputValue('prop-text-color', obj.textColor);
             } else {
                 textGroup.style.display = 'none';
@@ -629,13 +593,8 @@ export class AnnotationPanel {
         }
 
         if (tableGroup) {
+            // Table-specific controls removed; just toggle visibility of table group container if present
             tableGroup.style.display = obj.type === 'table' ? 'block' : 'none';
-            if (obj.type === 'table') {
-                const rowHeight = appContext.layerManager?.getTableSelectedRowHeight(obj.id) ?? '';
-                const colWidth = appContext.layerManager?.getTableSelectedColWidth(obj.id) ?? '';
-                this.setInputValue('prop-table-row-height', rowHeight);
-                this.setInputValue('prop-table-col-width', colWidth);
-            }
         }
         
         if (appearanceGroup) {

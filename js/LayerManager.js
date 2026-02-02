@@ -112,53 +112,7 @@ export class LayerManager {
         return { rows, cols, cells, rowHeights, colWidths, selectedCell: { row: 0, col: 0 } };
     }
 
-    /**
-     * 選択行の高さ取得
-     */
-    getTableSelectedRowHeight(id) {
-        const obj = this.layers.find(l => l.id === id);
-        if (!obj || obj.type !== 'table' || !obj.table) return '';
-        const row = obj.table.selectedCell?.row ?? 0;
-        return obj.table.rowHeights?.[row] ?? '';
-    }
-
-    /**
-     * 選択列の幅取得
-     */
-    getTableSelectedColWidth(id) {
-        const obj = this.layers.find(l => l.id === id);
-        if (!obj || obj.type !== 'table' || !obj.table) return '';
-        const col = obj.table.selectedCell?.col ?? 0;
-        return obj.table.colWidths?.[col] ?? '';
-    }
-
-    /**
-     * 選択行の高さ設定
-     */
-    setTableRowHeight(id, height) {
-        const obj = this.layers.find(l => l.id === id);
-        if (!obj || obj.type !== 'table' || !obj.table) return;
-        const row = obj.table.selectedCell?.row ?? 0;
-        if (!obj.table.rowHeights) obj.table.rowHeights = [];
-        obj.table.rowHeights[row] = height;
-        this.updateTableDimensions(obj);
-        this.renderObject(obj);
-        this.selectObject(obj);
-    }
-
-    /**
-     * 選択列の幅設定
-     */
-    setTableColWidth(id, width) {
-        const obj = this.layers.find(l => l.id === id);
-        if (!obj || obj.type !== 'table' || !obj.table) return;
-        const col = obj.table.selectedCell?.col ?? 0;
-        if (!obj.table.colWidths) obj.table.colWidths = [];
-        obj.table.colWidths[col] = width;
-        this.updateTableDimensions(obj);
-        this.renderObject(obj);
-        this.selectObject(obj);
-    }
+    // Table row/col helpers removed — appearance controls no longer supported.
 
     /**
      * テーブルの外形サイズを更新
@@ -235,62 +189,7 @@ export class LayerManager {
         this.selectObject(obj);
     }
 
-    /**
-     * テーブルのセル結合
-     */
-    mergeTableCell(id, direction) {
-        const obj = this.layers.find(l => l.id === id);
-        if (!obj || obj.type !== 'table' || !obj.table) return;
-
-        const { row, col } = obj.table.selectedCell || { row: 0, col: 0 };
-        const cells = obj.table.cells;
-        const base = cells[row]?.[col];
-        if (!base || base.hidden) return;
-
-        if (direction === 'right') {
-            const target = cells[row]?.[col + base.colspan];
-            if (!target || target.hidden) return;
-            base.colspan += target.colspan;
-            for (let c = col + 1; c < col + base.colspan; c++) {
-                if (cells[row][c]) cells[row][c].hidden = true;
-            }
-        } else if (direction === 'down') {
-            const target = cells[row + base.rowspan]?.[col];
-            if (!target || target.hidden) return;
-            base.rowspan += target.rowspan;
-            for (let r = row + 1; r < row + base.rowspan; r++) {
-                if (cells[r] && cells[r][col]) cells[r][col].hidden = true;
-            }
-        }
-
-        this.renderObject(obj);
-        this.selectObject(obj);
-    }
-
-    /**
-     * テーブルのセル結合を解除
-     */
-    unmergeTableCell(id) {
-        const obj = this.layers.find(l => l.id === id);
-        if (!obj || obj.type !== 'table' || !obj.table) return;
-
-        const { row, col } = obj.table.selectedCell || { row: 0, col: 0 };
-        const cells = obj.table.cells;
-        const base = cells[row]?.[col];
-        if (!base) return;
-
-        for (let r = row; r < row + base.rowspan; r++) {
-            for (let c = col; c < col + base.colspan; c++) {
-                if (cells[r] && cells[r][c]) cells[r][c].hidden = false;
-            }
-        }
-
-        base.rowspan = 1;
-        base.colspan = 1;
-
-        this.renderObject(obj);
-        this.selectObject(obj);
-    }
+    // Table merge/unmerge helpers removed — merge controls no longer supported in Appearance panel.
 
     /**
      * Cytoscapeのpan/zoomと同期
@@ -723,18 +622,8 @@ export class LayerManager {
                     e.stopPropagation();
                 });
 
-                td.addEventListener('dblclick', (e) => {
-                    td.contentEditable = 'true';
-                    td.focus();
-                    e.stopPropagation();
-                });
-
-                td.addEventListener('blur', () => {
-                    if (td.contentEditable === 'true') {
-                        td.contentEditable = 'false';
-                        cell.text = td.textContent;
-                    }
-                });
+                // Inline editing disabled per request: keep cell selection but prevent contentEditable usage
+                // (Removing dblclick -> contentEditable and blur -> save handlers to avoid side effects.)
 
                 tr.appendChild(td);
             }
