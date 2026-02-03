@@ -92,9 +92,6 @@ export class MenuManager {
         document.getElementById('save-as-network').addEventListener('click', async () => {
             if (appContext.networkManager.hasNetwork()) {
                 const saved = await appContext.fileHandler.saveCX2File(null, true); // useFileDialog = true
-                if (saved) {
-                    alert('保存しました。');
-                }
             }
             this.closeAllMenus();
         });
@@ -303,19 +300,24 @@ export class MenuManager {
         // メニューのクリックで少し凹む（押下）エフェクトを追加
         const menuItems = document.querySelectorAll('.menubar .menu-item');
         menuItems.forEach(mi => {
+            const hasSubmenu = !!mi.querySelector('.submenu');
             // マウス操作
             mi.addEventListener('mousedown', (ev) => {
+                if (hasSubmenu) return;
                 mi.classList.add('depressed');
             });
             mi.addEventListener('mouseup', (ev) => {
+                if (hasSubmenu) return;
                 mi.classList.remove('depressed');
             });
             mi.addEventListener('mouseleave', (ev) => {
+                if (hasSubmenu) return;
                 mi.classList.remove('depressed');
             });
 
             // キーボード操作（Enter / Space）で視覚効果を短く出す
             mi.addEventListener('keydown', (ev) => {
+                if (hasSubmenu) return;
                 if (ev.key === 'Enter' || ev.key === ' ') {
                     mi.classList.add('depressed');
                     setTimeout(() => mi.classList.remove('depressed'), 150);

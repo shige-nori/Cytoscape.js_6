@@ -33,8 +33,7 @@ export class StylePanel {
             width: { type: 'default', value: 2, mapping: null, attribute: null },
             style: { type: 'default', value: 'solid', mapping: null, attribute: null },
             targetArrow: { type: 'default', value: 'none', mapping: null, attribute: null },
-            opacity: { type: 'default', value: 100, mapping: null, attribute: null },
-            curveStyle: { type: 'default', value: 'bezier', mapping: null, attribute: null }
+            opacity: { type: 'default', value: 100, mapping: null, attribute: null }
         };
 
         this.networkStyles = {
@@ -514,33 +513,6 @@ export class StylePanel {
                 </div>
                 <div class="style-discrete-mapping hidden" id="edge-opacity-discrete"></div>
             </div>
-
-            <!-- Curve Style -->
-            <div class="style-property-group collapsed">
-                <div class="style-property-header collapsed" data-toggle="collapse">
-                    <label>Curve Style</label>
-                    <span class="collapse-icon">▼</span>
-                </div>
-                <div class="style-property-control">
-                    <select class="style-mapping-type" data-property="curveStyle" data-element="edge">
-                        <option value="default" selected>Default</option>
-                        <option value="bypass">Bypass</option>
-                        <option value="discrete">Discrete</option>
-                    </select>
-                    <select class="style-select" id="edge-curveStyle">
-                        <option value="bezier">Bezier</option>
-                        <option value="unbundled-bezier">Unbundled Bezier</option>
-                        <option value="haystack">Haystack</option>
-                        <option value="straight">Straight</option>
-                        <option value="segments">Segments</option>
-                        <option value="taxi">Taxi</option>
-                    </select>
-                    <select class="style-attribute-select hidden" id="edge-curveStyle-attr" data-property="curveStyle" data-element="edge">
-                        <option value="">-- Select Attribute --</option>
-                    </select>
-                </div>
-                <div class="style-discrete-mapping hidden" id="edge-curveStyle-discrete"></div>
-            </div>
         `;
     }
 
@@ -979,15 +951,6 @@ export class StylePanel {
             opacityValue.addEventListener('input', (e) => {
                 this.edgeStyles.opacity.value = parseFloat(e.target.value);
                 opacity.value = e.target.value;
-                this.applyEdgeStyles();
-            });
-        }
-
-        // Curve Style
-        const curveStyle = document.getElementById('edge-curveStyle');
-        if (curveStyle) {
-            curveStyle.addEventListener('change', (e) => {
-                this.edgeStyles.curveStyle.value = e.target.value;
                 this.applyEdgeStyles();
             });
         }
@@ -1519,8 +1482,7 @@ export class StylePanel {
             width: { type: 'default', value: 2, mapping: null, attribute: null },
             style: { type: 'default', value: 'solid', mapping: null, attribute: null },
             targetArrow: { type: 'default', value: 'none', mapping: null, attribute: null },
-            opacity: { type: 'default', value: 100, mapping: null, attribute: null },
-            curveStyle: { type: 'default', value: 'bezier', mapping: null, attribute: null }
+            opacity: { type: 'default', value: 100, mapping: null, attribute: null }
         };
 
         this.networkStyles = {
@@ -1608,9 +1570,6 @@ export class StylePanel {
         const edgeOpacityValue = document.getElementById('edge-opacity-value');
         if (edgeOpacity) edgeOpacity.value = '100';
         if (edgeOpacityValue) edgeOpacityValue.value = '100';
-        
-        const edgeCurveStyle = document.getElementById('edge-curveStyle');
-        if (edgeCurveStyle) edgeCurveStyle.value = 'bezier';
         
         // すべてのマッピングタイプをDefaultに戻す
         document.querySelectorAll('.style-mapping-type').forEach(select => {
@@ -1774,11 +1733,6 @@ export class StylePanel {
             const opacityResult = this.getBypassValue(edge, 'opacity', this.edgeStyles.opacity, isSelected);
             if (opacityResult.apply) {
                 style['opacity'] = opacityResult.value / 100;
-            }
-            
-            // Curve Style: Bendsが設定されている場合は上書きしない
-            if (!hasControlPoints) {
-                style['curve-style'] = this.edgeStyles.curveStyle.value;
             }
 
             edge.style(style);
@@ -1949,8 +1903,7 @@ export class StylePanel {
             width: { type: 'default', value: 2, mapping: null, attribute: null },
             style: { type: 'default', value: 'solid', mapping: null, attribute: null },
             targetArrow: { type: 'default', value: 'none', mapping: null, attribute: null },
-            opacity: { type: 'default', value: 100, mapping: null, attribute: null },
-            curveStyle: { type: 'default', value: 'bezier', mapping: null, attribute: null }
+            opacity: { type: 'default', value: 100, mapping: null, attribute: null }
         };
 
         this.networkStyles = {
@@ -2066,7 +2019,7 @@ export class StylePanel {
                 }
             }
         } else if (property === 'shape' || property === 'labelPosition' || property === 'style' || 
-                   property === 'targetArrow' || property === 'curveStyle') {
+                   property === 'targetArrow') {
             // セレクトボックス
             const selectInput = document.getElementById(`${elementType}-${property}`);
             if (selectInput && selectInput.value !== value) {

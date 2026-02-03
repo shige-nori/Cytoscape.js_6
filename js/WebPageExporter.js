@@ -201,7 +201,17 @@ export class WebPageExporter {
             position: absolute;
             top: 40px;
             left: 0;
+            background-color: transparent;
+            z-index: 2;
+        }
+        #network-background {
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             background-color: #ffffff;
+            z-index: 0;
         }
         .overlay-container {
             position: absolute;
@@ -211,6 +221,12 @@ export class WebPageExporter {
             height: 100vh;
             pointer-events: none;
             transform-origin: 0 0;
+        }
+        #overlay-container-back {
+            z-index: 1;
+        }
+        #overlay-container {
+            z-index: 3;
         }
         .overlay-object {
             position: absolute;
@@ -787,6 +803,7 @@ export class WebPageExporter {
             <button id="filter-panel-toggle" class="table-toggle off">OFF</button>
         </div>
     </div>
+    <div id="network-background"></div>
     <div id="cy"></div>
     <div id="overlay-container-back" class="overlay-container"></div>
     <div id="overlay-container" class="overlay-container"></div>
@@ -2135,8 +2152,8 @@ export class WebPageExporter {
 
             // Apply network background
             if (backgroundColor) {
-                const cyContainer = document.getElementById('cy');
-                if (cyContainer) cyContainer.style.backgroundColor = backgroundColor;
+                const bgLayer = document.getElementById('network-background');
+                if (bgLayer) bgLayer.style.backgroundColor = backgroundColor;
                 document.body.style.backgroundColor = backgroundColor;
             }
 

@@ -630,6 +630,53 @@ export class FileHandler {
                 }
             }
 
+            // Save As: ファイルダイアログを表示して保存
+            if (useFileDialog) {
+                if (typeof window.showSaveFilePicker !== 'function') {
+                    return false;
+                }
+
+                const defaultName = filename || this.currentFilePath || 'network.cx2';
+                const finalName = defaultName.endsWith('.cx2') ? defaultName : defaultName + '.cx2';
+
+                try {
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: finalName,
+                        types: [
+                            {
+                                description: 'CX2 Files',
+                                accept: { 'application/json': ['.cx2'] }
+                            }
+                        ]
+                    });
+
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+
+                    // 現在のファイル情報を保存
+                    this.currentFileHandle = fileHandle;
+                    this.currentFilePath = fileHandle.name;
+
+                    // 未保存の変更フラグをクリア
+                    appContext.hasUnsavedChanges = false;
+
+                    // Saveメニューを有効化
+                    if (appContext.menuManager) {
+                        appContext.menuManager.updateMenuStates();
+                    }
+
+                    this.restoreNetworkView();
+                    return true;
+                } catch (err) {
+                    if (err && err.name === 'AbortError') {
+                        return false;
+                    }
+                    console.error('Error saving with file picker:', err);
+                    return false;
+                }
+            }
+
             // 従来のダウンロード方法を使用（ブラウザーダイアログなし）
             const defaultName = filename || this.currentFilePath || 'network.cx2';
             const finalName = defaultName.endsWith('.cx2') ? defaultName : defaultName + '.cx2';
