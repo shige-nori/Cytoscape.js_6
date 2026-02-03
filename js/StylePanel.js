@@ -288,12 +288,21 @@ export class StylePanel {
                     <span class="collapse-icon">▼</span>
                 </div>
                 <div class="style-property-control">
+                    <select class="style-mapping-type" data-property="labelPosition" data-element="node">
+                        <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
+                        <option value="discrete">Discrete</option>
+                    </select>
                     <select class="style-select" id="node-labelPosition">
                         <option value="top">Top</option>
                         <option value="center">Center</option>
                         <option value="bottom">Bottom</option>
                     </select>
+                    <select class="style-attribute-select hidden" id="node-labelPosition-attr" data-property="labelPosition" data-element="node">
+                        <option value="">-- Select Attribute --</option>
+                    </select>
                 </div>
+                <div class="style-discrete-mapping hidden" id="node-labelPosition-discrete"></div>
             </div>
 
 
@@ -513,6 +522,11 @@ export class StylePanel {
                     <span class="collapse-icon">▼</span>
                 </div>
                 <div class="style-property-control">
+                    <select class="style-mapping-type" data-property="curveStyle" data-element="edge">
+                        <option value="default" selected>Default</option>
+                        <option value="bypass">Bypass</option>
+                        <option value="discrete">Discrete</option>
+                    </select>
                     <select class="style-select" id="edge-curveStyle">
                         <option value="bezier">Bezier</option>
                         <option value="unbundled-bezier">Unbundled Bezier</option>
@@ -521,7 +535,11 @@ export class StylePanel {
                         <option value="segments">Segments</option>
                         <option value="taxi">Taxi</option>
                     </select>
+                    <select class="style-attribute-select hidden" id="edge-curveStyle-attr" data-property="curveStyle" data-element="edge">
+                        <option value="">-- Select Attribute --</option>
+                    </select>
                 </div>
+                <div class="style-discrete-mapping hidden" id="edge-curveStyle-discrete"></div>
             </div>
         `;
     }
@@ -1048,8 +1066,7 @@ export class StylePanel {
             // Defaultモード: 直接入力のみ表示
             directInputs.forEach(input => input.classList.remove('hidden'));
         } else if (mappingType === 'discrete') {
-            // Discreteモード: 直接入力と属性選択の両方を表示
-            directInputs.forEach(input => input.classList.remove('hidden'));
+            // Discreteモード: 属性選択のみ表示（直接入力は非表示）
             if (attrSelect) {
                 attrSelect.classList.remove('hidden');
                 this.updateAttributeOptions(attrSelect, element);
