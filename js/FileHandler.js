@@ -606,43 +606,17 @@ export class FileHandler {
             
             const jsonString = JSON.stringify(cx2Data, null, 2);
             const blob = new Blob([jsonString], { type: 'application/json' });
-            
-            // File System Access APIをサポートしているか確認
-            if ('showSaveFilePicker' in window) {
+
+            // Openで取得したファイルハンドルがある場合は同一ディレクトリに上書き保存（ダイアログなし）
+            if (this.currentFileHandle && !useFileDialog) {
                 try {
-                    let handle;
-                    
-                    // Save Asまたは保存先がない場合はダイアログを表示
-                    if (useFileDialog || !this.currentFileHandle) {
-                        // デフォルトファイル名を設定
-                        const defaultName = filename || this.currentFilePath || 'network.cx2';
-                        const suggestedName = defaultName.endsWith('.cx2') ? defaultName : defaultName + '.cx2';
-                        
-                        // ファイル保存ダイアログを表示
-                        handle = await window.showSaveFilePicker({
-                            suggestedName: suggestedName,
-                            types: [{
-                                description: 'CX2 Network File',
-                                accept: { 'application/json': ['.cx2'] }
-                            }]
-                        });
-                        
-                        // ファイルハンドルを保存
-                        this.currentFileHandle = handle;
-                        this.currentFilePath = handle.name;
-                    } else {
-                        // 既存のファイルハンドルを使用（上書き）
-                        handle = this.currentFileHandle;
-                    }
-                    
-                    // ファイルに書き込み
-                    const writable = await handle.createWritable();
+                    const writable = await this.currentFileHandle.createWritable();
                     await writable.write(blob);
                     await writable.close();
-                    
+
                     // 未保存の変更フラグをクリア
                     appContext.hasUnsavedChanges = false;
-                    
+
                     // Saveメニューを有効化
                     if (appContext.menuManager) {
                         appContext.menuManager.updateMenuStates();
@@ -651,20 +625,15 @@ export class FileHandler {
                     this.restoreNetworkView();
                     return true;
                 } catch (err) {
-                    // ユーザーがキャンセルした場合など
-                    if (err.name !== 'AbortError') {
-                        console.error('Error using File System Access API:', err);
-                        // フォールバックに続く
-                    } else {
-                        return false; // キャンセルされた
-                    }
+                    console.error('Error writing to existing file handle:', err);
+                    // 失敗時は従来のダウンロード方法にフォールバック
                 }
             }
-            
-            // フォールバック: 従来のダウンロード方法
+
+            // 従来のダウンロード方法を使用（ブラウザーダイアログなし）
             const defaultName = filename || this.currentFilePath || 'network.cx2';
             const finalName = defaultName.endsWith('.cx2') ? defaultName : defaultName + '.cx2';
-            
+
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -673,13 +642,13 @@ export class FileHandler {
             a.click();
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
-            
+
             // 未保存の変更フラグをクリア
             appContext.hasUnsavedChanges = false;
-            
+
             // ファイルパスを保存
             this.currentFilePath = finalName;
-            
+
             // Saveメニューを有効化
             if (appContext.menuManager) {
                 appContext.menuManager.updateMenuStates();

@@ -71,9 +71,18 @@ export class MenuManager {
         // Save Network
         document.getElementById('save-network').addEventListener('click', async () => {
             if (appContext.fileHandler.currentFilePath) {
-                const saved = await appContext.fileHandler.saveCX2File(appContext.fileHandler.currentFilePath);
-                if (saved) {
-                    alert('保存しました。');
+                const fileName = appContext.fileHandler.currentFilePath;
+                const result = await appContext.modalManager.showDynamicConfirm(
+                    `${fileName}に変更を保存しますか？`,
+                    '保存',
+                    'キャンセル'
+                );
+                
+                if (result === 'primary') {
+                    const saved = await appContext.fileHandler.saveCX2File(appContext.fileHandler.currentFilePath);
+                    if (saved) {
+                        alert('保存しました。');
+                    }
                 }
             }
             this.closeAllMenus();

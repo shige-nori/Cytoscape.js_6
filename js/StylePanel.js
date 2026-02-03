@@ -10,6 +10,9 @@ export class StylePanel {
         this.currentTab = 'node'; // 'node' or 'edge'
         this.isDragging = false;
         this.dragOffset = { x: 0, y: 0 };
+        this.isResizing = false;
+        this.resizeStartY = 0;
+        this.resizeStartHeight = 0;
         
         // スタイル設定を保持（永続化）
         this.nodeStyles = {
@@ -82,6 +85,7 @@ export class StylePanel {
         this.createPanel();
         this.setupEventListeners();
         this.setupPanelDrag();
+        this.setupPanelResize();
     }
 
     createPanel() {
@@ -117,6 +121,7 @@ export class StylePanel {
                         ${this.createNetworkStyleControls()}
                     </div>
                 </div>
+                <div class="style-panel-resize-handle" id="style-panel-resize-handle"></div>
             </div>
         `;
         
@@ -1387,6 +1392,41 @@ export class StylePanel {
                 this.isDragging = false;
                 const header = this.panel.querySelector('.tools-panel-header');
                 if (header) header.style.cursor = 'grab';
+            }
+        });
+    }
+
+    setupPanelResize() {
+        if (!this.panel) return;
+        const resizeHandle = this.panel.querySelector('.style-panel-resize-handle');
+        if (!resizeHandle) return;
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            this.isResizing = true;
+            this.resizeStartY = e.clientY;
+            this.resizeStartHeight = this.panel.offsetHeight;
+            document.body.style.cursor = 'ns-resize';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!this.isResizing) return;
+            e.preventDefault();
+            const deltaY = e.clientY - this.resizeStartY;
+            const newHeight = this.resizeStartHeight + deltaY;
+            const minHeight = 200;
+            const maxHeight = window.innerHeight - 100;
+            
+            if (newHeight >= minHeight && newHeight <= maxHeight) {
+                this.panel.style.height = `${newHeight}px`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (this.isResizing) {
+                this.isResizing = false;
+                document.body.style.cursor = '';
             }
         });
     }
