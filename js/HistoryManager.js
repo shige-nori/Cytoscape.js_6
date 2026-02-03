@@ -117,13 +117,25 @@ export class HistoryManager {
 
         const cy = appContext.networkManager.cy;
 
+        // ノードやエッジの一時的なデータ属性（_で始まるもの）は除外してスナップショットを作成
+        // これにより、選択状態やホバー状態などの一時的な変更を変更とみなさない
+        const filterData = (data) => {
+            const filtered = {};
+            for (const key in data) {
+                if (!key.startsWith('_')) {
+                    filtered[key] = data[key];
+                }
+            }
+            return filtered;
+        };
+
         const nodes = cy.nodes().map(node => ({
-            data: { ...node.data() },
+            data: filterData(node.data()),
             position: { ...node.position() }
         }));
 
         const edges = cy.edges().map(edge => ({
-            data: { ...edge.data() }
+            data: filterData(edge.data())
         }));
 
         const edgeBendsSettings = appContext.edgeBends ? {
