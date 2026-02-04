@@ -371,18 +371,51 @@ export class WebPageExporter {
             background: #f3f4f6;
             z-index: 10;
         }
-        .data-table th,
-        .data-table td {
-            padding: 6px 8px;
-            border-bottom: 1px solid #e2e8f0;
-            white-space: nowrap;
-            vertical-align: top;
+        .data-table thead tr {
+            background: #f3f4f6;
+        }
+        .data-table th {
             position: relative;
+            padding: 8px 8px 4px 8px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: none;
+            background: #f3f4f6;
+            white-space: nowrap;
+            user-select: none;
             overflow: hidden;
             text-overflow: ellipsis;
-            min-width: 30px;
-            box-sizing: border-box;
-            max-width: 0; /* Allow shrinking below content width in some browsers */
+            min-width: 80px;
+        }
+        .data-table .filter-row th {
+            padding: 0px 8px 8px 8px;
+            background-color: #f3f4f6;
+            border-top: none;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .data-table td {
+            padding: 8px 8px;
+            border-bottom: 1px solid #e2e8f0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+            vertical-align: top;
+            user-select: text;
+            cursor: text;
+        }
+        .data-table tbody tr {
+            cursor: default;
+            transition: background-color 0.15s;
+        }
+        .data-table tbody tr:hover {
+            background-color: rgba(37, 99, 235, 0.05);
+        }
+        .data-table tbody tr.selected {
+            background-color: rgba(249, 115, 22, 0.15);
+        }
+        .data-table tbody tr.selected:hover {
+            background-color: rgba(249, 115, 22, 0.25);
         }
         .resize-handle {
             position: absolute;
@@ -403,13 +436,11 @@ export class WebPageExporter {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 100%;
         }
         .cell-array {
             display: flex;
             flex-direction: column;
             gap: 0;
-            min-width: 0;
         }
         .cell-array-item {
             padding: 2px 0;
@@ -418,20 +449,27 @@ export class WebPageExporter {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            min-width: 0;
         }
         .cell-array-item:last-child {
             border-bottom: none;
         }
-        .data-table tr:hover {
-            background: #f8fafc;
-        }
         .column-filter {
             width: 100%;
-            padding: 4px 6px;
+            padding: 4px 0px;
             border: 1px solid #e2e8f0;
-            border-radius: 4px;
+            border-radius: 3px;
             font-size: 12px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+        .column-filter:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+        }
+        .column-filter::placeholder {
+            color: #94a3b8;
+            font-size: 11px;
         }
         /* Progress Overlay */
         .progress-overlay {
@@ -2035,6 +2073,69 @@ export class WebPageExporter {
                 const computeArrayMatchedIndices = (row) => {
                     const arrayColumns = getArrayColumns(row);
                     let arrayMatchedIndices = null;
+
+                    // External filter conditions from Filter Panel
+                    if (externalFilterResults && externalFilterResults.conditions && externalFilterResults.conditions.length > 0) {
+                        const externalConditions = externalFilterResults.conditions.filter(c => {
+                            if (!c.column) return false;
+                            const [condType] = c.column.split('.');
+                            return condType === type;
+                        });
+
+                        externalConditions.forEach(condition => {
+                            const [, columnName] = condition.column.split('.');
+                            if (!columnName || row[columnName] === undefined) return;
+                            
+                            const items = getArrayItems(row[columnName]);
+                            if (!items || items.length === 0) return;
+
+                            const matchedIndices = items
+                                .map((item, idx) => ({ item, idx }))
+                                .filter(({ item }) => {
+                                    // Use evaluateCondition for consistency with Filter Panel
+                                    return evaluateCondition(item, condition.operator, condition.value);
+                                })
+                                .map(({ idx }) => idx);
+
+                            if (matchedIndices.length === 0) return;
+
+                            if (arrayMatchedIndices === null) {
+                                arrayMatchedIndices = matchedIndices;
+                            } else {
+                                arrayMatchedIndices = arrayMatchedIndices.filter(i => matchedIndices.includes(i));
+                            }
+                        });
+
+                        // Cross-type conditions from Filter Panel
+                        const crossExternalConditions = externalFilterResults.conditions.filter(c => {
+                            if (!c.column) return false;
+                            const [condType] = c.column.split('.');
+                            return condType === crossType;
+                        });
+
+                        crossExternalConditions.forEach(condition => {
+                            const [, columnName] = condition.column.split('.');
+                            if (!columnName || !arrayColumns.includes(columnName) || row[columnName] === undefined) return;
+                            
+                            const items = getArrayItems(row[columnName]);
+                            if (!items || items.length === 0) return;
+
+                            const matchedIndices = items
+                                .map((item, idx) => ({ item, idx }))
+                                .filter(({ item }) => {
+                                    return evaluateCondition(item, condition.operator, condition.value);
+                                })
+                                .map(({ idx }) => idx);
+
+                            if (matchedIndices.length === 0) return;
+
+                            if (arrayMatchedIndices === null) {
+                                arrayMatchedIndices = matchedIndices;
+                            } else {
+                                arrayMatchedIndices = arrayMatchedIndices.filter(i => matchedIndices.includes(i));
+                            }
+                        });
+                    }
 
                     // Current table filters
                     Object.keys(activeFilters).forEach(col => {
