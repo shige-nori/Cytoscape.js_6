@@ -2022,49 +2022,77 @@ export class WebPageExporter {
                     }
                 }
 
-                filtered.forEach(row => {
-                    // Start with global allowed indices
-                    let validIndices = allowedIndices ? new Set(allowedIndices) : null;
-                    
-                    // Also consider row-local matches for self-type filters (to be precise)
-                    // But users asked for "global" sync. 
-                    // Let's refine local matching: if "myIndices" exists, we should ensure the row content matches specific query too.
-                    // Actually, "allowedIndices" already contains the union of all matches. 
-                    // But specific row might have match only on index 5, while allowedIndices has {5, 6}.
-                    // We should intersect allowedIndices with row-specific matches if any active filter applies.
+                const crossTypeFilters = filters[crossType] || {};
 
-                    if (allowedIndices !== null) {
-                         // Refine per row: Intersect global allowed indices with row-local matches
-                         Object.keys(activeFilters).forEach(col => {
-                             const query = activeFilters[col];
-                             if (!query) return;
-                             const colVal = row[col];
-                             const items = getArrayItems(colVal);
-                             
-                             if (items) {
-                                 // Identify indices in this row's array that match the filter for this column
-                                 const rowMatchedIndices = new Set();
-                                 items.forEach((item, i) => {
-                                     if (itemMatches(item, query)) {
-                                         rowMatchedIndices.add(i);
-                                     }
-                                 });
-                                 
-                                 // Intersect with validIndices
-                                 // If validIndices has {0, 1} (Global Union) but this row only matches at {0},
-                                 // we must restrict display to {0}.
-                                 if (validIndices) {
-                                     const next = new Set();
-                                     validIndices.forEach(idx => {
-                                         if (rowMatchedIndices.has(idx)) {
-                                             next.add(idx);
-                                         }
-                                     });
-                                     validIndices = next;
-                                 }
-                             }
-                         });
+                const getArrayColumns = (row) => {
+                    return columns.filter(col => {
+                        if (col === 'id' || col === 'source' || col === 'target') return false;
+                        const items = getArrayItems(row[col]);
+                        return items && items.length > 0;
+                    });
+                };
+
+                const computeArrayMatchedIndices = (row) => {
+                    const arrayColumns = getArrayColumns(row);
+                    let arrayMatchedIndices = null;
+
+                    // Current table filters
+                    Object.keys(activeFilters).forEach(col => {
+                        const query = activeFilters[col];
+                        if (!query) return;
+                        if (row[col] === undefined) return;
+                        const items = getArrayItems(row[col]);
+                        if (!items || items.length === 0) return;
+
+                        const matchedIndices = items
+                            .map((item, idx) => ({ item, idx }))
+                            .filter(({ item }) => itemMatches(item, query))
+                            .map(({ idx }) => idx);
+
+                        if (matchedIndices.length === 0) return;
+
+                        if (arrayMatchedIndices === null) {
+                            arrayMatchedIndices = matchedIndices;
+                        } else {
+                            arrayMatchedIndices = arrayMatchedIndices.filter(i => matchedIndices.includes(i));
+                        }
+                    });
+
+                    // Cross table filters (only for matching column names)
+                    let crossMatchedIndices = null;
+                    arrayColumns.forEach(col => {
+                        const query = crossTypeFilters[col];
+                        if (!query) return;
+                        const items = getArrayItems(row[col]);
+                        if (!items || items.length === 0) return;
+
+                        const matchedIndices = items
+                            .map((item, idx) => ({ item, idx }))
+                            .filter(({ item }) => itemMatches(item, query))
+                            .map(({ idx }) => idx);
+
+                        if (matchedIndices.length === 0) return;
+
+                        if (crossMatchedIndices === null) {
+                            crossMatchedIndices = matchedIndices;
+                        } else {
+                            crossMatchedIndices = crossMatchedIndices.filter(i => matchedIndices.includes(i));
+                        }
+                    });
+
+                    if (crossMatchedIndices !== null) {
+                        if (arrayMatchedIndices === null) {
+                            arrayMatchedIndices = crossMatchedIndices;
+                        } else {
+                            arrayMatchedIndices = arrayMatchedIndices.filter(i => crossMatchedIndices.includes(i));
+                        }
                     }
+
+                    return { arrayMatchedIndices, arrayColumns };
+                };
+
+                filtered.forEach(row => {
+                    const { arrayMatchedIndices, arrayColumns } = computeArrayMatchedIndices(row);
 
                     const tr = document.createElement('tr');
                     tr.dataset.elementId = row._element.id();
@@ -2084,16 +2112,15 @@ export class WebPageExporter {
                         const td = document.createElement('td');
                         let value = row[col];
                         
-                        // Apply linked index filtering for arrays
-                        if (validIndices !== null) {
-                             let items = getArrayItems(value);
-                             if (items) {
-                                 const newItems = [];
-                                 items.forEach((item, i) => {
-                                     if (validIndices.has(i)) newItems.push(item);
-                                 });
-                                 value = newItems;
-                             }
+                        // Apply array filtering for this row if indices are matched
+                        if (arrayMatchedIndices && arrayMatchedIndices.length > 0) {
+                            const items = getArrayItems(value);
+                            if (items) {
+                                const newItems = arrayMatchedIndices
+                                    .map(i => items[i])
+                                    .filter(v => v !== undefined);
+                                value = newItems;
+                            }
                         }
 
                         // Pass value without query since we pre-filtered
