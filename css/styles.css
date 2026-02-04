@@ -2419,6 +2419,45 @@ body {
     border-color: var(--primary-color);
 }
 
+.annotation-panel .text-align-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.annotation-panel .text-align-btn,
+.annotation-panel .text-valign-btn {
+    width: 32px;
+    height: 28px;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: #f8fafc;
+    color: var(--secondary-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.annotation-panel .text-align-btn:hover,
+.annotation-panel .text-valign-btn:hover {
+    background-color: #e2e8f0;
+    color: var(--text-color);
+}
+
+.annotation-panel .text-align-btn.active,
+.annotation-panel .text-valign-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.annotation-panel .text-align-btn svg,
+.annotation-panel .text-valign-btn svg {
+    display: block;
+}
+
 .annotation-panel .property-table-actions {
     display: flex;
     gap: 6px;

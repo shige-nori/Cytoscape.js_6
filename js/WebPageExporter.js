@@ -2280,7 +2280,18 @@ export class WebPageExporter {
                     div.style.opacity = obj.opacity;
                     div.style.transform = 'rotate(' + obj.rotation + 'deg)';
                     div.style.whiteSpace = 'pre-wrap';
-                    div.textContent = obj.text || 'Text';
+                    div.style.textAlign = obj.textAlign || 'left';
+                    div.style.display = 'flex';
+                    div.style.alignItems = obj.textVAlign === 'middle' ? 'center' : obj.textVAlign === 'bottom' ? 'flex-end' : 'flex-start';
+                    div.style.justifyContent = obj.textAlign === 'center' ? 'center' : obj.textAlign === 'right' ? 'flex-end' : 'flex-start';
+                    div.style.boxSizing = 'border-box';
+                    
+                    const span = document.createElement('span');
+                    span.style.width = '100%';
+                    span.style.textAlign = obj.textAlign || 'left';
+                    span.textContent = obj.text || 'Text';
+                    div.appendChild(span);
+                    
                     return div;
                 };
 

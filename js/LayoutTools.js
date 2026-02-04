@@ -362,13 +362,21 @@ export class LayoutTools {
             const selectedNodes = appContext.networkManager.cy.nodes(':selected');
             selectedNodes.forEach(node => {
                 const pos = node.position();
+                const width = node.width();
+                const height = node.height();
                 elements.push({
                     type: 'node',
                     element: node,
                     x: pos.x,
                     y: pos.y,
-                    width: node.width(),
-                    height: node.height()
+                    width: width,
+                    height: height,
+                    centerX: pos.x,
+                    centerY: pos.y,
+                    left: pos.x - width / 2,
+                    right: pos.x + width / 2,
+                    top: pos.y - height / 2,
+                    bottom: pos.y + height / 2
                 });
             });
         }
@@ -383,13 +391,21 @@ export class LayoutTools {
                 if (!layer) return;
                 // ライン/矢印は除外（位置の概念が異なるため）
                 if (layer.type !== 'line' && layer.type !== 'arrow') {
+                    const width = layer.width || 100;
+                    const height = layer.height || 80;
                     elements.push({
                         type: 'overlay',
                         element: layer,
                         x: layer.x,
                         y: layer.y,
-                        width: layer.width || 100,
-                        height: layer.height || 80
+                        width: width,
+                        height: height,
+                        centerX: layer.x + width / 2,
+                        centerY: layer.y + height / 2,
+                        left: layer.x,
+                        right: layer.x + width,
+                        top: layer.y,
+                        bottom: layer.y + height
                     });
                 }
             });
@@ -412,7 +428,7 @@ export class LayoutTools {
         
         switch (direction) {
             case 'left':
-                targetValue = Math.min(...elements.map(el => el.x - el.width / 2));
+                targetValue = Math.min(...elements.map(el => el.left));
                 elements.forEach(el => {
                     if (el.type === 'node') {
                         el.element.position({ x: targetValue + el.width / 2, y: el.element.position().y });
@@ -424,19 +440,19 @@ export class LayoutTools {
                 break;
                 
             case 'center-h':
-                const avgX = elements.reduce((sum, el) => sum + el.x, 0) / elements.length;
+                const avgX = elements.reduce((sum, el) => sum + el.centerX, 0) / elements.length;
                 elements.forEach(el => {
                     if (el.type === 'node') {
                         el.element.position({ x: avgX, y: el.element.position().y });
                     } else {
-                        el.element.x = avgX;
+                        el.element.x = avgX - el.width / 2;
                         appContext.layerManager.renderObject(el.element);
                     }
                 });
                 break;
                 
             case 'right':
-                targetValue = Math.max(...elements.map(el => el.x + el.width / 2));
+                targetValue = Math.max(...elements.map(el => el.right));
                 elements.forEach(el => {
                     if (el.type === 'node') {
                         el.element.position({ x: targetValue - el.width / 2, y: el.element.position().y });
@@ -448,7 +464,7 @@ export class LayoutTools {
                 break;
                 
             case 'top':
-                targetValue = Math.min(...elements.map(el => el.y - el.height / 2));
+                targetValue = Math.min(...elements.map(el => el.top));
                 elements.forEach(el => {
                     if (el.type === 'node') {
                         el.element.position({ x: el.element.position().x, y: targetValue + el.height / 2 });
@@ -460,19 +476,19 @@ export class LayoutTools {
                 break;
                 
             case 'center-v':
-                const avgY = elements.reduce((sum, el) => sum + el.y, 0) / elements.length;
+                const avgY = elements.reduce((sum, el) => sum + el.centerY, 0) / elements.length;
                 elements.forEach(el => {
                     if (el.type === 'node') {
                         el.element.position({ x: el.element.position().x, y: avgY });
                     } else {
-                        el.element.y = avgY;
+                        el.element.y = avgY - el.height / 2;
                         appContext.layerManager.renderObject(el.element);
                     }
                 });
                 break;
                 
             case 'bottom':
-                targetValue = Math.max(...elements.map(el => el.y + el.height / 2));
+                targetValue = Math.max(...elements.map(el => el.bottom));
                 elements.forEach(el => {
                     if (el.type === 'node') {
                         el.element.position({ x: el.element.position().x, y: targetValue - el.height / 2 });

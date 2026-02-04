@@ -268,6 +268,8 @@ export class LayerManager {
             fontSize: options.fontSize ?? 14,
             fontFamily: options.fontFamily ?? 'Arial',
             textColor: options.textColor ?? '#000000',
+            textAlign: options.textAlign ?? 'left',
+            textVAlign: options.textVAlign ?? 'top',
             
             // 画像用
             imageData: options.imageData ?? null, // base64
@@ -498,11 +500,31 @@ export class LayerManager {
             white-space: pre-wrap;
             outline: none;
             box-sizing: border-box;
+            text-align: ${obj.textAlign || 'left'};
+            display: flex;
+            align-items: ${obj.textVAlign === 'middle' ? 'center' : obj.textVAlign === 'bottom' ? 'flex-end' : 'flex-start'};
+            justify-content: ${obj.textAlign === 'center' ? 'center' : obj.textAlign === 'right' ? 'flex-end' : 'flex-start'};
         `;
-        div.textContent = obj.text || 'Text';
+        // フレックスボックスで配置を行うため、内部のテキストをラップする要素が必要かもしれないが、
+        // white-space: pre-wrap と display: flex の相性が悪いため、テキストコンテナを追加する形に修正すべきかもしれない。
+        // ここでは単純なテキスト要素として扱う。
+        // ただし、display: flexを使うと複数行テキストのtext-align (左寄せ・右寄せ) が期待通り効かないことがある。
+        // したがって、内部にspanを作って、そのspanに対してtext-alignを効かせ、親divで配置を制御する。
+        
+        // いったんクリア
+        div.innerHTML = '';
+        
+        const span = document.createElement('span');
+        span.style.cssText = `
+            width: 100%;
+            text-align: ${obj.textAlign || 'left'};
+        `;
+        span.textContent = obj.text || 'Text';
+        div.appendChild(span);
         
         div.addEventListener('dblclick', (e) => {
             div.contentEditable = 'true';
+            span.style.display = 'block'; // 編集時はブロック表示にして崩れを防ぐ
             div.focus();
             e.stopPropagation();
         });
@@ -510,7 +532,9 @@ export class LayerManager {
         div.addEventListener('blur', () => {
             if (div.contentEditable === 'true') {
                 div.contentEditable = 'false';
-                obj.text = div.textContent;
+                obj.text = div.textContent; // テキスト内容を保存
+                span.textContent = obj.text; // spanに反映し直す（構造維持のため）
+                span.style.display = ''; // リセット
             }
         });
         
@@ -1289,6 +1313,25 @@ export class LayerManager {
         }
 
         return true;
+    }
+
+    /**
+     * オブジェクトの複数プロパティを更新
+     */
+    updateObject(id, properties) {
+        const obj = this.layers.find(l => l.id === id);
+        if (!obj) return;
+        
+        Object.assign(obj, properties);
+        this.renderObject(obj);
+        
+        if (this.selectedLayer?.id === id) {
+            this.selectObject(obj);
+        }
+
+        if (appContext.historyManager) {
+            appContext.historyManager.captureState('overlay-update');
+        }
     }
 
     /**

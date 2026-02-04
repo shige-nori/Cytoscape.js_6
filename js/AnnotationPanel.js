@@ -55,7 +55,9 @@ export class AnnotationPanel {
                         fillColor: '#ffffff',
                         strokeColor: '#94a3b8',
                         strokeWidth: 1,
-                        fontSize: 14
+                        fontSize: 14,
+                        textAlign: 'left',
+                        textVAlign: 'top'
                     });
                 } else if (shape === 'table') {
                     // Show row/col inputs; creation happens on Apply
@@ -230,6 +232,64 @@ export class AnnotationPanel {
                                     <label>Color:</label>
                                     <input type="color" id="prop-text-color" class="property-color">
                                 </div>
+                                <div class="property-row">
+                                    <label>Horizontal:</label>
+                                    <div class="text-align-buttons">
+                                        <button type="button" class="text-align-btn" data-align="left" title="Left Align">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="17" y1="10" x2="3" y2="10"></line>
+                                                <line x1="21" y1="6" x2="3" y2="6"></line>
+                                                <line x1="21" y1="14" x2="3" y2="14"></line>
+                                                <line x1="17" y1="18" x2="3" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="text-align-btn" data-align="center" title="Center Align">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="18" y1="10" x2="6" y2="10"></line>
+                                                <line x1="21" y1="6" x2="3" y2="6"></line>
+                                                <line x1="21" y1="14" x2="3" y2="14"></line>
+                                                <line x1="18" y1="18" x2="6" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="text-align-btn" data-align="right" title="Right Align">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="21" y1="10" x2="7" y2="10"></line>
+                                                <line x1="21" y1="6" x2="3" y2="6"></line>
+                                                <line x1="21" y1="14" x2="3" y2="14"></line>
+                                                <line x1="21" y1="18" x2="7" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="property-row">
+                                    <label>Vertical:</label>
+                                    <div class="text-align-buttons">
+                                        <button type="button" class="text-valign-btn" data-valign="top" title="Top Align">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="10" y1="7" x2="10" y2="21"></line>
+                                                <line x1="6" y1="3" x2="6" y2="21"></line>
+                                                <line x1="14" y1="3" x2="14" y2="21"></line>
+                                                <line x1="18" y1="7" x2="18" y2="21"></line>
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="text-valign-btn" data-valign="middle" title="Middle Align">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="10" y1="6" x2="10" y2="18"></line>
+                                                <line x1="6" y1="3" x2="6" y2="21"></line>
+                                                <line x1="14" y1="3" x2="14" y2="21"></line>
+                                                <line x1="18" y1="6" x2="18" y2="18"></line>
+                                            </svg>
+                                        </button>
+                                        <button type="button" class="text-valign-btn" data-valign="bottom" title="Bottom Align">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <line x1="10" y1="3" x2="10" y2="17"></line>
+                                                <line x1="6" y1="3" x2="6" y2="21"></line>
+                                                <line x1="14" y1="3" x2="14" y2="21"></line>
+                                                <line x1="18" y1="3" x2="18" y2="17"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Table appearance controls removed per user request -->
@@ -327,6 +387,8 @@ export class AnnotationPanel {
             'prop-font-size': 'fontSize',
             'prop-font-family': 'fontFamily',
             'prop-text-color': 'textColor',
+            'text-align': 'textAlign',
+            'text-valign': 'textVAlign',
             'prop-name': 'name'
         };
 
@@ -341,7 +403,7 @@ export class AnnotationPanel {
                 
                 let value = input.value;
                 
-                if (['x', 'y', 'width', 'height', 'strokeWidth', 'rotation', 'fontSize'].includes(property)) {
+                if (['x', 'y', 'width', 'height', 'strokeWidth', 'rotation', 'fontSize', 'textAlign', 'textVAlign'].includes(property)) {
                     value = parseFloat(value) || 0;
                 } else if (property === 'opacity') {
                     value = parseFloat(value);
@@ -404,6 +466,29 @@ export class AnnotationPanel {
             if (selected) {
                 appContext.layerManager.removeObject(selected.id);
             }
+        });
+
+        // Text align buttons
+        document.querySelectorAll('.text-align-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const align = btn.dataset.align;
+                document.querySelectorAll('.text-align-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                if (this.currentObject && appContext.layerManager) {
+                    appContext.layerManager.updateObjectProperty(this.currentObject.id, 'textAlign', align);
+                }
+            });
+        });
+
+        document.querySelectorAll('.text-valign-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const valign = btn.dataset.valign;
+                document.querySelectorAll('.text-valign-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                if (this.currentObject && appContext.layerManager) {
+                    appContext.layerManager.updateObjectProperty(this.currentObject.id, 'textVAlign', valign);
+                }
+            });
         });
 
         document.getElementById('layer-lock')?.addEventListener('click', () => {
@@ -587,6 +672,14 @@ export class AnnotationPanel {
                 this.setInputValue('prop-font-size', obj.fontSize);
                 this.setInputValue('prop-font-family', obj.fontFamily || 'Yu Gothic');
                 this.setInputValue('prop-text-color', obj.textColor);
+                
+                // Update text align buttons
+                document.querySelectorAll('.text-align-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.align === (obj.textAlign || 'left'));
+                });
+                document.querySelectorAll('.text-valign-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.valign === (obj.textVAlign || 'top'));
+                });
             } else {
                 textGroup.style.display = 'none';
             }
