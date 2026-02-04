@@ -791,16 +791,16 @@ export class WebPageExporter {
     </div>
     <div class="top-menubar">
         <div class="menu-item">
-            <span class="menu-label">Path Trace</span>
-            <button id="path-trace-toggle" class="path-trace-toggle off">OFF</button>
-        </div>
-        <div class="menu-item">
             <span class="menu-label">Table Panel</span>
             <button id="table-panel-toggle" class="table-toggle off">OFF</button>
         </div>
         <div class="menu-item">
-            <span class="menu-label">Filter</span>
+            <span class="menu-label">Filter Panel</span>
             <button id="filter-panel-toggle" class="table-toggle off">OFF</button>
+        </div>
+        <div class="menu-item">
+            <span class="menu-label">Path Trace</span>
+            <button id="path-trace-toggle" class="path-trace-toggle off">OFF</button>
         </div>
     </div>
     <div id="network-background"></div>
