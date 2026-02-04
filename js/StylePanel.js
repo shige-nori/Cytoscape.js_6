@@ -44,6 +44,9 @@ export class StylePanel {
         this.nodeAttributes = [];
         this.edgeAttributes = [];
 
+        // マッピング値の変更フラグ（選択のみでは未保存扱いにしない）
+        this.mappingEdits = { node: {}, edge: {} };
+
         // コミット済みスタイル（Apply 押下で更新される）
         this.committedNodeStyles = JSON.parse(JSON.stringify(this.nodeStyles));
         this.committedEdgeStyles = JSON.parse(JSON.stringify(this.edgeStyles));
@@ -649,6 +652,7 @@ export class StylePanel {
                     this.nodeStyles.fillColor.mapping = {};
                 }
                 this.nodeStyles.fillColor.mapping.min = e.target.value;
+                this.markMappingEdited('node', 'fillColor');
                 this.applyNodeStyles();
             });
         }
@@ -658,6 +662,7 @@ export class StylePanel {
                     this.nodeStyles.fillColor.mapping = {};
                 }
                 this.nodeStyles.fillColor.mapping.max = e.target.value;
+                this.markMappingEdited('node', 'fillColor');
                 this.applyNodeStyles();
             });
         }
@@ -696,6 +701,7 @@ export class StylePanel {
                     this.nodeStyles.size.mapping = {};
                 }
                 this.nodeStyles.size.mapping.min = parseFloat(e.target.value);
+                this.markMappingEdited('node', 'size');
                 this.applyNodeStyles();
             });
         }
@@ -705,6 +711,7 @@ export class StylePanel {
                     this.nodeStyles.size.mapping = {};
                 }
                 this.nodeStyles.size.mapping.max = parseFloat(e.target.value);
+                this.markMappingEdited('node', 'size');
                 this.applyNodeStyles();
             });
         }
@@ -743,6 +750,7 @@ export class StylePanel {
                     this.nodeStyles.labelColor.mapping = {};
                 }
                 this.nodeStyles.labelColor.mapping.min = e.target.value;
+                this.markMappingEdited('node', 'labelColor');
                 this.applyNodeStyles();
             });
         }
@@ -752,6 +760,7 @@ export class StylePanel {
                     this.nodeStyles.labelColor.mapping = {};
                 }
                 this.nodeStyles.labelColor.mapping.max = e.target.value;
+                this.markMappingEdited('node', 'labelColor');
                 this.applyNodeStyles();
             });
         }
@@ -821,6 +830,7 @@ export class StylePanel {
                     this.nodeStyles.borderColor.mapping = {};
                 }
                 this.nodeStyles.borderColor.mapping.min = e.target.value;
+                this.markMappingEdited('node', 'borderColor');
                 this.applyNodeStyles();
             });
         }
@@ -830,6 +840,7 @@ export class StylePanel {
                     this.nodeStyles.borderColor.mapping = {};
                 }
                 this.nodeStyles.borderColor.mapping.max = e.target.value;
+                this.markMappingEdited('node', 'borderColor');
                 this.applyNodeStyles();
             });
         }
@@ -870,6 +881,7 @@ export class StylePanel {
                     this.edgeStyles.lineColor.mapping = {};
                 }
                 this.edgeStyles.lineColor.mapping.min = e.target.value;
+                this.markMappingEdited('edge', 'lineColor');
                 this.applyEdgeStyles();
             });
         }
@@ -879,6 +891,7 @@ export class StylePanel {
                     this.edgeStyles.lineColor.mapping = {};
                 }
                 this.edgeStyles.lineColor.mapping.max = e.target.value;
+                this.markMappingEdited('edge', 'lineColor');
                 this.applyEdgeStyles();
             });
         }
@@ -908,6 +921,7 @@ export class StylePanel {
                     this.edgeStyles.width.mapping = {};
                 }
                 this.edgeStyles.width.mapping.min = parseFloat(e.target.value);
+                this.markMappingEdited('edge', 'width');
                 this.applyEdgeStyles();
             });
         }
@@ -917,6 +931,7 @@ export class StylePanel {
                     this.edgeStyles.width.mapping = {};
                 }
                 this.edgeStyles.width.mapping.max = parseFloat(e.target.value);
+                this.markMappingEdited('edge', 'width');
                 this.applyEdgeStyles();
             });
         }
@@ -1206,6 +1221,7 @@ export class StylePanel {
                 }
                 
                 styleConfig.mapping[attrValue] = styleValue;
+                this.markMappingEdited(element, property);
                 this.applyStyles();
             });
             
@@ -1219,6 +1235,7 @@ export class StylePanel {
                 }
                 
                 styleConfig.mapping[attrValue] = styleValue;
+                this.markMappingEdited(element, property);
                 this.applyStyles();
             });
         });
@@ -1279,7 +1296,7 @@ export class StylePanel {
 
         // ノード属性を収集（内部用属性は除外）
         const nodeAttrs = new Set();
-        const excludeKeys = ['_hoverOriginalBg', '_hoverOriginalOpacity', '_originalBg'];
+        const excludeKeys = ['_hoverOriginalBg', '_hoverOriginalOpacity', '_originalBg', '_originalZIndex'];
         appContext.networkManager.cy.nodes().forEach(node => {
             Object.keys(node.data()).forEach(key => {
                 // `_bypass_` で始まる属性は表示しない
@@ -1298,7 +1315,7 @@ export class StylePanel {
 
         // エッジ属性を収集（内部用属性は除外）
         const edgeAttrs = new Set();
-        const excludeEdgeKeys = ['_hoverOriginalLineColor', '_originalLineColor', '_originalWidth'];
+        const excludeEdgeKeys = ['_hoverOriginalLineColor', '_originalLineColor', '_originalWidth', '_originalZIndex'];
         appContext.networkManager.cy.edges().forEach(edge => {
             Object.keys(edge.data()).forEach(key => {
                 // `_bypass_` で始まる属性は表示しない
@@ -1501,6 +1518,7 @@ export class StylePanel {
             this.committedNodeStyles = JSON.parse(JSON.stringify(this.nodeStyles));
             this.committedEdgeStyles = JSON.parse(JSON.stringify(this.edgeStyles));
             this.committedNetworkStyles = JSON.parse(JSON.stringify(this.networkStyles));
+            this.resetMappingEdits();
         } catch (e) {
             console.warn('StylePanel: failed to commit reset styles', e);
         }
@@ -2123,6 +2141,7 @@ export class StylePanel {
         this.committedNodeStyles = JSON.parse(JSON.stringify(this.nodeStyles));
         this.committedEdgeStyles = JSON.parse(JSON.stringify(this.edgeStyles));
         this.committedNetworkStyles = JSON.parse(JSON.stringify(this.networkStyles));
+        this.resetMappingEdits();
         // ここで必要ならイベントを発火させる（例: 保存ボタンを有効化など）
         // ネットワーク上のスタイルは既に live preview されているため、再適用は不要
         console.info('StylePanel: styles committed');
@@ -2145,6 +2164,7 @@ export class StylePanel {
         
         // 変更されたスタイルをネットワークに反映
         this.applyStyles();
+        this.resetMappingEdits();
         console.info('StylePanel: styles cancelled, reverted to committed state');
     }
 
@@ -2153,12 +2173,8 @@ export class StylePanel {
     // 未保存の変更があるか比較する
     hasUnsavedChanges() {
         try {
-            const a = JSON.stringify(this.nodeStyles);
-            const b = JSON.stringify(this.committedNodeStyles);
-            if (a !== b) return true;
-            const c = JSON.stringify(this.edgeStyles);
-            const d = JSON.stringify(this.committedEdgeStyles);
-            if (c !== d) return true;
+            if (this.hasStyleValueChanges(this.nodeStyles, this.committedNodeStyles, 'node')) return true;
+            if (this.hasStyleValueChanges(this.edgeStyles, this.committedEdgeStyles, 'edge')) return true;
             const e = JSON.stringify(this.networkStyles);
             const f = JSON.stringify(this.committedNetworkStyles);
             if (e !== f) return true;
@@ -2167,6 +2183,39 @@ export class StylePanel {
             console.warn('StylePanel: hasUnsavedChanges error', err);
             return false;
         }
+    }
+
+    hasStyleValueChanges(currentStyles, committedStyles, elementType) {
+        if (!currentStyles || !committedStyles) return false;
+        const keys = new Set([...Object.keys(currentStyles), ...Object.keys(committedStyles)]);
+        for (const key of keys) {
+            const current = currentStyles[key];
+            const committed = committedStyles[key];
+            if (!current || !committed) {
+                if (JSON.stringify(current) !== JSON.stringify(committed)) return true;
+                continue;
+            }
+            if (current.value !== committed.value) return true;
+
+            const mappingEdited = this.mappingEdits
+                && this.mappingEdits[elementType]
+                && this.mappingEdits[elementType][key];
+            if (mappingEdited) {
+                const currentMap = current.mapping || null;
+                const committedMap = committed.mapping || null;
+                if (JSON.stringify(currentMap) !== JSON.stringify(committedMap)) return true;
+            }
+        }
+        return false;
+    }
+
+    markMappingEdited(elementType, property) {
+        if (!this.mappingEdits[elementType]) this.mappingEdits[elementType] = {};
+        this.mappingEdits[elementType][property] = true;
+    }
+
+    resetMappingEdits() {
+        this.mappingEdits = { node: {}, edge: {} };
     }
 
     deepCopy(obj) {

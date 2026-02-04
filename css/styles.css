@@ -1635,18 +1635,20 @@ body {
 
 /* Column Settings Modal */
 .column-settings-container {
-    max-height: 400px;
-    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .column-checkboxes {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 8px;
-    padding: 8px;
+    padding: 12px;
     border: 1px solid var(--border-color);
-    border-radius: 4px;
-    max-height: 350px;
+    border-radius: 6px;
+    background-color: #fafafa;
+    max-height: 400px;
     overflow-y: auto;
 }
 
@@ -1654,21 +1656,28 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 6px 8px;
+    padding: 8px 12px;
     cursor: pointer;
-    border-radius: 3px;
-    transition: background-color 0.2s;
+    border-radius: 4px;
+    background-color: white;
+    border: 1px solid transparent;
+    transition: all 0.2s;
     user-select: none;
+    font-size: 13px;
 }
 
 .column-checkbox-item:hover {
     background-color: var(--background-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .column-checkbox-item input[type="checkbox"] {
     cursor: pointer;
     width: 16px;
     height: 16px;
+    margin: 0;
+    flex-shrink: 0;
 }
 
 /* Adjust cy-container for table panel */

@@ -15,8 +15,8 @@ export class TablePanel {
         this.sortColumn = null;
         this.sortOrder = 'asc'; // 'asc' or 'desc'
         // 除外カラム
-        this.excludedNodeColumns = ['_originalBg', '_hoverOriginalBg', '_hoverOriginalOpacity', 'name', 'label', 'Label'];
-        this.excludedEdgeColumns = ['_originalLineColor', '_originalWidth', '_hoverOriginalLineColor', '_hoverOriginalOpacity', 'interaction'];
+        this.excludedNodeColumns = ['_originalBg', '_hoverOriginalBg', '_hoverOriginalOpacity', 'name', 'label', 'Label', '_originalZIndex'];
+        this.excludedEdgeColumns = ['_originalLineColor', '_originalWidth', '_hoverOriginalLineColor', '_hoverOriginalOpacity', 'interaction', '_originalZIndex'];
         this.nodeColumns = ['id']; // デフォルトカラム（除外済み）
         this.edgeColumns = ['id', 'source', 'target']; // デフォルトカラム（除外済み）
         this.visibleNodeColumns = new Set(this.nodeColumns);

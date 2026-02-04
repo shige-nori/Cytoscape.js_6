@@ -2723,10 +2723,14 @@ export class WebPageExporter {
                     edge.data('_selectionOriginalWidth', edge.style('width'));
                     edge.data('_selectionOriginalZIndex', edge.style('z-index'));
                 }
+                
+                // 本ツールと同じ選択色 (#ef4444) と元の太さを維持
+                const currentWidth = edge.style('width');
+                
                 edge.style({
                     'line-color': '#ef4444',
                     'target-arrow-color': '#ef4444',
-                    'width': 3,
+                    'width': currentWidth,
                     'z-index': 9999
                 });
             });
