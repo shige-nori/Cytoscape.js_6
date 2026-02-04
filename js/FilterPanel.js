@@ -1,7 +1,7 @@
 import { appContext } from './AppContext.js';
 import { progressOverlay } from './ProgressOverlay.js';
 import { applySelectionToCy, expandSelectionWithConnections } from './FilterSelectionUtils.js';
-import { evaluateCondition } from './FilterEval.js';
+import { evaluateCondition, getMatchedIndicesForArray, evaluateExternalConditionSequence } from './FilterEval.js';
 
 /**
  * FilterPanel - フィルターパネル管理クラス
@@ -255,7 +255,6 @@ export class FilterPanel {
             logicalSelect.innerHTML = `
                 <option value="AND">AND</option>
                 <option value="OR" selected>OR</option>
-                <option value="NOT">NOT</option>
             `;
             logicalSelect.value = condition.logicalOp;
             logicalSelect.addEventListener('change', (e) => {
@@ -553,38 +552,65 @@ export class FilterPanel {
             return false;
         }
 
-        let result = true;
-        let lastLogicalOp = 'OR';
-        
-        const conditionEvals = []; // For debugging
+        // 新しいロジック：同一カラムに対する複数条件はまとめて評価し、
+        // 配列カラムの場合は要素単位でマッチしたインデックスを取得して
+        // カラム間では AND（共通するインデックスが存在すること）で判定する。
+        const condMap = new Map(); // columnName -> [conditions]
+        relevantConditions.forEach(c => {
+            const [, columnName] = c.column.split('.');
+            if (!columnName) return;
+            if (!condMap.has(columnName)) condMap.set(columnName, []);
+            condMap.get(columnName).push(c);
+        });
 
-        for (let i = 0; i < relevantConditions.length; i++) {
-            const condition = relevantConditions[i];
-            const [, columnName] = condition.column.split('.');
+        // 配列カラムのインデックス集合を格納
+        const arrayIndexSets = [];
+        // 非配列カラムの真偽値結果を格納
+        const nonArrayResults = [];
 
-            const value = element.data(columnName);
-            const conditionResult = evaluateCondition(value, condition.operator, condition.value);
-            
-            conditionEvals.push({
-                column: columnName,
-                value: value,
-                operator: condition.operator,
-                expected: condition.value,
-                result: conditionResult
-            });
-
-            if (i === 0) {
-                result = conditionResult;
-            } else if (lastLogicalOp === 'AND') {
-                result = result && conditionResult;
-            } else if (lastLogicalOp === 'OR') {
-                result = result || conditionResult;
-            } else if (lastLogicalOp === 'NOT') {
-                result = result && !conditionResult;
+        // 値を配列に正規化するヘルパー
+        const normalizeToItems = (val) => {
+            if (val === null || val === undefined) return null;
+            if (Array.isArray(val)) return val.map(v => String(v));
+            if (typeof val === 'string') {
+                if (val.includes('\n')) return val.split('\n').map(v => String(v));
+                if (val.includes('|')) return val.split('|').map(v => String(v));
             }
+            return null;
+        };
 
-            lastLogicalOp = condition.logicalOp || 'OR';
+        for (const [colName, conds] of condMap.entries()) {
+            let value = null;
+            try { value = element.data(colName); } catch (e) { value = undefined; }
+
+            const items = normalizeToItems(value);
+            if (items && items.length > 0) {
+                // 配列カラム：要素単位で条件群を評価してマッチするインデックスを取得
+                const matched = getMatchedIndicesForArray(items, conds);
+                arrayIndexSets.push(new Set(matched));
+            } else {
+                // 非配列カラム：条件群をシーケンス評価して真偽を得る
+                const boolResult = evaluateExternalConditionSequence(value, conds);
+                nonArrayResults.push(boolResult);
+            }
         }
+
+        // 非配列カラムはすべて真でなければ合格しない（AND）
+        if (nonArrayResults.some(r => !r)) return false;
+
+        // 配列カラム間はインデックスの共通部分が存在することを要求
+        if (arrayIndexSets.length > 0) {
+            let inter = arrayIndexSets[0];
+            for (let i = 1; i < arrayIndexSets.length; i++) {
+                inter = new Set([...inter].filter(x => arrayIndexSets[i].has(x)));
+                if (inter.size === 0) return false;
+            }
+            // 共通するインデックスがあれば合格
+            return inter.size > 0;
+        }
+
+        // 配列条件が無く、非配列条件がすべて真なら合格
+        return true;
         
         // Debug log for edges
         if (elementType === 'edge' && element._private && element._private.data && element._private.data.id) {

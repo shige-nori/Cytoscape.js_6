@@ -1,4 +1,5 @@
 import { appContext } from './AppContext.js';
+import { progressOverlay } from './ProgressOverlay.js';
 import { applySelectionToCy, expandSelectionWithConnections } from './FilterSelectionUtils.js';
 import { evaluateExternalConditionValue, evaluateExternalConditionSequence, getMatchedIndicesForArray } from './FilterEval.js';
 
@@ -1071,22 +1072,54 @@ export class TablePanel {
     /**
      * フィルターを適用してテーブルを再描画
      */
-    applyFilters(type) {
+    async applyFilters(type) {
+        if (appContext.pathTracePanel && appContext.pathTracePanel.isEnabled) {
+            let confirmed = true;
+            if (appContext.modalManager && typeof appContext.modalManager.showConfirm === 'function') {
+                try {
+                    confirmed = await appContext.modalManager.showConfirm('Path Trace機能はOFFになります。よろしいですか？');
+                } catch (e) {
+                    confirmed = confirm('Path Trace機能はOFFになります。よろしいですか？');
+                }
+            } else {
+                confirmed = confirm('Path Trace機能はOFFになります。よろしいですか？');
+            }
+
+            if (!confirmed) return;
+            // PathTraceをOFFにする
+            try { appContext.pathTracePanel.togglePathTrace(false); } catch (e) { /* ignore */ }
+        }
+
         if (type === 'node') {
             this.tableFilterConditions.node = this.buildTableFilterConditions('node');
         } else {
             this.tableFilterConditions.edge = this.buildTableFilterConditions('edge');
         }
 
-        if (type === this.currentTab) {
-            // フィルター適用時はヘッダーを再生成せず、tbodyのみ更新
-            if (type === 'node') {
-                this.renderNodeTable(false);
-            } else {
-                this.renderEdgeTable(false);
-            }
-            this.updateSelectionFromFilters(type);
+        // プログレス表示して非同期に処理（UI ブロックを避ける）
+        try {
+            progressOverlay.show('Applying filter...');
+        } catch (e) {
+            // ignore if overlay not available
         }
+
+        setTimeout(() => {
+            if (type === this.currentTab) {
+                // フィルター適用時はヘッダーを再生成せず、tbodyのみ更新
+                if (type === 'node') {
+                    this.renderNodeTable(false);
+                } else {
+                    this.renderEdgeTable(false);
+                }
+                this.updateSelectionFromFilters(type);
+            }
+
+            try {
+                progressOverlay.hide();
+            } catch (e) {
+                // ignore
+            }
+        }, 50);
     }
 
     hasActiveFilters(type) {

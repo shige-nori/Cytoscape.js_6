@@ -187,7 +187,7 @@ export class WebPageExporter {
     <style>
         * {
             margin: 0;
-            padding: 0;
+                if (val.includes(String.fromCharCode(10))) return val.split(String.fromCharCode(10)).map(v => String(v));
             box-sizing: border-box;
         }
         body {
@@ -917,6 +917,20 @@ export class WebPageExporter {
                 if(progressOverlay) progressOverlay.classList.remove('active');
             };
 
+            // Global error handlers to ensure loading overlay is hidden on runtime errors
+            window.addEventListener('error', (ev) => {
+                try {
+                    console.error('Exported page error:', ev.error || ev.message || ev);
+                } catch (e) {}
+                try { hideLoading(); } catch (e) {}
+            });
+            window.addEventListener('unhandledrejection', (ev) => {
+                try {
+                    console.error('Exported page unhandledrejection:', ev.reason);
+                } catch (e) {}
+                try { hideLoading(); } catch (e) {}
+            });
+
             // Confirm Modal Helper
             const showConfirm = (message) => {
                 return new Promise((resolve) => {
@@ -1019,6 +1033,53 @@ export class WebPageExporter {
                     return value.some(item => evaluateSingleValue(item, operator, targetValue));
                 }
                 return evaluateSingleValue(value, operator, targetValue);
+            }
+
+            // Evaluate a sequence of external conditions (preserve AND/OR/NOT sequencing)
+            function evaluateExternalConditionSequence(value, conditions) {
+                if (!conditions || conditions.length === 0) return false;
+                let result = true;
+                let lastLogicalOp = 'OR';
+                for (let i = 0; i < conditions.length; i++) {
+                    const condition = conditions[i];
+                    const conditionResult = evaluateCondition(value, condition.operator, condition.value);
+                    if (i === 0) {
+                        result = conditionResult;
+                    } else if (lastLogicalOp === 'AND') {
+                        result = result && conditionResult;
+                    } else if (lastLogicalOp === 'OR') {
+                        result = result || conditionResult;
+                    } else if (lastLogicalOp === 'NOT') {
+                        result = result && !conditionResult;
+                    }
+                    lastLogicalOp = condition.logicalOp || 'OR';
+                }
+                return result;
+            }
+
+            // Return matched element indices for array-like column given conditions
+            function getMatchedIndicesForArray(items, conditions) {
+                if (!items || items.length === 0 || !conditions || conditions.length === 0) return [];
+                let resultSet = null;
+                let lastLogicalOp = 'OR';
+                conditions.forEach((condition, index) => {
+                    const matched = items
+                        .map((item, idx) => ({ item, idx }))
+                        .filter(({ item }) => evaluateSingleValue(item, condition.operator, condition.value))
+                        .map(({ idx }) => idx);
+                    const matchedSet = new Set(matched);
+                    if (index === 0) {
+                        resultSet = new Set(matched);
+                    } else if (lastLogicalOp === 'AND') {
+                        resultSet = new Set([...resultSet].filter(i => matchedSet.has(i)));
+                    } else if (lastLogicalOp === 'OR') {
+                        resultSet = new Set([...resultSet, ...matchedSet]);
+                    } else if (lastLogicalOp === 'NOT') {
+                        resultSet = new Set([...resultSet].filter(i => !matchedSet.has(i)));
+                    }
+                    lastLogicalOp = condition.logicalOp || 'OR';
+                });
+                return resultSet ? Array.from(resultSet).sort((a, b) => a - b) : [];
             }
 
             // --- FilterSelectionUtils Logic ---
@@ -1275,7 +1336,7 @@ export class WebPageExporter {
                          logicalRow.className = 'filter-logical-row';
                          const logicalSelect = document.createElement('select');
                          logicalSelect.className = 'filter-logical-select';
-                         logicalSelect.innerHTML = '<option value="AND">AND</option><option value="OR" selected>OR</option><option value="NOT">NOT</option>';
+                         logicalSelect.innerHTML = '<option value="AND">AND</option><option value="OR" selected>OR</option>';
                          logicalSelect.value = condition.logicalOp;
                          logicalSelect.addEventListener('change', (e) => condition.logicalOp = e.target.value);
                          logicalRow.appendChild(logicalSelect);
@@ -1383,20 +1444,55 @@ export class WebPageExporter {
                 
                 evaluateConditions(ele, type, conditions) {
                     const relevant = conditions.filter(c => c.column.startsWith(type + '.'));
-                    if(relevant.length === 0) return false;
-                    let result = true;
-                    let lastOp = 'OR';
-                    relevant.forEach((c, i) => {
+                    if (relevant.length === 0) return false;
+                    // Group conditions by column
+                    const condMap = new Map();
+                    relevant.forEach(c => {
                         const col = c.column.split('.')[1];
-                        const val = ele.data(col);
-                        const res = evaluateCondition(val, c.operator, c.value);
-                        if(i === 0) result = res;
-                        else if(lastOp === 'AND') result = result && res;
-                        else if(lastOp === 'OR') result = result || res;
-                        else if(lastOp === 'NOT') result = result && !res;
-                        lastOp = c.logicalOp || 'OR';
+                        if (!col) return;
+                        if (!condMap.has(col)) condMap.set(col, []);
+                        condMap.get(col).push(c);
                     });
-                    return result;
+
+                    // Helpers
+                    const normalizeToItems = (val) => {
+                        if (val === null || val === undefined) return null;
+                        if (Array.isArray(val)) return val.map(v => String(v));
+                        if (typeof val === 'string') {
+                            if (val.includes(String.fromCharCode(10))) return val.split(String.fromCharCode(10)).map(v => String(v));
+                            if (val.includes('|')) return val.split('|').map(v => String(v));
+                        }
+                        return null;
+                    };
+
+                    const arrayIndexSets = [];
+                    const nonArrayResults = [];
+
+                    for (const [colName, conds] of condMap.entries()) {
+                        let value = null;
+                        try { value = ele.data(colName); } catch (e) { value = undefined; }
+                        const items = normalizeToItems(value);
+                        if (items && items.length > 0) {
+                            const matched = getMatchedIndicesForArray(items, conds);
+                            arrayIndexSets.push(new Set(matched));
+                        } else {
+                            const boolResult = evaluateExternalConditionSequence(value, conds);
+                            nonArrayResults.push(boolResult);
+                        }
+                    }
+
+                    if (nonArrayResults.some(r => !r)) return false;
+
+                    if (arrayIndexSets.length > 0) {
+                        let inter = arrayIndexSets[0];
+                        for (let i = 1; i < arrayIndexSets.length; i++) {
+                            inter = new Set([...inter].filter(x => arrayIndexSets[i].has(x)));
+                            if (inter.size === 0) return false;
+                        }
+                        return inter.size > 0;
+                    }
+
+                    return true;
                 }
 
                 applyFilterResults(nodes, edges, conditions) {
@@ -1643,7 +1739,7 @@ export class WebPageExporter {
             const formatCellValue = (value) => {
                 if (value === null || value === undefined) return '';
                 if (Array.isArray(value)) {
-                    return value.map(v => String(v)).join('\\n');
+                    return value.map(v => String(v)).join(String.fromCharCode(10));
                 }
                 if (typeof value === 'object') {
                     try {
@@ -1667,8 +1763,8 @@ export class WebPageExporter {
                 let items = null;
                 if (Array.isArray(value)) {
                     items = value.map(v => String(v));
-                } else if (typeof value === 'string' && value.includes('\\n')) {
-                    items = value.split('\\n').map(v => v.trim()).filter(v => v !== '');
+                } else if (typeof value === 'string' && value.includes(String.fromCharCode(10))) {
+                    items = value.split(String.fromCharCode(10)).map(v => v.trim()).filter(v => v !== '');
                 }
 
                 if (items && items.length > 0) {
@@ -1809,7 +1905,7 @@ export class WebPageExporter {
                 // Helpers for array detection
                 const getArrayItems = (val) => {
                     if (Array.isArray(val)) return val.map(v => String(v));
-                    if (typeof val === 'string' && val.includes('\\n')) return val.split('\\n');
+                    if (typeof val === 'string' && val.includes(String.fromCharCode(10))) return val.split(String.fromCharCode(10));
                     if (typeof val === 'string' && val.includes('|')) return val.split('|');
                     return null;
                 };
@@ -2960,8 +3056,9 @@ export class WebPageExporter {
                 setTimeout(hideLoading, 500);
             });
         } catch (error) {
+            try { hideLoading(); } catch (e) {}
             console.error('Error initializing network:', error);
-            alert('Failed to load network: ' + error.message);
+            alert('Failed to load network: ' + (error && error.message ? error.message : String(error)));
         }
     </script>
 </body>

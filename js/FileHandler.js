@@ -368,12 +368,13 @@ export class FileHandler {
         );
         if (allBooleans) return 'Boolean';
 
-        // 配列チェック（パイプ区切り）
+        // 配列チェック（パイプ区切り） — 空文字を数値扱いしない
         const hasDelimiter = sampleValues.some(v => String(v).includes('|'));
         if (hasDelimiter) {
             const firstWithDelimiter = sampleValues.find(v => String(v).includes('|'));
-            const parts = String(firstWithDelimiter).split('|');
-            const allPartsNumbers = parts.every(p => !isNaN(Number(p.trim())));
+            const parts = String(firstWithDelimiter).split('|').map(p => p.trim());
+            const isNumberString = s => s !== '' && /^-?\d+(?:\.\d+)?$/.test(s);
+            const allPartsNumbers = parts.length > 0 && parts.every(p => isNumberString(p));
             return allPartsNumbers ? 'Number Array' : 'String Array';
         }
 
