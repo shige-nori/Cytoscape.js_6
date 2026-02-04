@@ -63,7 +63,28 @@ export function evaluateCondition(value, operator, targetValue) {
     }
 
     if (Array.isArray(value)) {
-        return value.some(item => evaluateSingleValue(item, operator, targetValue));
+        const result = value.some(item => evaluateSingleValue(item, operator, targetValue));
+        // Debug: Log array evaluation with actual values
+        if (value.length > 0 && value.length < 200) {
+            const sampleValues = value.slice(0, 5);
+            // ★★★ 診断用ログ - このログが出ない場合は古いFilterEval.jsが読み込まれています ★★★
+            const sampleStr = sampleValues.map(v => JSON.stringify(v)).join(', ');
+            console.log(`      [evaluateCondition] Array (${value.length} items), sample: [${sampleStr}]`,
+                        `operator: ${operator}, target: ${targetValue}, result: ${result}`);
+            
+            // 最初の配列評価時に強制エラーログで診断
+            if (!window._filterEvalV5Logged) {
+                window._filterEvalV5Logged = true;
+                console.error('%c🔴 [FilterEval v5] First array evaluation detected', 'color: red; font-weight: bold; background: yellow;');
+                console.error(`[FilterEval v5] Sample values type check:`, sampleValues.map(v => typeof v + ': ' + v));
+                if (sampleValues.every(v => typeof v === 'number')) {
+                    console.error('%c⚠️ WARNING: All values are NUMBERS (0) - Old code is running!', 'color: red; font-size: 16px; font-weight: bold;');
+                } else {
+                    console.error('%c✅ Values contain STRINGS - New code is running correctly!', 'color: green; font-weight: bold;');
+                }
+            }
+        }
+        return result;
     }
 
     return evaluateSingleValue(value, operator, targetValue);

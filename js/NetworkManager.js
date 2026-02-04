@@ -736,9 +736,18 @@ export class NetworkManager {
             case 'Boolean':
                 return Boolean(value) && value !== 'false' && value !== '0';
             case 'String Array':
-                return String(value).split(delimiter).map(s => s.trim());
+                // 空要素も保持する（trim後が空文字列でもそのまま配列に含める）
+                const stringArray = String(value).split(delimiter).map(s => s.trim());
+                console.log('[convertValue] String Array:', value, '→', stringArray);
+                return stringArray;
             case 'Number Array':
-                return String(value).split(delimiter).map(s => Number(s.trim()) || 0);
+                // 空要素は 0 として扱う（Number('')は0になる）
+                const numberArray = String(value).split(delimiter).map(s => {
+                    const trimmed = s.trim();
+                    return trimmed === '' ? 0 : (Number(trimmed) || 0);
+                });
+                console.log('[convertValue] Number Array:', value, '→', numberArray);
+                return numberArray;
             default:
                 return String(value);
         }

@@ -22,6 +22,23 @@ import { WebPageExporter } from './WebPageExporter.js';
 
 // アプリケーション初期化
 document.addEventListener('DOMContentLoaded', () => {
+    // ★★★ バージョン確認用 - このログが出ない場合は古いファイルが読み込まれています ★★★
+    console.error('%c🔴 APP VERSION: 2026-02-04-v5 (CRITICAL UPDATE APPLIED)', 'color: red; font-size: 20px; font-weight: bold; background: yellow; padding: 10px;');
+    console.error('%c⚠️ If you see old logs (sample: [0,0,0,0,0]), cache is NOT cleared!', 'color: red; font-size: 16px; font-weight: bold;');
+    console.error('%c✅ Expected: sample: ["", "", "", "", "東北大"]', 'color: green; font-size: 16px; font-weight: bold;');
+    
+    // Service Worker診断
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+            if (registrations.length > 0) {
+                console.error('%c⚠️ WARNING: Service Worker detected! This may cache old files.', 'color: orange; font-size: 14px; font-weight: bold;');
+                console.error('Service Workers:', registrations);
+                console.error('To unregister: Open DevTools → Application → Service Workers → Unregister');
+            } else {
+                console.log('✅ No Service Workers registered');
+            }
+        });
+    }
     
     // プログレスオーバーレイ初期化
     progressOverlay.init();

@@ -61,13 +61,8 @@ export function applySelectionToCy(cy, nodes, edges, options = {}) {
     (edges || []).forEach(edge => edge.select());
     (nodes || []).forEach(node => node.select());
 
-    if (bringToFront && Array.isArray(edges) && edges.length > 0) {
-        try {
-            edges.forEach(edge => edge.moveToFront());
-        } catch (e) {
-            console.warn('applySelectionToCy: moveToFront failed', e);
-        }
-    }
+    // bringToFront: using z-index style rather than non-standard moveToFront()
+    // Some Cytoscape builds do not expose moveToFront(), so rely on 'z-index' applied below.
 
     // NetworkManager のイベントハンドラが抑止されている場合でも
     // 選択スタイルが反映されるように、ここで元スタイルを保存して

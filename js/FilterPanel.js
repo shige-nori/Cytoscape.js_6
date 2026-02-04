@@ -480,8 +480,24 @@ export class FilterPanel {
             });
             
             // エッジをフィルタリング
-            edges.forEach(edge => {
-                if (this.evaluateConditions(edge, 'edge', validConditions)) {
+            console.log(`[FilterPanel] Evaluating ${edges.length} edges with ${validConditions.length} conditions`);
+            
+            edges.forEach((edge, idx) => {
+                const result = this.evaluateConditions(edge, 'edge', validConditions);
+                
+                // Debug first few edges
+                if (idx < 3) {
+                    const edgeData = {};
+                    validConditions.forEach(c => {
+                        const [, colName] = c.column.split('.');
+                        if (colName) {
+                            edgeData[colName] = edge.data(colName);
+                        }
+                    });
+                    console.log(`  [Edge ${idx}] Data:`, edgeData, 'Result:', result);
+                }
+                
+                if (result) {
                     matchedEdges.push(edge);
                 }
             });
@@ -539,6 +555,8 @@ export class FilterPanel {
 
         let result = true;
         let lastLogicalOp = 'OR';
+        
+        const conditionEvals = []; // For debugging
 
         for (let i = 0; i < relevantConditions.length; i++) {
             const condition = relevantConditions[i];
@@ -546,6 +564,14 @@ export class FilterPanel {
 
             const value = element.data(columnName);
             const conditionResult = evaluateCondition(value, condition.operator, condition.value);
+            
+            conditionEvals.push({
+                column: columnName,
+                value: value,
+                operator: condition.operator,
+                expected: condition.value,
+                result: conditionResult
+            });
 
             if (i === 0) {
                 result = conditionResult;
@@ -558,6 +584,14 @@ export class FilterPanel {
             }
 
             lastLogicalOp = condition.logicalOp || 'OR';
+        }
+        
+        // Debug log for edges
+        if (elementType === 'edge' && element._private && element._private.data && element._private.data.id) {
+            const edgeId = element._private.data.id;
+            if (parseInt(edgeId) < 3) { // Log first 3 edges
+                console.log(`    [evaluateConditions Edge ${edgeId}]`, conditionEvals, '=> Final:', result);
+            }
         }
 
         return result;
@@ -713,6 +747,10 @@ export class FilterPanel {
         
         // Table Panelを更新（抽出結果を連動）
         if (appContext.tablePanel) {
+            console.log('[FilterPanel.applyFilterResults] Sending to TablePanel:',
+                        'matchedNodes:', matchedNodes.length,
+                        'matchedEdges:', matchedEdges.length,
+                        'conditions:', conditions.length);
             appContext.tablePanel.setExternalFilterResults(matchedNodes, matchedEdges, conditions);
             if (appContext.tablePanel.isVisible) {
                 appContext.tablePanel.refreshTable();

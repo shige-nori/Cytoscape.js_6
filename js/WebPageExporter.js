@@ -1147,6 +1147,10 @@ export class WebPageExporter {
                     if(clearBtn) clearBtn.addEventListener('click', () => this.clearFilter());
                 }
 
+                hasActiveConditions() {
+                    return this.conditions.some(c => c.column && c.value);
+                }
+
                 toggle(show) {
                     const isVisible = show !== undefined ? show : !this.panel.classList.contains('active');
                     if (isVisible) {
@@ -2886,6 +2890,11 @@ export class WebPageExporter {
                 if (!selectionEnabled) return;
                 if (isFilterSelecting) return;
                 
+                // Clear table filters and external filter results when selection changes
+                filters.node = {};
+                filters.edge = {};
+                externalFilterResults = null;
+                
                 if (renderTableDebounceTimer) clearTimeout(renderTableDebounceTimer);
                 renderTableDebounceTimer = setTimeout(() => {
                     renderTable();
@@ -2893,17 +2902,37 @@ export class WebPageExporter {
                 }, 100);
             });
 
-            // Background click: if anything is selected, clear selection and filters
+            // Background click: clear selection and filters
             cy.on('tap', (evt) => {
                 if (evt.target !== cy) return;
-                // If nothing is selected, do nothing
+                
+                // Check if there are active conditions or filters
                 const currSel = cy.elements(':selected');
-                if (!currSel || currSel.length === 0) return;
+                const hasSelection = currSel && currSel.length > 0;
+                const hasTableFilters = Object.values(filters.node || {}).some(v => v && String(v).trim() !== '') ||
+                                       Object.values(filters.edge || {}).some(v => v && String(v).trim() !== '');
+                const hasExternalFilter = externalFilterResults && externalFilterResults.conditions && externalFilterResults.conditions.length > 0;
+                
+                // If Filter Panel has active conditions, clear them first
+                if (hasExternalFilter && filterPanel && typeof filterPanel.hasActiveConditions === 'function' && filterPanel.hasActiveConditions()) {
+                    filterPanel.clearFilter();
+                    return;
+                }
+                
+                // If nothing is selected and no filters are active, do nothing
+                if (!hasSelection && !hasTableFilters && !hasExternalFilter) return;
 
                 withLoading(() => {
                     filters.node = {};
                     filters.edge = {};
                     cy.elements().unselect();
+                    cy.elements().style('opacity', 1);
+                    
+                    // Clear external filter results
+                    if (hasExternalFilter) {
+                        externalFilterResults = null;
+                    }
+                    
                     // Cancel pending debounced render since we render immediately
                     if (renderTableDebounceTimer) {
                         clearTimeout(renderTableDebounceTimer);
