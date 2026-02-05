@@ -854,9 +854,19 @@ export class NetworkManager {
             this.cy.reset();
         }
         
-        // テーブルパネルをクリア
+        // フィルターパネルをクリア（条件とUI状態を完全にリセット）
+        if (appContext.filterPanel) {
+            appContext.filterPanel.conditions = [];
+            appContext.filterPanel.addCondition();
+            appContext.filterPanel.closePanel();
+        }
+        
+        // テーブルパネルをクリア（フィルター、キャッシュ、外部フィルター結果を含む）
         if (appContext.tablePanel) {
             appContext.tablePanel.clearTable();
+            appContext.tablePanel.clearExternalFilterResults();
+            appContext.tablePanel.clearAllFiltersAllTabs();
+            appContext.tablePanel.closePanel();
         }
         
         // Layout Toolsパネルをクリア

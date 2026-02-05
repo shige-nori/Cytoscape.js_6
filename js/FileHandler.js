@@ -202,9 +202,23 @@ export class FileHandler {
         progressOverlay.show('Parsing CSV...');
         
         try {
-            // 既存ネットワークがあればクローズしてから読み込む
+            // 既存ネットワークがあればクローズしてから読み込む（すべてのキャッシュをクリア）
             if (appContext.networkManager.hasNetwork()) {
                 appContext.networkManager.closeNetwork();
+            }
+            
+            // フィルターパネルの状態をクリア（念のため再度確認）
+            if (appContext.filterPanel) {
+                appContext.filterPanel.conditions = [];
+                appContext.filterPanel.addCondition();
+                appContext.filterPanel.closePanel();
+            }
+            
+            // テーブルパネルの状態をクリア（念のため再度確認）
+            if (appContext.tablePanel) {
+                appContext.tablePanel.clearExternalFilterResults();
+                appContext.tablePanel.clearAllFiltersAllTabs();
+                appContext.tablePanel.closePanel();
             }
 
             // 旧オーバーレイ（図形）が残っている可能性があるため、インポート開始時に必ずクリア
@@ -398,9 +412,23 @@ export class FileHandler {
                 throw new Error('Invalid CX2 format: missing nodes or edges');
             }
             
-            // ネットワークをクリア
+            // ネットワークをクリア（すべてのキャッシュをクリア）
             if (appContext.networkManager.hasNetwork()) {
                 appContext.networkManager.closeNetwork();
+            }
+            
+            // フィルターパネルの状態をクリア（念のため再度確認）
+            if (appContext.filterPanel) {
+                appContext.filterPanel.conditions = [];
+                appContext.filterPanel.addCondition();
+                appContext.filterPanel.closePanel();
+            }
+            
+            // テーブルパネルの状態をクリア（念のため再度確認）
+            if (appContext.tablePanel) {
+                appContext.tablePanel.clearExternalFilterResults();
+                appContext.tablePanel.clearAllFiltersAllTabs();
+                appContext.tablePanel.closePanel();
             }
             
             // スタイル設定をデフォルトにリセット
