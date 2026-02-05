@@ -720,24 +720,61 @@ export class FilterPanel {
                 const nodeConds = conditions.filter(c => typeof c.column === 'string' && c.column.startsWith('node.') && c.value !== undefined && c.value !== null && String(c.value).trim() !== '');
                 if (nodeConds.length > 0) {
                     const seen = new Set();
+                    // Group node conditions by column name so we can evaluate sequences per-column
+                    const nodeCondMap = new Map();
+                    nodeConds.forEach(cond => {
+                        const [, colName] = cond.column.split('.');
+                        if (!colName) return;
+                        if (!nodeCondMap.has(colName)) nodeCondMap.set(colName, []);
+                        nodeCondMap.get(colName).push(cond);
+                    });
+
                     matchedNodes.forEach(node => {
                         try {
                             const incident = node.connectedEdges();
-                            nodeConds.forEach(cond => {
-                                const [, colName] = cond.column.split('.');
-                                const targetVal = cond.value;
-                                incident.forEach(edge => {
-                                    const edgeVal = edge.data(colName);
-                                    if (edgeVal === undefined || edgeVal === null) return;
-                                    if (Array.isArray(edgeVal)) {
-                                        if (edgeVal.includes(targetVal) && !seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
-                                    } else {
-                                        if (String(edgeVal) === String(targetVal) && !seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
+                            incident.forEach(edge => {
+                                try {
+                                    // For each column group, evaluate against the edge's data for that column
+                                    let edgeMatchesAllNonArray = true;
+                                    const arrayIndexSets = [];
+
+                                    for (const [colName, conds] of nodeCondMap.entries()) {
+                                        const edgeVal = edge.data(colName);
+                                        if (edgeVal === undefined || edgeVal === null) {
+                                            edgeMatchesAllNonArray = false; break;
+                                        }
+
+                                        if (Array.isArray(edgeVal) || (typeof edgeVal === 'string' && (String(edgeVal).includes('|') || String(edgeVal).includes('\n')))) {
+                                            // normalize to items
+                                            let items = Array.isArray(edgeVal) ? edgeVal.map(v => String(v)) : String(edgeVal).split(/\|/).map(v => String(v));
+                                            const matchedIdx = getMatchedIndicesForArray(items, conds);
+                                            arrayIndexSets.push(new Set(matchedIdx));
+                                        } else {
+                                            // Non-array: evaluate sequence of conditions
+                                            const ok = evaluateExternalConditionSequence(edgeVal, conds);
+                                            if (!ok) { edgeMatchesAllNonArray = false; break; }
+                                        }
                                     }
-                                });
+
+                                    if (!edgeMatchesAllNonArray) return;
+
+                                    // If there are array column conditions, require index intersection
+                                    if (arrayIndexSets.length > 0) {
+                                        let inter = arrayIndexSets[0];
+                                        for (let i = 1; i < arrayIndexSets.length; i++) {
+                                            inter = new Set([...inter].filter(x => arrayIndexSets[i].has(x)));
+                                            if (inter.size === 0) return; // no match for this edge
+                                        }
+                                        if (inter.size === 0) return; // redundant safety
+                                    }
+
+                                    if (!seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
+                                } catch (e) {
+                                    // ignore edge-level errors
+                                }
                             });
                         } catch (e) {
-                            // 何もしない
+                            // node.connectedEdges() may fail in some contexts; ignore
                         }
                     });
                 }

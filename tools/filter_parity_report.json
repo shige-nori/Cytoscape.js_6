@@ -1,0 +1,9 @@
+{
+  "nodeFilter": "Node 所属2 = 東北大 AND Node 所属1 <> 東大",
+  "edgeFilter": "Edge 所属2 = 東北大 AND Edge 所属1 <> 東大",
+  "matchedNodeCount": 20,
+  "edgesMatchedDirectCount": 0,
+  "edgesInferredCount": 0,
+  "onlyDirect": [],
+  "onlyInferred": []
+}

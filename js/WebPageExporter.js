@@ -1525,17 +1525,43 @@ export class WebPageExporter {
                                 const edgeSeen = new Set();
                                 nodes.forEach(node => {
                                     const incident = node.connectedEdges();
+                                    // Group node conditions by column and evaluate against edge attributes
+                                    const nodeCondMap = new Map();
                                     nodeConds.forEach(cond => {
                                         const colName = cond.column.split('.')[1];
-                                        const targetVal = cond.value;
-                                        incident.forEach(edge => {
-                                            const edgeVal = edge.data(colName);
-                                            // Use consistent loose/exact matching logic (unifying behavior with TablePanel)
-                                            if (valueMatches(edgeVal, targetVal) && !edgeSeen.has(edge.id())) {
-                                                edgeSeen.add(edge.id());
-                                                foundEdges.push(edge);
+                                        if (!colName) return;
+                                        if (!nodeCondMap.has(colName)) nodeCondMap.set(colName, []);
+                                        nodeCondMap.get(colName).push(cond);
+                                    });
+
+                                    incident.forEach(edge => {
+                                        try {
+                                            let edgeMatchesAllNonArray = true;
+                                            const arrayIndexSets = [];
+                                            for (const [colName, conds] of nodeCondMap.entries()) {
+                                                const edgeVal = edge.data(colName);
+                                                if (edgeVal === undefined || edgeVal === null) { edgeMatchesAllNonArray = false; break; }
+                                                if (Array.isArray(edgeVal) || (typeof edgeVal === 'string' && (String(edgeVal).includes('|') || String(edgeVal).includes(String.fromCharCode(10))))) {
+                                                    let items = Array.isArray(edgeVal) ? edgeVal.map(v => String(v)) : String(edgeVal).split('|').map(v => String(v));
+                                                    const matchedIdx = getMatchedIndicesForArray(items, conds);
+                                                    arrayIndexSets.push(new Set(matchedIdx));
+                                                } else {
+                                                    const ok = evaluateExternalConditionSequence(edgeVal, conds);
+                                                    if (!ok) { edgeMatchesAllNonArray = false; break; }
+                                                }
                                             }
-                                        });
+                                            if (!edgeMatchesAllNonArray) return;
+                                            if (arrayIndexSets.length > 0) {
+                                                let inter = arrayIndexSets[0];
+                                                for (let i = 1; i < arrayIndexSets.length; i++) {
+                                                    inter = new Set([...inter].filter(x => arrayIndexSets[i].has(x)));
+                                                    if (inter.size === 0) return;
+                                                }
+                                            }
+                                            if (!edgeSeen.has(edge.id())) { edgeSeen.add(edge.id()); foundEdges.push(edge); }
+                                        } catch (e) {
+                                            // ignore
+                                        }
                                     });
                                 });
                             }
