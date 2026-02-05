@@ -943,6 +943,95 @@ export class WebPageExporter {
         .confirm-modal-footer .btn-secondary:hover {
             background-color: #f8fafc;
         }
+        /* Columns Settings Modal */
+        #column-settings-modal .confirm-modal-body {
+            overflow-y: visible;
+        }
+        .column-checkboxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background-color: #fafafa;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .column-checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            background-color: white;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            user-select: none;
+            font-size: 13px;
+        }
+        .column-checkbox-item:hover {
+            background-color: #f8fafc;
+            border-color: #2563eb;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .column-checkbox-item input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            flex-shrink: 0;
+        }
+        /* How to use Modal */
+        #how-to-use-modal .confirm-modal-content {
+            max-width: 700px;
+            width: 90%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        #how-to-use-modal .confirm-modal-header {
+            cursor: move;
+            user-select: none;
+        }
+        #how-to-use-modal .confirm-modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+            white-space: normal; /* Override pre-wrap to prevent loose spacing */
+        }
+        .how-to-section {
+            margin-bottom: 15px;
+        }
+        .how-to-section:last-child {
+            margin-bottom: 0;
+        }
+        .how-to-section h3 {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0 0 5px 0;
+            padding-bottom: 3px;
+            border-bottom: 2px solid #3b82f6;
+        }
+        .how-to-section ul {
+            margin: 0;
+            padding-left: 20px;
+            list-style-type: disc;
+        }
+        .how-to-section li {
+            margin-bottom: 3px;
+            line-height: normal; /* Reset to browser default */
+            color: #475569;
+            font-size: 13px;
+        }
+        .how-to-section p {
+            margin: 0 0 3px 0;
+            line-height: normal;
+            color: #475569;
+            font-size: 13px;
+        }
     </style>
 </head>
 <body>
@@ -966,6 +1055,9 @@ export class WebPageExporter {
         <div class="menu-item" id="weight-switcher-menu-item" style="display: none; margin-left: 10px;">
             <span class="menu-label">Edge Weight Switcher</span>
             <button id="weight-switcher-toggle" class="table-toggle off">OFF</button>
+        </div>
+        <div class="menu-item" style="margin-left: auto;">
+            <button id="how-to-use-btn" class="table-toggle" style="background-color: #3b82f6; color: white;">How to use</button>
         </div>
     </div>
     <div id="network-background"></div>
@@ -994,6 +1086,7 @@ export class WebPageExporter {
                 <div class="table-tab" id="edge-table-tab">Edge Table</div>
             </div>
             <div class="table-panel-actions">
+                <button class="table-toggle" id="table-column-settings-btn">Columns...</button>
                 <button class="table-toggle" id="table-filter-apply-btn">Filter</button>
                 <button class="table-toggle off" id="table-filter-clear-btn">Clear</button>
             </div>
@@ -1021,6 +1114,105 @@ export class WebPageExporter {
             <div class="confirm-modal-footer">
                 <button class="btn btn-secondary" id="confirm-modal-cancel">キャンセル</button>
                 <button class="btn btn-primary" id="confirm-modal-ok">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Columns Settings Modal -->
+    <div class="confirm-modal-overlay" id="column-settings-modal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <h2>Columns Settings</h2>
+                <button class="confirm-modal-close" id="column-settings-modal-close">×</button>
+            </div>
+            <div class="confirm-modal-body">
+                <p style="margin: 0 0 6px 0; font-size: 14px; color: #64748b;">Select columns to display in the table:</p>
+                <div class="column-checkboxes" id="column-checkboxes">
+                    <!-- Checkboxes will be dynamically generated -->
+                </div>
+            </div>
+            <div class="confirm-modal-footer">
+                <button class="btn btn-secondary" id="column-settings-cancel">Cancel</button>
+                <button class="btn btn-primary" id="column-settings-apply">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- How to use Modal -->
+    <div class="confirm-modal-overlay" id="how-to-use-modal">
+        <div class="confirm-modal-content">
+            <div class="confirm-modal-header">
+                <h2>How to use</h2>
+                <button class="confirm-modal-close" id="how-to-use-close">×</button>
+            </div>
+            <div class="confirm-modal-body">
+                <div class="how-to-section">
+                    <h3>推奨環境</h3>
+                    <ul>
+                        <li>Chromium系ブラウザ（Chrome, Edge）またはFirefoxの最新版</li>
+                        <li>JavaScriptを有効にしてください</li>
+                    </ul>
+                </div>
+                <div class="how-to-section">
+                    <h3>メニューバー（画面上部）</h3>
+                    <ul>
+                        <li><strong>Table Panel:</strong> ON/OFFでテーブルパネルを開閉します</li>
+                        <li><strong>Filter Panel:</strong> ON/OFFでフィルタパネルを開閉します</li>
+                        <li><strong>Path Trace:</strong> ONでノードの経路をハイライトします（ONの時ノードやエッジの選択機能は無効になります）</li>
+                        <li><strong>Edge Weight Switcher:</strong> ONで重みとして使用するカラムを変更できます（エッジに重みデータが含まれている場合のみ表示）</li>
+                    </ul>
+                </div>
+                <div class="how-to-section">
+                    <h3>ネットワークの基本操作</h3>
+                    <ul>
+                        <li><strong>拡大/縮小:</strong> マウスホイールまたはピンチ操作</li>
+                        <li><strong>移動:</strong> 空き領域で左クリックしたままドラッグしてネットワーク図全体を移動</li>
+                        <li><strong>ノード選択:</strong> ノードをクリック（Ctrl/Cmd を押しながらで複数選択）。そのままドラッグすることで移動。テーブルパネルを表示している場合、そのノードの情報のみが表示されます</li>
+                        <li><strong>エッジ選択:</strong> エッジをクリック。テーブルパネルを表示している場合、そのエッジの情報のみが表示されます</li>
+                        <li><strong>背景クリック:</strong> ネットワーク領域の余白をクリックすると選択、およびフィルターが解除されます</li>
+                    </ul>
+                </div>
+                <div class="how-to-section">
+                    <h3>Table Panel（テーブル）</h3>
+                    <ul>
+                        <li>Node Table / Edge Table タブで切替</li>
+                        <li>各行をクリックすると対応する要素が選択されます</li>
+                        <li><strong>Columns...ボタン:</strong> テーブルに表示するカラムを選択できます</li>
+                        <li><strong>Filterボタン:</strong> テーブル内部の簡易フィルタ入力を使用して表示行を絞り込み</li>
+                        <li><strong>Clearボタン:</strong> テーブルのフィルタをクリアして選択を解除</li>
+                    </ul>
+                </div>
+                <div class="how-to-section">
+                    <h3>Filter Panel（フィルタ）</h3>
+                    <ul>
+                        <li>カラムを選択し、演算子と値を入力して条件を追加できます</li>
+                        <li>Apply を押すとフィルタが適用され、該当ノード/エッジが選択されます</li>
+                        <li>Clear を押すとフィルタ条件がクリアされます</li>
+                    </ul>
+                </div>
+                <div class="how-to-section">
+                    <h3>Path Trace（パストレース）</h3>
+                    <ul>
+                        <li>有効化すると、ノードにマウスを乗せた際にそのノードを通るパスがハイライトされます（軽微な負荷がかかります）</li>
+                    </ul>
+                </div>
+                <div class="how-to-section">
+                    <h3>Edge Weight Switcher（エッジ重み切り替え）</h3>
+                    <ul>
+                        <li>エッジに重みデータが含まれている場合、メニューバーに「Edge Weight Switcher」ボタンが表示されます</li>
+                        <li><strong>Weight Column:</strong> ドロップダウンから重みとして使用するカラムを選択できます</li>
+                    </ul>
+                </div>
+                <div class="how-to-section">
+                    <h3>注意事項 / 既知の制限</h3>
+                    <ul>
+                        <li>ブラウザのセキュリティ設定や拡張機能によって動作が制限される場合があります</li>
+                        <li>大規模ネットワークでは表示・操作に時間がかかることがあります</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="confirm-modal-footer">
+                <button class="btn btn-primary" id="how-to-use-ok">Close</button>
             </div>
         </div>
     </div>
@@ -1947,6 +2139,8 @@ export class WebPageExporter {
             let currentTab = 'node';
             const filters = { node: {}, edge: {} };
             const columnWidths = { node: {}, edge: {} };
+            let visibleNodeColumns = new Set();
+            let visibleEdgeColumns = new Set();
             let selectionEnabled = false;
             let isFilterSelecting = false;
             let isEdgeSelectingNodes = false;
@@ -2029,6 +2223,13 @@ export class WebPageExporter {
                 }
                 return Array.from(cols);
             };
+            
+            // Alias for columns settings
+            const getAvailableColumns = collectColumns;
+            
+            // Initialize visible columns
+            visibleNodeColumns = new Set(collectColumns('node'));
+            visibleEdgeColumns = new Set(collectColumns('edge'));
 
             const isNumericQuery = (query) => {
                 const s = String(query ?? '').trim();
@@ -2687,7 +2888,9 @@ export class WebPageExporter {
             const renderTable = () => {
                 if (!tableVisible) return;
                 const type = currentTab;
-                const columns = collectColumns(type);
+                const allColumns = collectColumns(type);
+                const visibleCols = type === 'node' ? visibleNodeColumns : visibleEdgeColumns;
+                const columns = allColumns.filter(col => visibleCols.has(col));
                 renderTableHeader(columns, type);
                 renderTableBody(columns, type);
             };
@@ -2737,8 +2940,140 @@ export class WebPageExporter {
                     }, 'Clearing...');
                 });
             }
+            
+            // Columns Settings
+            const columnSettingsBtn = document.getElementById('table-column-settings-btn');
+            const columnSettingsModal = document.getElementById('column-settings-modal');
+            const columnSettingsClose = document.getElementById('column-settings-modal-close');
+            const columnSettingsApply = document.getElementById('column-settings-apply');
+            const columnSettingsCancel = document.getElementById('column-settings-cancel');
+            const columnCheckboxes = document.getElementById('column-checkboxes');
+            
+            if (columnSettingsBtn) {
+                columnSettingsBtn.addEventListener('click', () => {
+                    // Populate checkboxes
+                    if (columnCheckboxes) {
+                        columnCheckboxes.innerHTML = '';
+                        const allColumns = getAvailableColumns(currentTab);
+                        const visibleCols = currentTab === 'node' ? visibleNodeColumns : visibleEdgeColumns;
+                        
+                        allColumns.forEach(col => {
+                            const label = document.createElement('label');
+                            label.classList.add('column-checkbox-item');
+                            
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.value = col;
+                            checkbox.checked = visibleCols.has(col);
+                            
+                            label.appendChild(checkbox);
+                            label.appendChild(document.createTextNode(col));
+                            columnCheckboxes.appendChild(label);
+                        });
+                    }
+                    if (columnSettingsModal) {
+                        columnSettingsModal.classList.add('active');
+                    }
+                });
+            }
+            
+            const closeColumnSettings = () => {
+                if (columnSettingsModal) {
+                    columnSettingsModal.classList.remove('active');
+                }
+            };
+            
+            if (columnSettingsClose) {
+                columnSettingsClose.addEventListener('click', closeColumnSettings);
+            }
+            if (columnSettingsCancel) {
+                columnSettingsCancel.addEventListener('click', closeColumnSettings);
+            }
+            if (columnSettingsApply) {
+                columnSettingsApply.addEventListener('click', () => {
+                    if (columnCheckboxes) {
+                        const checkboxes = columnCheckboxes.querySelectorAll('input[type="checkbox"]');
+                        const selectedColumns = new Set();
+                        checkboxes.forEach(cb => {
+                            if (cb.checked) {
+                                selectedColumns.add(cb.value);
+                            }
+                        });
+                        
+                        if (currentTab === 'node') {
+                            visibleNodeColumns = selectedColumns;
+                        } else {
+                            visibleEdgeColumns = selectedColumns;
+                        }
+                    }
+                    closeColumnSettings();
+                    renderTable();
+                });
+            }
             if (tableToggle) {
                 tableToggle.addEventListener('click', () => setTableVisible(!tableVisible));
+            }
+
+            // How to use Modal
+            const howToUseBtn = document.getElementById('how-to-use-btn');
+            const howToUseModal = document.getElementById('how-to-use-modal');
+            const howToUseClose = document.getElementById('how-to-use-close');
+            const howToUseOk = document.getElementById('how-to-use-ok');
+            const howToUseModalContent = howToUseModal ? howToUseModal.querySelector('.confirm-modal-content') : null;
+            const howToUseHeader = howToUseModal ? howToUseModal.querySelector('.confirm-modal-header') : null;
+            
+            const closeHowToUse = () => {
+                if (howToUseModal) {
+                    howToUseModal.classList.remove('active');
+                }
+            };
+            
+            if (howToUseBtn) {
+                howToUseBtn.addEventListener('click', () => {
+                    if (howToUseModal) {
+                        howToUseModal.classList.add('active');
+                        // Reset position
+                        if (howToUseModalContent) {
+                            howToUseModalContent.style.top = '50%';
+                            howToUseModalContent.style.left = '50%';
+                            howToUseModalContent.style.transform = 'translate(-50%, -50%)';
+                        }
+                    }
+                });
+            }
+            if (howToUseClose) {
+                howToUseClose.addEventListener('click', closeHowToUse);
+            }
+            if (howToUseOk) {
+                howToUseOk.addEventListener('click', closeHowToUse);
+            }
+            
+            // Make How to use modal draggable
+            if (howToUseHeader && howToUseModalContent) {
+                let isDragging = false;
+                let currentX, currentY, initialX, initialY;
+                
+                howToUseHeader.addEventListener('mousedown', (e) => {
+                    if (e.target.classList.contains('confirm-modal-close')) return;
+                    isDragging = true;
+                    const rect = howToUseModalContent.getBoundingClientRect();
+                    initialX = e.clientX - rect.left;
+                    initialY = e.clientY - rect.top;
+                    howToUseModalContent.style.transform = 'none';
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    e.preventDefault();
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    howToUseModalContent.style.left = currentX + 'px';
+                    howToUseModalContent.style.top = currentY + 'px';
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    isDragging = false;
+                });
             }
 
             // Apply network background

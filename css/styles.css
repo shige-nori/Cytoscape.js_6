@@ -319,6 +319,11 @@ body {
     margin: 0;
 }
 
+/* Columns Settings Modal - スクロールバーはチェックボックスエリアのみに */
+#column-settings-modal .modal-body {
+    overflow-y: visible;
+}
+
 .modal-footer {
     display: flex;
     justify-content: flex-end;

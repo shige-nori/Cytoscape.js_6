@@ -34,9 +34,18 @@ Reserchmap　よくある問い合わせ(FAQ)
 winget install OpenJS.NodeJS.LTS
 
 
-フィルタークリアの処理
+Style Panelでマッピング方法を選択したとき「Default」「Continuous」、「Discrete」を選択したときはすぐに色やサイズなどを図に反映させるようにしてください
+「Bypass」だけは色やサイズの変更タイミングで図に反映させる
 
-空き領域をクリック→ノード・エッジの選択解除、テーブルパネルのフィルター解除(フィルターテキストボックスもクリア)、
+
+Save時の動き
+
+
+
+
+
+
+
 
 
 
