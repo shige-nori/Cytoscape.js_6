@@ -1405,7 +1405,6 @@ export class WebPageExporter {
                         <option value="<"><</option>
                         <option value="<=">≦</option>
                         <option value="<>"><></option>
-                        <option value="contains" \${columnValue && (columnValue.includes('node.') || columnValue.includes('edge.')) ? '' : ''}>contains</option>
                     \`;
                 }
 
