@@ -152,8 +152,16 @@ export class WebPageExporter {
         // オーバーレイレイヤーを取得
         const layers = appContext.layerManager ? appContext.layerManager.exportLayers() : [];
 
+        // Edge width設定を取得（Edge Weight Switcher用）
+        const edgeWidthConfig = {
+            attribute: appContext.stylePanel?.edgeStyles?.width?.attribute || null,
+            type: appContext.stylePanel?.edgeStyles?.width?.type || 'default',
+            value: appContext.stylePanel?.edgeStyles?.width?.value || 2,
+            mapping: appContext.stylePanel?.edgeStyles?.width?.mapping || null
+        };
+
         // HTMLを生成
-        const html = this.generateHTML(elements, styles, layers, elementStyleOverrides, backgroundColor);
+        const html = this.generateHTML(elements, styles, layers, elementStyleOverrides, backgroundColor, edgeWidthConfig);
 
         // ダウンロード
         this.downloadHTML(html, 'network.html');
@@ -166,9 +174,10 @@ export class WebPageExporter {
      * @param {Array} layers - オーバーレイレイヤーデータ
      * @param {Object} elementStyleOverrides - element単位のstyle（computed）
      * @param {string} backgroundColor - ネットワーク背景色
+     * @param {Object} edgeWidthConfig - Edge width設定情報
      * @returns {string} HTML文字列
      */
-    generateHTML(elements, styles, layers, elementStyleOverrides, backgroundColor) {
+    generateHTML(elements, styles, layers, elementStyleOverrides, backgroundColor, edgeWidthConfig) {
         // JSONはapplication/jsonスクリプトタグに安全に埋め込むため、base64化
         const toBase64 = (value) => btoa(unescape(encodeURIComponent(value)));
         const elementsJson = toBase64(JSON.stringify(elements));
@@ -176,6 +185,7 @@ export class WebPageExporter {
         const layersJson = toBase64(JSON.stringify(layers));
         const overridesJson = toBase64(JSON.stringify(elementStyleOverrides));
         const backgroundJson = toBase64(JSON.stringify(backgroundColor));
+        const edgeWidthConfigJson = toBase64(JSON.stringify(edgeWidthConfig));
 
         return `<!DOCTYPE html>
 <html lang="ja">
@@ -294,6 +304,132 @@ export class WebPageExporter {
         .table-toggle.off {
             background: #e2e8f0;
             color: #0f172a;
+        }
+        .weight-switcher-btn {
+            border: 1px solid #94a3b8;
+            background: #e2e8f0;
+            color: #0f172a;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .weight-switcher-btn:hover {
+            background: #cbd5e1;
+        }
+        /* Edge Weight Switcher Modal */
+        .weight-switcher-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: transparent;
+            z-index: 10000;
+            pointer-events: none;
+        }
+        .weight-switcher-modal-overlay.active {
+            display: block;
+        }
+        .weight-switcher-modal-content {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            width: 350px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+            overflow: hidden;
+            pointer-events: auto;
+        }
+        .weight-switcher-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            background-color: #1e293b;
+            color: #ffffff;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            cursor: move;
+            user-select: none;
+        }
+        .weight-switcher-modal-header h2 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+        }
+        .weight-switcher-modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #ffffff;
+            line-height: 1;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+        }
+        .weight-switcher-modal-close:hover {
+            color: #e6eefc;
+        }
+        .weight-switcher-modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1 1 auto;
+        }
+        .weight-switcher-modal-body label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0f172a;
+        }
+        .weight-switcher-modal-body select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 14px;
+            background-color: #ffffff;
+        }
+        .weight-switcher-modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 12px 16px;
+            border-top: 1px solid #e2e8f0;
+        }
+        .weight-switcher-modal-footer .btn {
+            padding: 6px 16px;
+            font-size: 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-weight: 600;
+        }
+        .weight-switcher-modal-footer .btn-primary {
+            background-color: #2563eb;
+            color: #fff;
+        }
+        .weight-switcher-modal-footer .btn-primary:hover {
+            background-color: #1d4ed8;
+        }
+        .weight-switcher-modal-footer .btn-secondary {
+            background-color: #fff;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+        }
+        .weight-switcher-modal-footer .btn-secondary:hover {
+            background-color: #f8fafc;
         }
         :root {
             --table-panel-height: 0px;
@@ -840,6 +976,9 @@ export class WebPageExporter {
             <span class="menu-label">Path Trace</span>
             <button id="path-trace-toggle" class="path-trace-toggle off">OFF</button>
         </div>
+        <div class="menu-item" id="weight-switcher-menu-item" style="display: none; margin-left: 20px;">
+            <button id="weight-switcher-btn" class="weight-switcher-btn">Edge Weight Switcher</button>
+        </div>
     </div>
     <div id="network-background"></div>
     <div id="cy"></div>
@@ -898,11 +1037,30 @@ export class WebPageExporter {
         </div>
     </div>
 
+    <!-- Edge Weight Switcher Modal -->
+    <div class="weight-switcher-modal-overlay" id="weight-switcher-modal">
+        <div class="weight-switcher-modal-content">
+            <div class="weight-switcher-modal-header">
+                <h2>Edge Weight Switcher</h2>
+                <button class="weight-switcher-modal-close" id="weight-switcher-modal-close">×</button>
+            </div>
+            <div class="weight-switcher-modal-body">
+                <label for="weight-column-select">Select Weight Column:</label>
+                <select id="weight-column-select"></select>
+            </div>
+            <div class="weight-switcher-modal-footer">
+                <button class="btn btn-secondary" id="weight-switcher-cancel">Cancel</button>
+                <button class="btn btn-primary" id="weight-switcher-apply">Apply</button>
+            </div>
+        </div>
+    </div>
+
     <script type="application/json" id="elements-json">${elementsJson}</script>
     <script type="application/json" id="styles-json">${stylesJson}</script>
     <script type="application/json" id="layers-json">${layersJson}</script>
     <script type="application/json" id="overrides-json">${overridesJson}</script>
     <script type="application/json" id="background-json">${backgroundJson}</script>
+    <script type="application/json" id="edge-width-config-json">${edgeWidthConfigJson}</script>
     <script>
         try {
             // Loading Overlay Helpers
@@ -1766,6 +1924,7 @@ export class WebPageExporter {
             const layers = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('layers-json').textContent || ''))));
             const styleOverrides = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('overrides-json').textContent || ''))));
             const backgroundColor = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('background-json').textContent || ''))));
+            const edgeWidthConfig = JSON.parse(decodeURIComponent(escape(atob(document.getElementById('edge-width-config-json').textContent || '{}'))));
 
             console.log('Elements loaded:', elements.length);
             console.log('Styles loaded:', styles.length);
@@ -3084,6 +3243,215 @@ export class WebPageExporter {
             setTableVisible(false);
             // ensure resize handle exists
             ensureTableResizeHandle();
+
+            // Edge Weight Switcher
+            const weightSwitcherBtn = document.getElementById('weight-switcher-btn');
+            const weightSwitcherModal = document.getElementById('weight-switcher-modal');
+            const weightSwitcherClose = document.getElementById('weight-switcher-modal-close');
+            const weightColumnSelect = document.getElementById('weight-column-select');
+            const weightSwitcherApply = document.getElementById('weight-switcher-apply');
+            const weightSwitcherCancel = document.getElementById('weight-switcher-cancel');
+            const weightSwitcherMenuItem = document.getElementById('weight-switcher-menu-item');
+            let currentWeightColumn = null;
+            let weightColumns = [];
+            let initialWeightColumn = null;
+            let initialMinWidth = null;
+            let initialMaxWidth = null;
+
+            // Check if edges have weight columns
+            const detectWeightColumns = () => {
+                const columns = new Set();
+                const edges = cy.edges();
+                edges.forEach(edge => {
+                    const data = edge.data();
+                    Object.keys(data).forEach(key => {
+                        if (/weight|重み|ウェイト/i.test(key)) {
+                            columns.add(key);
+                        }
+                    });
+                });
+                return Array.from(columns).sort();
+            };
+
+            weightColumns = detectWeightColumns();
+            if (weightColumns.length > 0) {
+                // Show the Edge Weight Switcher button
+                if (weightSwitcherMenuItem) {
+                    weightSwitcherMenuItem.style.display = 'flex';
+                }
+                // Set initial weight column from edgeWidthConfig or first one found
+                if (edgeWidthConfig && edgeWidthConfig.type === 'continuous' && edgeWidthConfig.attribute) {
+                    initialWeightColumn = edgeWidthConfig.attribute;
+                    currentWeightColumn = edgeWidthConfig.attribute;
+                    // Get initial min/max from mapping config
+                    if (edgeWidthConfig.mapping && edgeWidthConfig.mapping.min !== undefined && edgeWidthConfig.mapping.max !== undefined) {
+                        // Extract numeric values from color or size range
+                        // For width, these should be numbers directly
+                        const minVal = parseFloat(edgeWidthConfig.mapping.min);
+                        const maxVal = parseFloat(edgeWidthConfig.mapping.max);
+                        if (!isNaN(minVal) && !isNaN(maxVal)) {
+                            initialMinWidth = minVal;
+                            initialMaxWidth = maxVal;
+                        }
+                    }
+                    // If not found in mapping or invalid, calculate from current edge widths
+                    if (initialMinWidth === null || initialMaxWidth === null) {
+                        const currentWidths = [];
+                        cy.edges().forEach(edge => {
+                            const width = edge.style('width');
+                            const numWidth = parseFloat(width);
+                            if (!isNaN(numWidth)) {
+                                currentWidths.push(numWidth);
+                            }
+                        });
+                        if (currentWidths.length > 0) {
+                            initialMinWidth = Math.min(...currentWidths);
+                            initialMaxWidth = Math.max(...currentWidths);
+                        }
+                    }
+                } else {
+                    currentWeightColumn = weightColumns[0];
+                }
+            }
+
+            // Modal drag functionality
+            const weightSwitcherContent = document.querySelector('.weight-switcher-modal-content');
+            const weightSwitcherHeader = document.querySelector('.weight-switcher-modal-header');
+            let isDraggingWeightModal = false;
+            let dragOffsetX = 0;
+            let dragOffsetY = 0;
+
+            if (weightSwitcherHeader && weightSwitcherContent) {
+                weightSwitcherHeader.addEventListener('mousedown', (e) => {
+                    isDraggingWeightModal = true;
+                    const rect = weightSwitcherContent.getBoundingClientRect();
+                    dragOffsetX = e.clientX - rect.left;
+                    dragOffsetY = e.clientY - rect.top;
+                    e.preventDefault();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (isDraggingWeightModal && weightSwitcherContent) {
+                        const newLeft = e.clientX - dragOffsetX;
+                        const newTop = e.clientY - dragOffsetY;
+                        weightSwitcherContent.style.left = newLeft + 'px';
+                        weightSwitcherContent.style.top = newTop + 'px';
+                        weightSwitcherContent.style.right = 'auto';
+                    }
+                });
+
+                document.addEventListener('mouseup', () => {
+                    isDraggingWeightModal = false;
+                });
+            }
+
+            // Open modal
+            if (weightSwitcherBtn) {
+                weightSwitcherBtn.addEventListener('click', () => {
+                    // Populate select with weight columns
+                    if (weightColumnSelect) {
+                        weightColumnSelect.innerHTML = '';
+                        weightColumns.forEach(col => {
+                            const option = document.createElement('option');
+                            option.value = col;
+                            option.textContent = col;
+                            if (col === currentWeightColumn) {
+                                option.selected = true;
+                            }
+                            weightColumnSelect.appendChild(option);
+                        });
+                    }
+                    if (weightSwitcherModal) {
+                        weightSwitcherModal.classList.add('active');
+                    }
+                });
+            }
+
+            // Close modal
+            const closeWeightSwitcherModal = () => {
+                if (weightSwitcherModal) {
+                    weightSwitcherModal.classList.remove('active');
+                }
+            };
+            if (weightSwitcherClose) {
+                weightSwitcherClose.addEventListener('click', closeWeightSwitcherModal);
+            }
+            if (weightSwitcherCancel) {
+                weightSwitcherCancel.addEventListener('click', closeWeightSwitcherModal);
+            }
+            // Remove background click to close functionality for non-modal behavior
+            // if (weightSwitcherModal) {
+            //     weightSwitcherModal.addEventListener('click', (e) => {
+            //         if (e.target === weightSwitcherModal) {
+            //             closeWeightSwitcherModal();
+            //         }
+            //     });
+            // }
+
+            // Apply weight column change
+            if (weightSwitcherApply) {
+                weightSwitcherApply.addEventListener('click', () => {
+                    const selectedColumn = weightColumnSelect ? weightColumnSelect.value : null;
+                    if (selectedColumn) {
+                        currentWeightColumn = selectedColumn;
+                        
+                        // Collect all weight values to determine min/max
+                        const weightValues = [];
+                        cy.edges().forEach(edge => {
+                            const weightValue = edge.data(selectedColumn);
+                            if (weightValue !== undefined && weightValue !== null && weightValue !== '') {
+                                const numValue = parseFloat(weightValue);
+                                if (!isNaN(numValue)) {
+                                    weightValues.push(numValue);
+                                }
+                            }
+                        });
+                        
+                        if (weightValues.length > 0) {
+                            // Calculate min and max values
+                            const minValue = Math.min(...weightValues);
+                            const maxValue = Math.max(...weightValues);
+                            
+                            // Define edge width range (min width to max width)
+                            let minWidth, maxWidth;
+                            // If returning to initial column, use saved min/max
+                            if (selectedColumn === initialWeightColumn && initialMinWidth !== null && initialMaxWidth !== null) {
+                                minWidth = initialMinWidth;
+                                maxWidth = initialMaxWidth;
+                            } else {
+                                // Auto-calculate for other columns
+                                minWidth = 0.5;
+                                maxWidth = 20;
+                            }
+                            
+                            // Apply continuous mapping
+                            cy.edges().forEach(edge => {
+                                const weightValue = edge.data(selectedColumn);
+                                if (weightValue !== undefined && weightValue !== null && weightValue !== '') {
+                                    const numValue = parseFloat(weightValue);
+                                    if (!isNaN(numValue)) {
+                                        // Linear interpolation for continuous mapping
+                                        let scaledWidth;
+                                        if (maxValue === minValue) {
+                                            // All values are the same
+                                            scaledWidth = (minWidth + maxWidth) / 2;
+                                        } else {
+                                            // Map value from [minValue, maxValue] to [minWidth, maxWidth]
+                                            const ratio = (numValue - minValue) / (maxValue - minValue);
+                                            scaledWidth = minWidth + ratio * (maxWidth - minWidth);
+                                        }
+                                        edge.style('width', scaledWidth);
+                                    }
+                                } else {
+                                    // No value, set to minimum width
+                                    edge.style('width', minWidth);
+                                }
+                            });
+                        }
+                    }
+                    closeWeightSwitcherModal();
+                });
+            }
 
             cy.on('mouseover', 'node', function(event) {
                 if (!pathTraceEnabled) return;
