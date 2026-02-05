@@ -1503,6 +1503,25 @@ export class WebPageExporter {
                     
                     let resNodes = nodes;
                     let resEdges = edges;
+                    const hasEdgeWeights = (() => {
+                        try {
+                            const edges = cy.edges();
+                            const limit = Math.min(edges.length, 200);
+                            const weightKeyRegex = /weight|重み|ウェイト/i;
+                            for (let i = 0; i < limit; i++) {
+                                const data = edges[i].data();
+                                if (!data) continue;
+                                for (const key of Object.keys(data)) {
+                                    if (!weightKeyRegex.test(key)) continue;
+                                    const v = data[key];
+                                    if (v !== '' && v !== null && v !== undefined) {
+                                        return true;
+                                    }
+                                }
+                            }
+                        } catch (e) {}
+                        return false;
+                    })();
 
                     // Specialized logic for explicit selection
                     if (Array.isArray(edges) && edges.length > 0) {
@@ -1516,58 +1535,106 @@ export class WebPageExporter {
                         resNodes = Array.from(nodeSet);
                         resEdges = edges;
                     } else {
+                        // Unweighted graph: map node conditions to edge conditions when no explicit edge conditions exist
+                        let mappedEdgeMatches = false;
+                        if (!hasEdgeWeights && Array.isArray(conditions) && conditions.length > 0) {
+                            const hasEdgeConds = conditions.some(c => typeof c.column === 'string' && c.column.startsWith('edge.'));
+                            const nodeCondsForMap = conditions.filter(c => typeof c.column === 'string' && c.column.startsWith('node.'));
+                            if (!hasEdgeConds && nodeCondsForMap.length > 0) {
+                                const edgeConds = nodeCondsForMap.map(c => ({ ...c, column: c.column.replace(/^node\./, 'edge.') }));
+                                const edgeMatches = [];
+                                cy.edges().forEach(edge => {
+                                    if (this.evaluateConditions(edge, 'edge', edgeConds)) edgeMatches.push(edge);
+                                });
+                                if (edgeMatches.length > 0) {
+                                    resEdges = edgeMatches;
+                                    const nodeSet2 = new Set();
+                                    edgeMatches.forEach(edge => {
+                                        if(edge.source()) nodeSet2.add(edge.source());
+                                        if(edge.target()) nodeSet2.add(edge.target());
+                                    });
+                                    resNodes = Array.from(nodeSet2);
+                                    mappedEdgeMatches = true;
+                                    // continue to apply selection below
+                                }
+                            }
+                        }
+
                         // If no edges matched explicitly, check if we can infer edges from node conditions
                         // e.g., if filtering by "PaperID" on nodes, also find edges with that "PaperID"
                         let foundEdges = [];
-                        if (Array.isArray(conditions) && conditions.length > 0 && Array.isArray(nodes) && nodes.length > 0) {
+                        if (!mappedEdgeMatches && Array.isArray(conditions) && conditions.length > 0 && Array.isArray(nodes) && nodes.length > 0) {
                             const nodeConds = conditions.filter(c => typeof c.column === 'string' && c.column.startsWith('node.') && c.value);
                             if (nodeConds.length > 0) {
                                 const edgeSeen = new Set();
-                                nodes.forEach(node => {
-                                    const incident = node.connectedEdges();
-                                    // Group node conditions by column and evaluate against edge attributes
-                                    const nodeCondMap = new Map();
-                                    nodeConds.forEach(cond => {
-                                        const colName = cond.column.split('.')[1];
-                                        if (!colName) return;
-                                        if (!nodeCondMap.has(colName)) nodeCondMap.set(colName, []);
-                                        nodeCondMap.get(colName).push(cond);
-                                    });
+                                // Group node conditions by column name
+                                const nodeCondMap = new Map();
+                                nodeConds.forEach(cond => {
+                                    const colName = cond.column.split('.')[1];
+                                    if (!colName) return;
+                                    if (!nodeCondMap.has(colName)) nodeCondMap.set(colName, []);
+                                    nodeCondMap.get(colName).push(cond);
+                                });
 
-                                    incident.forEach(edge => {
-                                        try {
-                                            let edgeMatchesAllNonArray = true;
-                                            const arrayIndexSets = [];
-                                            for (const [colName, conds] of nodeCondMap.entries()) {
-                                                const edgeVal = edge.data(colName);
-                                                if (edgeVal === undefined || edgeVal === null) { edgeMatchesAllNonArray = false; break; }
-                                                if (Array.isArray(edgeVal) || (typeof edgeVal === 'string' && (String(edgeVal).includes('|') || String(edgeVal).includes(String.fromCharCode(10))))) {
-                                                    let items = Array.isArray(edgeVal) ? edgeVal.map(v => String(v)) : String(edgeVal).split('|').map(v => String(v));
-                                                    const matchedIdx = getMatchedIndicesForArray(items, conds);
-                                                    arrayIndexSets.push(new Set(matchedIdx));
-                                                } else {
-                                                    const ok = evaluateExternalConditionSequence(edgeVal, conds);
-                                                    if (!ok) { edgeMatchesAllNonArray = false; break; }
-                                                }
+                                const edgeMatchesNodeConds = (edge) => {
+                                    if (hasEdgeWeights) {
+                                        const arrayIndexSets = [];
+                                        const nonArrayResults = [];
+                                        for (const [colName, conds] of nodeCondMap.entries()) {
+                                            const edgeVal = edge.data(colName);
+                                            if (edgeVal === undefined || edgeVal === null) return false;
+                                            if (Array.isArray(edgeVal) || (typeof edgeVal === 'string' && (String(edgeVal).includes('|') || String(edgeVal).includes(String.fromCharCode(10))))) {
+                                                let items = Array.isArray(edgeVal) ? edgeVal.map(v => String(v)) : String(edgeVal).split(/\|/).map(v => String(v));
+                                                const matchedIdx = getMatchedIndicesForArray(items, conds);
+                                                arrayIndexSets.push(new Set(matchedIdx));
+                                            } else {
+                                                nonArrayResults.push(evaluateExternalConditionSequence(edgeVal, conds));
                                             }
-                                            if (!edgeMatchesAllNonArray) return;
-                                            if (arrayIndexSets.length > 0) {
-                                                let inter = arrayIndexSets[0];
-                                                for (let i = 1; i < arrayIndexSets.length; i++) {
-                                                    inter = new Set([...inter].filter(x => arrayIndexSets[i].has(x)));
-                                                    if (inter.size === 0) return;
-                                                }
-                                            }
-                                            if (!edgeSeen.has(edge.id())) { edgeSeen.add(edge.id()); foundEdges.push(edge); }
-                                        } catch (e) {
-                                            // ignore
                                         }
-                                    });
+                                        if (nonArrayResults.some(r => !r)) return false;
+                                        if (arrayIndexSets.length > 0) {
+                                            let inter = arrayIndexSets[0];
+                                            for (let i = 1; i < arrayIndexSets.length; i++) {
+                                                inter = new Set([...inter].filter(x => arrayIndexSets[i].has(x)));
+                                                if (inter.size === 0) return false;
+                                            }
+                                            return inter.size > 0;
+                                        }
+                                        return true;
+                                    }
+
+                                    // Unweighted graph logic
+                                    for (const [colName, conds] of nodeCondMap.entries()) {
+                                        const edgeVal = edge.data(colName);
+                                        if (edgeVal === undefined || edgeVal === null) return false;
+                                        if (Array.isArray(edgeVal) || (typeof edgeVal === 'string' && (String(edgeVal).includes('|') || String(edgeVal).includes(String.fromCharCode(10))))) {
+                                            let items = Array.isArray(edgeVal) ? edgeVal.map(v => String(v)) : String(edgeVal).split(/\|/).map(v => String(v));
+                                            const matchedIdx = getMatchedIndicesForArray(items, conds);
+                                            if (!matchedIdx || matchedIdx.length === 0) return false;
+                                        } else {
+                                            if (!evaluateExternalConditionSequence(edgeVal, conds)) return false;
+                                        }
+                                    }
+                                    return true;
+                                };
+
+                                nodes.forEach(node => {
+                                    try {
+                                        const incident = node.connectedEdges();
+                                        incident.forEach(edge => {
+                                            try {
+                                                if (!edgeMatchesNodeConds(edge)) return;
+                                                if (!edgeSeen.has(edge.id())) { edgeSeen.add(edge.id()); foundEdges.push(edge); }
+                                            } catch (e) {
+                                            }
+                                        });
+                                    } catch (e) {
+                                    }
                                 });
                             }
                         }
 
-                        if (foundEdges.length > 0) {
+                            if (foundEdges.length > 0) {
                              resEdges = foundEdges;
                              const nodeSet2 = new Set();
                              foundEdges.forEach(edge => {
@@ -1575,13 +1642,95 @@ export class WebPageExporter {
                                  if(edge.target()) nodeSet2.add(edge.target());
                              });
                              resNodes = Array.from(nodeSet2);
-                        } else {
-                             // Fallback: Default expansion (likely just nodes, or implicit edges if >2 nodes)
-                             const expanded = expandSelectionWithConnections(this.cy, nodes, edges);
-                             resNodes = expanded.nodes;
-                             resEdges = expanded.edges;
+                            } else if (!mappedEdgeMatches) {
+                                 // If no edges were found by incident-edge checks, try global pass
+                                 const matchedNodeIdSet = new Set((nodes || []).map(n => (typeof n.id === 'function') ? n.id() : n.id));
+                                 const globalMatches = [];
+                                 
+                                 // Group node conditions by column name for global pass
+                                 const nodeConds = conditions.filter(c => typeof c.column === 'string' && c.column.startsWith('node.') && c.value);
+                                 if (nodeConds.length > 0) {
+                                     const nodeCondMap = new Map();
+                                     nodeConds.forEach(cond => {
+                                         const colName = cond.column.split('.')[1];
+                                         if (!colName) return;
+                                         if (!nodeCondMap.has(colName)) nodeCondMap.set(colName, []);
+                                         nodeCondMap.get(colName).push(cond);
+                                     });
+
+                                     const edgeMatchesNodeConds = (edge) => {
+                                         if (hasEdgeWeights) {
+                                             const arrayIndexSets = [];
+                                             const nonArrayResults = [];
+                                             for (const [colName, conds] of nodeCondMap.entries()) {
+                                                 const edgeVal = edge.data(colName);
+                                                 if (edgeVal === undefined || edgeVal === null) return false;
+                                                 if (Array.isArray(edgeVal) || (typeof edgeVal === 'string' && (String(edgeVal).includes('|') || String(edgeVal).includes(String.fromCharCode(10))))) {
+                                                     let items = Array.isArray(edgeVal) ? edgeVal.map(v => String(v)) : String(edgeVal).split(/\|/).map(v => String(v));
+                                                     const matchedIdx = getMatchedIndicesForArray(items, conds);
+                                                     arrayIndexSets.push(new Set(matchedIdx));
+                                                 } else {
+                                                     nonArrayResults.push(evaluateExternalConditionSequence(edgeVal, conds));
+                                                 }
+                                             }
+                                             if (nonArrayResults.some(r => !r)) return false;
+                                             if (arrayIndexSets.length > 0) {
+                                                 let inter = arrayIndexSets[0];
+                                                 for (let i = 1; i < arrayIndexSets.length; i++) {
+                                                     inter = new Set([...inter].filter(x => arrayIndexSets[i].has(x)));
+                                                     if (inter.size === 0) return false;
+                                                 }
+                                                 return inter.size > 0;
+                                             }
+                                             return true;
+                                         }
+
+                                         for (const [colName, conds] of nodeCondMap.entries()) {
+                                             const edgeVal = edge.data(colName);
+                                             if (edgeVal === undefined || edgeVal === null) return false;
+                                             if (Array.isArray(edgeVal) || (typeof edgeVal === 'string' && (String(edgeVal).includes('|') || String(edgeVal).includes(String.fromCharCode(10))))) {
+                                                 let items = Array.isArray(edgeVal) ? edgeVal.map(v => String(v)) : String(edgeVal).split(/\|/).map(v => String(v));
+                                                 const matchedIdx = getMatchedIndicesForArray(items, conds);
+                                                 if (!matchedIdx || matchedIdx.length === 0) return false;
+                                             } else {
+                                                 if (!evaluateExternalConditionSequence(edgeVal, conds)) return false;
+                                             }
+                                         }
+                                         return true;
+                                     };
+
+                                     cy.edges().forEach(edge => {
+                                         try {
+                                             const s = edge.source(); const t = edge.target();
+                                             const sid = (s && typeof s.id === 'function') ? s.id() : (s ? s : null);
+                                             const tid = (t && typeof t.id === 'function') ? t.id() : (t ? t : null);
+                                             if (!matchedNodeIdSet.has(sid) && !matchedNodeIdSet.has(tid)) return;
+                                             if (edgeMatchesNodeConds(edge)) globalMatches.push(edge);
+                                         } catch (e) {
+                                         }
+                                     });
+                                 }
+
+                                 if (globalMatches.length > 0) {
+                                     resEdges = globalMatches;
+                                     const nodeSet2 = new Set();
+                                     globalMatches.forEach(edge => {
+                                         if(edge.source()) nodeSet2.add(edge.source());
+                                         if(edge.target()) nodeSet2.add(edge.target());
+                                     });
+                                     resNodes = Array.from(nodeSet2);
+                                 } else {
+                                     if (hasEdgeWeights) {
+                                         const expanded = expandSelectionWithConnections(this.cy, nodes, edges);
+                                         resNodes = expanded.nodes;
+                                         resEdges = expanded.edges;
+                                     } else {
+                                         resNodes = nodes;
+                                         resEdges = [];
+                                     }
+                                 }
+                            }
                         }
-                    }
 
                     applySelectionToCy(this.cy, resNodes, resEdges, {setOpacity: true, bringToFront: true});
                     
@@ -2025,6 +2174,19 @@ export class WebPageExporter {
                     allowedIndices = crossIndices;
                 }
 
+                // Build External Condition Map for Scalar Checks
+                const externalScalarChecks = new Map();
+                if (externalFilterResults && externalFilterResults.conditions) {
+                     externalFilterResults.conditions.forEach(c => {
+                         if (!c.column) return;
+                         const [cType, cCol] = c.column.split('.');
+                         if (cType === type && cCol) {
+                             if (!externalScalarChecks.has(cCol)) externalScalarChecks.set(cCol, []);
+                             externalScalarChecks.get(cCol).push(c);
+                         }
+                     });
+                }
+
 
                 const elements = getDisplayElements(type);
                 const dataRows = elements.map(ele => {
@@ -2200,7 +2362,7 @@ export class WebPageExporter {
                     const arrayColumns = getArrayColumns(row);
                     let arrayMatchedIndices = null;
 
-                    // External filter conditions from Filter Panel
+                    // External filter conditions from Filter Panel (grouped by column)
                     if (externalFilterResults && externalFilterResults.conditions && externalFilterResults.conditions.length > 0) {
                         const externalConditions = externalFilterResults.conditions.filter(c => {
                             if (!c.column) return false;
@@ -2208,21 +2370,20 @@ export class WebPageExporter {
                             return condType === type;
                         });
 
+                        const externalByColumn = new Map();
                         externalConditions.forEach(condition => {
                             const [, columnName] = condition.column.split('.');
-                            if (!columnName || row[columnName] === undefined) return;
-                            
+                            if (!columnName) return;
+                            if (!externalByColumn.has(columnName)) externalByColumn.set(columnName, []);
+                            externalByColumn.get(columnName).push(condition);
+                        });
+
+                        externalByColumn.forEach((conditions, columnName) => {
+                            if (row[columnName] === undefined) return;
                             const items = getArrayItems(row[columnName]);
                             if (!items || items.length === 0) return;
 
-                            const matchedIndices = items
-                                .map((item, idx) => ({ item, idx }))
-                                .filter(({ item }) => {
-                                    // Use evaluateCondition for consistency with Filter Panel
-                                    return evaluateCondition(item, condition.operator, condition.value);
-                                })
-                                .map(({ idx }) => idx);
-
+                            const matchedIndices = getMatchedIndicesForArray(items, conditions);
                             if (matchedIndices.length === 0) return;
 
                             if (arrayMatchedIndices === null) {
@@ -2232,35 +2393,48 @@ export class WebPageExporter {
                             }
                         });
 
-                        // Cross-type conditions from Filter Panel
+                        // Cross-type conditions from Filter Panel (grouped by column)
                         const crossExternalConditions = externalFilterResults.conditions.filter(c => {
                             if (!c.column) return false;
                             const [condType] = c.column.split('.');
                             return condType === crossType;
                         });
 
+                        const crossExternalByColumn = new Map();
                         crossExternalConditions.forEach(condition => {
                             const [, columnName] = condition.column.split('.');
-                            if (!columnName || !arrayColumns.includes(columnName) || row[columnName] === undefined) return;
-                            
-                            const items = getArrayItems(row[columnName]);
-                            if (!items || items.length === 0) return;
-
-                            const matchedIndices = items
-                                .map((item, idx) => ({ item, idx }))
-                                .filter(({ item }) => {
-                                    return evaluateCondition(item, condition.operator, condition.value);
-                                })
-                                .map(({ idx }) => idx);
-
-                            if (matchedIndices.length === 0) return;
-
-                            if (arrayMatchedIndices === null) {
-                                arrayMatchedIndices = matchedIndices;
-                            } else {
-                                arrayMatchedIndices = arrayMatchedIndices.filter(i => matchedIndices.includes(i));
-                            }
+                            if (!columnName) return;
+                            if (!crossExternalByColumn.has(columnName)) crossExternalByColumn.set(columnName, []);
+                            crossExternalByColumn.get(columnName).push(condition);
                         });
+
+                        if (crossExternalByColumn.size > 0 && arrayColumns.length > 0) {
+                            let crossMatchedIndices = null;
+                            arrayColumns.forEach(colName => {
+                                const conditionsForColumn = crossExternalByColumn.get(colName);
+                                if (!conditionsForColumn || conditionsForColumn.length === 0) return;
+                                if (row[colName] === undefined) return;
+                                const items = getArrayItems(row[colName]);
+                                if (!items || items.length === 0) return;
+
+                                const matchedIndices = getMatchedIndicesForArray(items, conditionsForColumn);
+                                if (matchedIndices.length === 0) return;
+
+                                if (crossMatchedIndices === null) {
+                                    crossMatchedIndices = matchedIndices;
+                                } else {
+                                    crossMatchedIndices = crossMatchedIndices.filter(i => matchedIndices.includes(i));
+                                }
+                            });
+
+                            if (crossMatchedIndices !== null) {
+                                if (arrayMatchedIndices === null) {
+                                    arrayMatchedIndices = crossMatchedIndices;
+                                } else {
+                                    arrayMatchedIndices = arrayMatchedIndices.filter(i => crossMatchedIndices.includes(i));
+                                }
+                            }
+                        }
                     }
 
                     // Current table filters
@@ -2339,14 +2513,20 @@ export class WebPageExporter {
                         const td = document.createElement('td');
                         let value = row[col];
                         
+                        const items = getArrayItems(value);
+
                         // Apply array filtering for this row if indices are matched
-                        if (arrayMatchedIndices && arrayMatchedIndices.length > 0) {
-                            const items = getArrayItems(value);
-                            if (items) {
+                        if (items && arrayMatchedIndices) {
                                 const newItems = arrayMatchedIndices
                                     .map(i => items[i])
                                     .filter(v => v !== undefined);
                                 value = newItems;
+                        }
+
+                        // Scalar Logic: Blank out if external condition fails
+                        if (!items && externalScalarChecks.has(col)) {
+                            if (!evaluateExternalConditionSequence(value, externalScalarChecks.get(col))) {
+                                value = '';
                             }
                         }
 

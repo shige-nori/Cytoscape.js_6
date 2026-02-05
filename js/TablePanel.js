@@ -1183,12 +1183,27 @@ export class TablePanel {
         }
 
         const cy = appContext.networkManager.cy;
-        const { fromFilter = false } = options || {};
+        const { fromFilter = false, skipExpand = false } = options || {};
 
         // ノードのみが与えられ、エッジが空の場合は、Table側の nodeFilters を参照して
         // ノードの配列カラム検索に一致する隣接エッジを優先的に選択する
         let resultingNodes = nodes;
         let resultingEdges = edges;
+
+        if (skipExpand) {
+            this.isFilterSelecting = true;
+            try {
+                applySelectionToCy(cy, resultingNodes, resultingEdges, options);
+            } finally {
+                this.isFilterSelecting = false;
+            }
+
+            if (fromFilter) {
+                this.selectionFromFilters = true;
+            }
+
+            return { nodes: resultingNodes, edges: resultingEdges };
+        }
 
         if (Array.isArray(nodes) && nodes.length > 0 && (!Array.isArray(edges) || edges.length === 0)) {
             try {

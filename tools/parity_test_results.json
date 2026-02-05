@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-02-05T00:30:30.403Z",
+  "results": [
+    {
+      "name": "ユーザケース - AND 条件",
+      "pass": true,
+      "matchedNodeCount": 20,
+      "edgesMatchedDirectCount": 0,
+      "edgesInferredCount": 0,
+      "onlyDirectCount": 0,
+      "onlyInferredCount": 0
+    },
+    {
+      "name": "ユーザケース - Node only",
+      "pass": true,
+      "matchedNodeCount": 20,
+      "edgesMatchedDirectCount": 24,
+      "edgesInferredCount": 24,
+      "onlyDirectCount": 0,
+      "onlyInferredCount": 0
+    }
+  ]
+}

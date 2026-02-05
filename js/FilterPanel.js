@@ -692,6 +692,27 @@ export class FilterPanel {
         
 
         const cy = appContext.networkManager.cy;
+        const hasEdgeWeights = (() => {
+            try {
+                const edges = cy.edges();
+                const limit = Math.min(edges.length, 200);
+                const weightKeyRegex = /weight|重み|ウェイト/i;
+                for (let i = 0; i < limit; i++) {
+                    const data = edges[i].data();
+                    if (!data) continue;
+                    for (const key of Object.keys(data)) {
+                        if (!weightKeyRegex.test(key)) continue;
+                        const v = data[key];
+                        if (v !== '' && v !== null && v !== undefined) {
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+            return false;
+        })();
 
         // エッジが明示的にフィルタで選択されている場合は、並列エッジの自動拡張を行わず
         // そのまま該当エッジのみを選択する（ネットワーク上で1本のエッジをクリックした時と同じ振る舞い）
@@ -712,10 +733,38 @@ export class FilterPanel {
             resultingNodes = Array.from(nodeSet);
             resultingEdges = matchedEdges;
         } else {
+            // Unweighted graph: if only node conditions are provided, map them to edge conditions
+            // so the Edge Table matches "Edge ..." behavior.
+            let mappedEdgeMatches = false;
+            if (!hasEdgeWeights && Array.isArray(conditions) && conditions.length > 0) {
+                const hasEdgeConds = conditions.some(c => typeof c.column === 'string' && c.column.startsWith('edge.'));
+                const nodeCondsForMap = conditions.filter(c => typeof c.column === 'string' && c.column.startsWith('node.'));
+                if (!hasEdgeConds && nodeCondsForMap.length > 0) {
+                    const edgeConds = nodeCondsForMap.map(c => ({ ...c, column: c.column.replace(/^node\./, 'edge.') }));
+                    const edgeMatches = [];
+                    cy.edges().forEach(edge => {
+                        if (this.evaluateConditions(edge, 'edge', edgeConds)) edgeMatches.push(edge);
+                    });
+                    if (edgeMatches.length > 0) {
+                        resultingEdges = edgeMatches;
+                        const nodeSet2 = new Set();
+                        edgeMatches.forEach(edge => {
+                            const s = edge.source(); if (s) nodeSet2.add(s);
+                            const t = edge.target(); if (t) nodeSet2.add(t);
+                        });
+                        resultingNodes = Array.from(nodeSet2);
+                        // Skip the node->edge inference path
+                        matchedNodes = resultingNodes;
+                        matchedEdges = resultingEdges;
+                        mappedEdgeMatches = true;
+                    }
+                }
+            }
+
             // エッジが明示されていない場合は、まずノードフィルタ条件に一致する
             // 配列カラム検索（例: 論文ID の要素一致）を優先して、該当する隣接エッジを絞り込む
             let foundEdges = [];
-            if (Array.isArray(conditions) && conditions.length > 0 && Array.isArray(matchedNodes) && matchedNodes.length > 0) {
+            if (!mappedEdgeMatches && Array.isArray(conditions) && conditions.length > 0 && Array.isArray(matchedNodes) && matchedNodes.length > 0) {
                 // node.XXX の条件を抽出（単純に '=' の場合を扱う）
                 const nodeConds = conditions.filter(c => typeof c.column === 'string' && c.column.startsWith('node.') && c.value !== undefined && c.value !== null && String(c.value).trim() !== '');
                 if (nodeConds.length > 0) {
@@ -729,44 +778,56 @@ export class FilterPanel {
                         nodeCondMap.get(colName).push(cond);
                     });
 
+                    const edgeMatchesNodeConds = (edge) => {
+                        if (hasEdgeWeights) {
+                            // Weighted graph: preserve index-intersection behavior for array columns.
+                            const arrayIndexSets = [];
+                            const nonArrayResults = [];
+                            for (const [colName, conds] of nodeCondMap.entries()) {
+                                const edgeVal = edge.data(colName);
+                                if (edgeVal === undefined || edgeVal === null) return false;
+                                if (Array.isArray(edgeVal) || (typeof edgeVal === 'string' && (String(edgeVal).includes('|') || String(edgeVal).includes('\n')))) {
+                                    let items = Array.isArray(edgeVal) ? edgeVal.map(v => String(v)) : String(edgeVal).split(/\|/).map(v => String(v));
+                                    const matchedIdx = getMatchedIndicesForArray(items, conds);
+                                    arrayIndexSets.push(new Set(matchedIdx));
+                                } else {
+                                    nonArrayResults.push(evaluateExternalConditionSequence(edgeVal, conds));
+                                }
+                            }
+                            if (nonArrayResults.some(r => !r)) return false;
+                            if (arrayIndexSets.length > 0) {
+                                let inter = arrayIndexSets[0];
+                                for (let i = 1; i < arrayIndexSets.length; i++) {
+                                    inter = new Set([...inter].filter(x => arrayIndexSets[i].has(x)));
+                                    if (inter.size === 0) return false;
+                                }
+                                return inter.size > 0;
+                            }
+                            return true;
+                        }
+
+                        // Unweighted graph: evaluate per-column AND, array columns satisfied if any element matches.
+                        for (const [colName, conds] of nodeCondMap.entries()) {
+                            const edgeVal = edge.data(colName);
+                            if (edgeVal === undefined || edgeVal === null) return false;
+
+                            if (Array.isArray(edgeVal) || (typeof edgeVal === 'string' && (String(edgeVal).includes('|') || String(edgeVal).includes('\n')))) {
+                                let items = Array.isArray(edgeVal) ? edgeVal.map(v => String(v)) : String(edgeVal).split(/\|/).map(v => String(v));
+                                const matchedIdx = getMatchedIndicesForArray(items, conds);
+                                if (!matchedIdx || matchedIdx.length === 0) return false;
+                            } else {
+                                if (!evaluateExternalConditionSequence(edgeVal, conds)) return false;
+                            }
+                        }
+                        return true;
+                    };
+
                     matchedNodes.forEach(node => {
                         try {
                             const incident = node.connectedEdges();
                             incident.forEach(edge => {
                                 try {
-                                    // For each column group, evaluate against the edge's data for that column
-                                    let edgeMatchesAllNonArray = true;
-                                    const arrayIndexSets = [];
-
-                                    for (const [colName, conds] of nodeCondMap.entries()) {
-                                        const edgeVal = edge.data(colName);
-                                        if (edgeVal === undefined || edgeVal === null) {
-                                            edgeMatchesAllNonArray = false; break;
-                                        }
-
-                                        if (Array.isArray(edgeVal) || (typeof edgeVal === 'string' && (String(edgeVal).includes('|') || String(edgeVal).includes('\n')))) {
-                                            // normalize to items
-                                            let items = Array.isArray(edgeVal) ? edgeVal.map(v => String(v)) : String(edgeVal).split(/\|/).map(v => String(v));
-                                            const matchedIdx = getMatchedIndicesForArray(items, conds);
-                                            arrayIndexSets.push(new Set(matchedIdx));
-                                        } else {
-                                            // Non-array: evaluate sequence of conditions
-                                            const ok = evaluateExternalConditionSequence(edgeVal, conds);
-                                            if (!ok) { edgeMatchesAllNonArray = false; break; }
-                                        }
-                                    }
-
-                                    if (!edgeMatchesAllNonArray) return;
-
-                                    // If there are array column conditions, require index intersection
-                                    if (arrayIndexSets.length > 0) {
-                                        let inter = arrayIndexSets[0];
-                                        for (let i = 1; i < arrayIndexSets.length; i++) {
-                                            inter = new Set([...inter].filter(x => arrayIndexSets[i].has(x)));
-                                            if (inter.size === 0) return; // no match for this edge
-                                        }
-                                        if (inter.size === 0) return; // redundant safety
-                                    }
+                                    if (!edgeMatchesNodeConds(edge)) return;
 
                                     if (!seen.has(edge.id())) { seen.add(edge.id()); foundEdges.push(edge); }
                                 } catch (e) {
@@ -789,17 +850,56 @@ export class FilterPanel {
                     const t = edge.target(); if (t) nodeSet2.add(t);
                 });
                 resultingNodes = Array.from(nodeSet2);
-            } else {
-                // 既存の拡張ロジックを使用
-                const expanded = expandSelectionWithConnections(cy, matchedNodes, matchedEdges);
-                resultingNodes = expanded.nodes;
-                resultingEdges = expanded.edges;
+            } else if (!mappedEdgeMatches) {
+                // If no edges were found by incident-edge checks, also try a global pass:
+                // include edges that satisfy the equivalent edge-level conditions and are connected to any matched node.
+                const matchedNodeIdSet = new Set((matchedNodes || []).map(n => (typeof n.id === 'function' ? n.id() : n.id)));
+
+                const globalMatches = [];
+                cy.edges().forEach(edge => {
+                    try {
+                        // only consider edges incident to matched nodes
+                        const s = edge.source(); const t = edge.target();
+                        const sid = (s && typeof s.id === 'function') ? s.id() : (s ? s : null);
+                        const tid = (t && typeof t.id === 'function') ? t.id() : (t ? t : null);
+                        if (!matchedNodeIdSet.has(sid) && !matchedNodeIdSet.has(tid)) return;
+
+                        if (edgeMatchesNodeConds(edge)) globalMatches.push(edge);
+                    } catch (e) {
+                        // ignore
+                    }
+                });
+
+                if (globalMatches.length > 0) {
+                    resultingEdges = globalMatches;
+                    const nodeSet2 = new Set();
+                    globalMatches.forEach(edge => {
+                        const s = edge.source(); if (s) nodeSet2.add(s);
+                        const t = edge.target(); if (t) nodeSet2.add(t);
+                    });
+                    resultingNodes = Array.from(nodeSet2);
+                } else {
+                    if (hasEdgeWeights) {
+                        // 既存の拡張ロジックを使用
+                        const expanded = expandSelectionWithConnections(cy, matchedNodes, matchedEdges);
+                        resultingNodes = expanded.nodes;
+                        resultingEdges = expanded.edges;
+                    } else {
+                        // Unweighted graph: do not expand edges when no matches found
+                        resultingNodes = matchedNodes;
+                        resultingEdges = [];
+                    }
+                }
             }
         }
 
         // すべての選択を解除して結果を適用
         if (appContext.tablePanel) {
-            const expanded = appContext.tablePanel.applySelectionClosure(resultingNodes, resultingEdges, { setOpacity: true, fromFilter: true, bringToFront: true });
+            const expanded = appContext.tablePanel.applySelectionClosure(
+                resultingNodes,
+                resultingEdges,
+                { setOpacity: true, fromFilter: true, bringToFront: true, skipExpand: !hasEdgeWeights }
+            );
             matchedNodes = expanded.nodes;
             matchedEdges = expanded.edges;
         } else {
