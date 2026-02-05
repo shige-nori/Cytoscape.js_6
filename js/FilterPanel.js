@@ -405,8 +405,25 @@ export class FilterPanel {
         
         const operatorSelect = conditionDiv.querySelector('.filter-operator-select');
         if (operatorSelect) {
+            // 現在の演算子値を保存
+            const currentOperator = condition.operator;
+            
+            // 演算子の選択肢を更新
             this.updateOperatorSelectOptions(operatorSelect, condition.column);
-            condition.operator = operatorSelect.value;
+            
+            // 保存していた演算子値を復元（選択肢に存在する場合のみ）
+            if (currentOperator) {
+                const options = Array.from(operatorSelect.options).map(opt => opt.value);
+                if (options.includes(currentOperator)) {
+                    operatorSelect.value = currentOperator;
+                    condition.operator = currentOperator;
+                } else {
+                    // 選択肢に存在しない場合は、新しい選択肢の最初の値を使用
+                    condition.operator = operatorSelect.value;
+                }
+            } else {
+                condition.operator = operatorSelect.value;
+            }
         }
     }
 

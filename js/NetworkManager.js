@@ -209,29 +209,23 @@ export class NetworkManager {
             }
         });
 
-        // 背景クリックで選択解除 / パネルのフィルター値クリア
+        // 背景クリックで選択解除 / テーブルパネルのフィルター値クリア（FilterPanelの条件はクリアしない）
         this.cy.on('tap', (event) => {
             if (event.target === this.cy) {
-                // まずFilterPanelに条件があれば優先的にクリア（FilterPanel.clearFilter がテーブル側も処理する）
-                if (appContext.filterPanel && typeof appContext.filterPanel.hasActiveConditions === 'function' && appContext.filterPanel.hasActiveConditions()) {
-                    appContext.filterPanel.clearFilter();
-                    return;
+                // 選択を解除
+                if (appContext.tablePanel && typeof appContext.tablePanel.clearSelection === 'function') {
+                    appContext.tablePanel.clearSelection();
+                } else {
+                    this.cy.elements().unselect();
                 }
+                this.resetSelectionStyles();
 
-                // TablePanelの入力フィルターや外部フィルターが設定されている場合はクリア
+                // TablePanelの入力フィルターや外部フィルターをクリア（FilterPanelの条件式はクリアしない）
                 if (appContext.tablePanel) {
                     const tp = appContext.tablePanel;
                     const nodeFiltersActive = Object.values(tp.nodeFilters || {}).some(v => v && String(v).trim() !== '');
                     const edgeFiltersActive = Object.values(tp.edgeFilters || {}).some(v => v && String(v).trim() !== '');
                     const externalActive = (tp.externalFilteredNodes && tp.externalFilteredNodes.length > 0) || (tp.externalFilteredEdges && tp.externalFilteredEdges.length > 0);
-
-                    // 先に選択を解除してからテーブルのフィルター状態をクリア/再描画する
-                    if (typeof tp.clearSelection === 'function') {
-                        tp.clearSelection();
-                    } else {
-                        this.cy.elements().unselect();
-                    }
-                    this.resetSelectionStyles();
 
                     if (nodeFiltersActive || edgeFiltersActive) {
                         // フィルター値をクリアしてテーブル更新
@@ -252,10 +246,6 @@ export class NetworkManager {
                             tp.refreshTable();
                         }
                     }
-                } else {
-                    // TablePanelがなければ通常どおり選択のみ解除
-                    this.cy.elements().unselect();
-                    this.resetSelectionStyles();
                 }
             }
         });

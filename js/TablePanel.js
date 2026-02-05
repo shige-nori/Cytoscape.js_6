@@ -94,13 +94,24 @@ export class TablePanel {
             });
         }
 
-        // フィルター解除ボタン
+        // フィルター解除ボタン（FilterPanelの条件式はクリアしない）
         const filterClearBtn = document.getElementById('table-filter-clear-btn');
         if (filterClearBtn) {
             filterClearBtn.addEventListener('click', () => {
+                // 選択を解除
+                if (typeof this.clearSelection === 'function') {
+                    this.clearSelection();
+                } else if (appContext.networkManager && appContext.networkManager.cy) {
+                    appContext.networkManager.cy.elements().unselect();
+                }
+                
+                // テーブルパネルのフィルターと外部フィルター結果をクリア
                 this.clearAllFiltersAllTabs();
-                if (appContext.filterPanel && appContext.filterPanel.isVisible) {
-                    appContext.filterPanel.clearFilter();
+                this.clearExternalFilterResults();
+                
+                // テーブルを更新
+                if (this.isVisible) {
+                    this.refreshTable();
                 }
             });
         }
@@ -782,6 +793,21 @@ export class TablePanel {
         // フィルターをリセット
         this.nodeFilters = {};
         this.edgeFilters = {};
+        // キャッシュをクリア
+        this._lastNodeSelectionIds = '';
+        this._lastNodeFilterString = '';
+        this._lastNodeVisibleColumns = '';
+        this._lastEdgeSelectionIds = '';
+        this._lastEdgeFilterString = '';
+        this._lastEdgeVisibleColumns = '';
+        // 外部フィルター結果をクリア
+        this.externalFilteredNodes = null;
+        this.externalFilteredEdges = null;
+        this.externalFilterConditions = null;
+        // テーブルフィルター条件をクリア
+        this.tableFilterConditions = { node: [], edge: [] };
+        // 選択フラグをリセット
+        this.selectionFromFilters = false;
     }
 
     updateAvailableColumns(type, elements, showAll = false) {

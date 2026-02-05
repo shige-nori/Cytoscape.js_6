@@ -1080,7 +1080,15 @@ export class StylePanel {
             }
         }
 
-        // マッピング種別や属性選択だけではスタイルを適用しない
+        // Default、Continuous、Discreteの場合はすぐにスタイルを適用
+        // Bypassの場合は値変更時にのみ適用
+        if (mappingType !== 'bypass') {
+            if (element === 'node') {
+                this.applyNodeStyles();
+            } else if (element === 'edge') {
+                this.applyEdgeStyles();
+            }
+        }
     }
 
     handleAttributeChange(e) {
@@ -1121,7 +1129,15 @@ export class StylePanel {
             if (rangeDiv) rangeDiv.classList.remove('hidden');
         }
 
-        // マッピング種別や属性選択だけではスタイルを適用しない
+        // Default、Continuous、Discreteの場合はすぐにスタイルを適用
+        // Bypassの場合は値変更時にのみ適用
+        if (styleConfig.type !== 'bypass') {
+            if (element === 'node') {
+                this.applyNodeStyles();
+            } else if (element === 'edge') {
+                this.applyEdgeStyles();
+            }
+        }
     }
 
     updateAttributeOptions(selectElement, elementType) {
