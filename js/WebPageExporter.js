@@ -305,19 +305,6 @@ export class WebPageExporter {
             background: #e2e8f0;
             color: #0f172a;
         }
-        .weight-switcher-btn {
-            border: 1px solid #94a3b8;
-            background: #e2e8f0;
-            color: #0f172a;
-            padding: 4px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        .weight-switcher-btn:hover {
-            background: #cbd5e1;
-        }
         /* Edge Weight Switcher Modal */
         .weight-switcher-modal-overlay {
             display: none;
@@ -976,8 +963,9 @@ export class WebPageExporter {
             <span class="menu-label">Path Trace</span>
             <button id="path-trace-toggle" class="path-trace-toggle off">OFF</button>
         </div>
-        <div class="menu-item" id="weight-switcher-menu-item" style="display: none; margin-left: 20px;">
-            <button id="weight-switcher-btn" class="weight-switcher-btn">Edge Weight Switcher</button>
+        <div class="menu-item" id="weight-switcher-menu-item" style="display: none; margin-left: 10px;">
+            <span class="menu-label">Edge Weight Switcher</span>
+            <button id="weight-switcher-toggle" class="table-toggle off">OFF</button>
         </div>
     </div>
     <div id="network-background"></div>
@@ -2726,9 +2714,20 @@ export class WebPageExporter {
             if (tableClearBtn) {
                 tableClearBtn.addEventListener('click', () => {
                     withLoading(() => {
+                        // Clear table filters
                         filters.node = {};
                         filters.edge = {};
+                        
+                        // Clear filter input fields
+                        const filterInputs = document.querySelectorAll('.column-filter');
+                        filterInputs.forEach(input => input.value = '');
+                        
+                        // Unselect elements
                         cy.elements().unselect();
+                        
+                        // Clear external filter results
+                        externalFilterResults = null;
+                        
                         // Cancel pending debounced render since we render immediately
                         if (renderTableDebounceTimer) {
                             clearTimeout(renderTableDebounceTimer);
@@ -3245,7 +3244,7 @@ export class WebPageExporter {
             ensureTableResizeHandle();
 
             // Edge Weight Switcher
-            const weightSwitcherBtn = document.getElementById('weight-switcher-btn');
+            const weightSwitcherToggle = document.getElementById('weight-switcher-toggle');
             const weightSwitcherModal = document.getElementById('weight-switcher-modal');
             const weightSwitcherClose = document.getElementById('weight-switcher-modal-close');
             const weightColumnSelect = document.getElementById('weight-column-select');
@@ -3345,32 +3344,53 @@ export class WebPageExporter {
                 });
             }
 
-            // Open modal
-            if (weightSwitcherBtn) {
-                weightSwitcherBtn.addEventListener('click', () => {
-                    // Populate select with weight columns
-                    if (weightColumnSelect) {
-                        weightColumnSelect.innerHTML = '';
-                        weightColumns.forEach(col => {
-                            const option = document.createElement('option');
-                            option.value = col;
-                            option.textContent = col;
-                            if (col === currentWeightColumn) {
-                                option.selected = true;
-                            }
-                            weightColumnSelect.appendChild(option);
-                        });
-                    }
-                    if (weightSwitcherModal) {
-                        weightSwitcherModal.classList.add('active');
+            // Toggle modal
+            let weightSwitcherVisible = false;
+            if (weightSwitcherToggle) {
+                weightSwitcherToggle.addEventListener('click', () => {
+                    weightSwitcherVisible = !weightSwitcherVisible;
+                    
+                    if (weightSwitcherVisible) {
+                        // Populate select with weight columns
+                        if (weightColumnSelect) {
+                            weightColumnSelect.innerHTML = '';
+                            weightColumns.forEach(col => {
+                                const option = document.createElement('option');
+                                option.value = col;
+                                option.textContent = col;
+                                if (col === currentWeightColumn) {
+                                    option.selected = true;
+                                }
+                                weightColumnSelect.appendChild(option);
+                            });
+                        }
+                        if (weightSwitcherModal) {
+                            weightSwitcherModal.classList.add('active');
+                        }
+                        // Update button state
+                        weightSwitcherToggle.textContent = 'ON';
+                        weightSwitcherToggle.classList.remove('off');
+                    } else {
+                        if (weightSwitcherModal) {
+                            weightSwitcherModal.classList.remove('active');
+                        }
+                        // Update button state
+                        weightSwitcherToggle.textContent = 'OFF';
+                        weightSwitcherToggle.classList.add('off');
                     }
                 });
             }
 
             // Close modal
             const closeWeightSwitcherModal = () => {
+                weightSwitcherVisible = false;
                 if (weightSwitcherModal) {
                     weightSwitcherModal.classList.remove('active');
+                }
+                // Update button state
+                if (weightSwitcherToggle) {
+                    weightSwitcherToggle.textContent = 'OFF';
+                    weightSwitcherToggle.classList.add('off');
                 }
             };
             if (weightSwitcherClose) {
@@ -3449,7 +3469,7 @@ export class WebPageExporter {
                             });
                         }
                     }
-                    closeWeightSwitcherModal();
+                    // Don't close modal after applying - user may want to try different columns
                 });
             }
 
@@ -3575,32 +3595,31 @@ export class WebPageExporter {
             cy.on('tap', (evt) => {
                 if (evt.target !== cy) return;
                 
-                // Check if there are active conditions or filters
+                // Check if there are active items to clear
                 const currSel = cy.elements(':selected');
                 const hasSelection = currSel && currSel.length > 0;
                 const hasTableFilters = Object.values(filters.node || {}).some(v => v && String(v).trim() !== '') ||
                                        Object.values(filters.edge || {}).some(v => v && String(v).trim() !== '');
-                const hasExternalFilter = externalFilterResults && externalFilterResults.conditions && externalFilterResults.conditions.length > 0;
-                
-                // If Filter Panel has active conditions, clear them first
-                if (hasExternalFilter && filterPanel && typeof filterPanel.hasActiveConditions === 'function' && filterPanel.hasActiveConditions()) {
-                    filterPanel.clearFilter();
-                    return;
-                }
+                const hasExternalFilter = externalFilterResults !== null;
                 
                 // If nothing is selected and no filters are active, do nothing
                 if (!hasSelection && !hasTableFilters && !hasExternalFilter) return;
 
                 withLoading(() => {
+                    // Clear table filters
                     filters.node = {};
                     filters.edge = {};
+                    
+                    // Clear filter input fields
+                    const filterInputs = document.querySelectorAll('.column-filter');
+                    filterInputs.forEach(input => input.value = '');
+                    
+                    // Unselect elements
                     cy.elements().unselect();
                     cy.elements().style('opacity', 1);
                     
                     // Clear external filter results
-                    if (hasExternalFilter) {
-                        externalFilterResults = null;
-                    }
+                    externalFilterResults = null;
                     
                     // Cancel pending debounced render since we render immediately
                     if (renderTableDebounceTimer) {
