@@ -562,6 +562,24 @@ export class FileHandler {
         }
     }
 
+    async hasWritePermission(handle) {
+        if (!handle) return false;
+        try {
+            const opts = { mode: 'readwrite' };
+            if (typeof handle.queryPermission === 'function') {
+                const q = await handle.queryPermission(opts);
+                if (q === 'granted') return true;
+            }
+            if (typeof handle.requestPermission === 'function') {
+                const r = await handle.requestPermission(opts);
+                if (r === 'granted') return true;
+            }
+            return false;
+        } catch (e) {
+            return false;
+        }
+    }
+
     /**
      * ネットワークをCX2形式で保存
      * @param {string} filename - ファイル名（省略時はデフォルト名）
@@ -639,6 +657,11 @@ export class FileHandler {
             // Openで取得したファイルハンドルがある場合は同一ディレクトリに上書き保存（ダイアログなし）
             if (this.currentFileHandle && !useFileDialog) {
                 try {
+                    // 書き込み権限があるか事前に確認。なければ Save As にフォールバック。
+                    if (!await this.hasWritePermission(this.currentFileHandle)) {
+                        return await this.saveCX2File(filename, true);
+                    }
+
                     const writable = await this.currentFileHandle.createWritable();
                     await writable.write(blob);
                     await writable.close();
