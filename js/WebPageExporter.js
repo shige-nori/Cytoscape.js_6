@@ -305,6 +305,47 @@ export class WebPageExporter {
             background: #e2e8f0;
             color: #0f172a;
         }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+        }
+        .btn-secondary {
+            background-color: #fff;
+            color: #0f172a;
+            border: 1px solid #d1d5db;
+        }
+        .btn-secondary:hover {
+            background-color: #f9fafb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.06);
+        }
+        .btn-secondary:active {
+            background-color: #e5e7eb;
+            transform: translateY(2px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 13px;
+        }
+        .table-filter-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px 8px;
+            min-width: 28px;
+        }
+        .table-filter-icon {
+            display: block;
+            width: 16px;
+            height: 16px;
+        }
         /* Edge Weight Switcher Modal */
         .weight-switcher-modal-overlay {
             display: none;
@@ -1086,9 +1127,18 @@ export class WebPageExporter {
                 <div class="table-tab" id="edge-table-tab">Edge Table</div>
             </div>
             <div class="table-panel-actions">
-                <button class="table-toggle" id="table-column-settings-btn">Columns...</button>
-                <button class="table-toggle" id="table-filter-apply-btn">Filter</button>
-                <button class="table-toggle off" id="table-filter-clear-btn">Clear</button>
+                <button class="btn btn-secondary btn-sm" id="table-column-settings-btn">Columns...</button>
+                <button class="btn btn-secondary btn-sm table-filter-btn" id="table-filter-apply-btn" title="Apply Table Filter" aria-label="Apply Table Filter">
+                    <svg class="table-filter-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 3h12l-5 6v4l-2 1V9L2 3z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button class="btn btn-secondary btn-sm table-filter-btn" id="table-filter-clear-btn" title="Clear Filters" aria-label="Clear Filters">
+                    <svg class="table-filter-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M2 3h12l-5 6v4l-2 1V9L2 3z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M5 5l6 6M11 5l-6 6" stroke="#dc2626" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                </button>
             </div>
         </div>
         <div class="table-panel-body">
