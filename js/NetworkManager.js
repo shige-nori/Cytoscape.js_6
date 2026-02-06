@@ -118,11 +118,8 @@ export class NetworkManager {
             const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
             
             if (!this.isSelectingNodesFromEdge && !(now < this.suppressAutoEdgeSelectionUntil)) {
-                // 既にエッジが選択されている場合は並列エッジの自動選択を行わない
-                if (this.cy.edges(':selected').length === 0) {
-                    // 隣接ノード間のエッジを自動選択
-                    this.selectEdgesBetweenSelectedNodes();
-                }
+                // 選択されたノード間のエッジを自動選択（3つ以上のノードでも全ての組み合わせを選択）
+                this.selectEdgesBetweenSelectedNodes();
             }
         });
 
