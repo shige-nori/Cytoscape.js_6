@@ -18,6 +18,9 @@ export class WebPageExporter {
             throw new Error('No network loaded');
         }
 
+        // Export前に選択状態を解除
+        cy.elements(':selected').unselect();
+
         // ネットワークデータを取得（JSON形式で完全にエクスポート）
         const elements = [];
         // Style設定の「真の情報源」
